@@ -1,0 +1,16 @@
+{
+  "name": "העגלה של אלה",
+  "short_name": "אלה",
+  "description": "משחק פוד-טראק כיפי וצבעוני לילדים",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#aee4ff",
+  "theme_color": "#ff7eb9",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
