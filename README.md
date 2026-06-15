@@ -19,15 +19,20 @@
 ## 📂 מבנה הקבצים
 ```
 העגלה של אלה/
-├── index.html        ← הקובץ הראשי
-├── style.css         ← כל העיצוב
-├── manifest.json     ← הגדרות PWA
-├── sw.js             ← Service Worker (עבודה אופליין)
-├── assets/icon.svg   ← אייקון האפליקציה
-└── js/               ← קוד המשחק
-    ├── audio.js  state.js  fx.js
-    ├── customers.js  minigames.js  store.js  main.js
+├── index.html          ← הקובץ הראשי
+├── style.css           ← רקע ועיצוב בסיס
+├── manifest.json       ← הגדרות PWA
+├── sw.js               ← Service Worker (עבודה אופליין)
+├── assets/icon.svg     ← אייקון האפליקציה
+├── vendor/phaser.min.js← מנוע המשחק Phaser 3 (מקומי, ללא אינטרנט)
+└── js/                 ← קוד המשחק
+    ├── audio.js        ← צלילים (Web Audio)
+    ├── state.js        ← כלכלה ושמירה (localStorage)
+    ├── game.js         ← תשתית Phaser + טעינה
+    ├── world.js        ← העולם החי + לקוחות
+    └── minigame.js     ← 4 המיני-משחקים + החנות
 ```
+> המשחק בנוי על מנוע **Phaser 3** ששמור מקומית בתיקיית `vendor` — אין שום תלות באינטרנט או ב-CDN.
 
 ---
 

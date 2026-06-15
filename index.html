@@ -16,72 +16,8 @@
 </head>
 <body>
 
-<!-- שכבת אפקטים (נצנוצים/קונפטי) -->
-<canvas id="fx"></canvas>
-
-<!-- מסך פתיחה -->
-<section id="splash" class="screen show">
-  <div class="splash-clouds"></div>
-  <div class="splash-inner">
-    <div class="splash-cart">🚚</div>
-    <h1 class="title">העגלה של <span>אלה</span></h1>
-    <p class="subtitle">פוד-טראק כיפי וצבעוני 🍔🍕🍦</p>
-    <button class="big-btn play" id="btnPlay">▶ שחקו</button>
-    <button class="big-btn free" id="btnFree">🎨 יצירה חופשית</button>
-    <button class="round-btn sound" id="btnSound" title="צליל">🔊</button>
-  </div>
-</section>
-
-<!-- סצנת המשחק הראשית -->
-<section id="scene" class="screen">
-  <div class="topbar">
-    <button class="round-btn" id="btnHome">🏠</button>
-    <div class="coins" id="coinsBox"><span class="coin-ico">🪙</span><span id="coinsVal">0</span></div>
-    <button class="round-btn" id="btnStore">🛒</button>
-  </div>
-
-  <div class="customers" id="customers"></div>
-
-  <div class="cart-wrap">
-    <div class="cart" id="cart">
-      <div class="cart-roof"></div>
-      <div class="cart-window">
-        <div class="ella">👧</div>
-      </div>
-      <div class="cart-body">
-        <div class="cart-sign" id="cartSign">העגלה של אלה</div>
-      </div>
-      <div class="cart-wheel left"></div>
-      <div class="cart-wheel right"></div>
-    </div>
-  </div>
-
-  <div class="hint" id="sceneHint">הקישו על לקוח כדי להכין את ההזמנה שלו 👆</div>
-</section>
-
-<!-- מסך מיני-משחק (מתמלא דינמית) -->
-<section id="minigame" class="screen overlay">
-  <div class="mg-top">
-    <button class="round-btn" id="btnMgBack">✖</button>
-    <div class="mg-title" id="mgTitle"></div>
-    <div class="mg-spacer"></div>
-  </div>
-  <div class="mg-stage" id="mgStage"></div>
-  <div class="mg-bottom" id="mgBottom"></div>
-</section>
-
-<!-- חנות שדרוגים -->
-<section id="store" class="screen overlay">
-  <div class="mg-top">
-    <button class="round-btn" id="btnStoreBack">✖</button>
-    <div class="mg-title">🛒 חנות השדרוגים</div>
-    <div class="coins small"><span class="coin-ico">🪙</span><span id="storeCoins">0</span></div>
-  </div>
-  <div class="store-grid" id="storeGrid"></div>
-</section>
-
-<!-- הודעת עידוד צפה -->
-<div id="toast" class="toast"></div>
+<!-- מכל המשחק (Phaser מצייר לכאן; הרקע מגיע מגרדיאנט ה-CSS) -->
+<div id="game"></div>
 
 <!-- בקשת סיבוב מסך לרוחב -->
 <div id="rotate" class="rotate-msg">
@@ -89,13 +25,12 @@
   <div>סובבו את האייפד לרוחב 😊</div>
 </div>
 
+<script src="vendor/phaser.min.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/state.js"></script>
-<script src="js/fx.js"></script>
-<script src="js/customers.js"></script>
-<script src="js/minigames.js"></script>
-<script src="js/store.js"></script>
-<script src="js/main.js"></script>
+<script src="js/world.js"></script>
+<script src="js/minigame.js"></script>
+<script src="js/game.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {

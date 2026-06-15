@@ -5,6 +5,7 @@ const G = (function () {
   // הגדרת שלושת המאכלים
   const FOODS = {
     shake:  { id:'shake',  name:'מילקשייק', emoji:'🥤', base:10 },
+    donut:  { id:'donut',  name:'דונאט',    emoji:'🍩', base:12 },
     burger: { id:'burger', name:'המבורגר',  emoji:'🍔', base:15 },
     pizza:  { id:'pizza',  name:'פיצה',      emoji:'🍕', base:20 }
   };

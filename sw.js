@@ -1,18 +1,17 @@
 /* ===== Service Worker — עבודה אופליין מלאה ===== */
-const CACHE = 'ella-cart-v1';
+const CACHE = 'ella-cart-v2';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './manifest.json',
   './assets/icon.svg',
+  './vendor/phaser.min.js',
   './js/audio.js',
   './js/state.js',
-  './js/fx.js',
-  './js/customers.js',
-  './js/minigames.js',
-  './js/store.js',
-  './js/main.js'
+  './js/world.js',
+  './js/minigame.js',
+  './js/game.js'
 ];
 
 self.addEventListener('install', function (e) {

@@ -17,9 +17,12 @@
 html,body{
   width:100%; height:100%; overflow:hidden;
   font-family:"Varela Round","Heebo","Arial Rounded MT Bold",system-ui,sans-serif;
-  background:#aee4ff; color:var(--ink);
+  color:var(--ink);
+  background:linear-gradient(180deg,var(--sky1) 0%, var(--sky2) 70%, #c8f7e0 100%);
   touch-action:none; overscroll-behavior:none; position:fixed;
 }
+#game{ position:absolute; inset:0; }
+#game canvas{ touch-action:none; }
 button{ font-family:inherit; cursor:pointer; border:none; -webkit-appearance:none; }
 
 /* ===== מסכים ===== */
@@ -229,15 +232,8 @@ button{ font-family:inherit; cursor:pointer; border:none; -webkit-appearance:non
   .rotate-msg{ display:flex; }
 }
 
-/* רקעי נושא (נקנים בחנות) */
-body[data-theme="beach"] #splash, body[data-theme="beach"] #scene{ background:linear-gradient(180deg,#aee4ff 0 55%, #ffe9a8 55% 70%, #ffd98a 100%); }
-body[data-theme="park"]  #splash, body[data-theme="park"]  #scene{ background:linear-gradient(180deg,#bfeaff 0 60%, #bdf0a0 60%, #8fd86a 100%); }
-body[data-theme="city"]  #splash, body[data-theme="city"]  #scene{ background:linear-gradient(180deg,#9fd0ff 0 55%, #cfd6e6 55%, #aab3c8 100%); }
-body[data-theme="space"] #splash, body[data-theme="space"] #scene{ background:linear-gradient(180deg,#241a4a 0%, #3a2a6a 60%, #5a3d8c 100%); color:#fff; }
-body[data-theme="space"] .hint{ color:#fff; }
-
-/* סקין עגלה */
-body[data-cart="royal"] .cart-roof{ background:repeating-linear-gradient(90deg,#a06bff 0 6vh,#fff 6vh 12vh); }
-body[data-cart="royal"] .cart-body{ background:linear-gradient(180deg,#d3b3ff,#a06bff); }
-body[data-cart="rainbow"] .cart-roof{ background:linear-gradient(90deg,#ff7eb9,#ffd24c,#7ee8c0,#7ec8ff); }
-body[data-cart="rainbow"] .cart-body{ background:linear-gradient(90deg,#ffd1ec,#fff0c2,#d3fff0); }
+/* רקעי נושא (נקנים בחנות) — משנים את גרדיאנט השמיים מאחורי הקנבס */
+body[data-theme="beach"]{ background:linear-gradient(180deg,#aee4ff 0 55%, #ffe9a8 55% 70%, #ffd98a 100%); }
+body[data-theme="park"] { background:linear-gradient(180deg,#bfeaff 0 60%, #bdf0a0 60%, #8fd86a 100%); }
+body[data-theme="city"] { background:linear-gradient(180deg,#9fd0ff 0 55%, #cfd6e6 55%, #aab3c8 100%); }
+body[data-theme="space"]{ background:linear-gradient(180deg,#241a4a 0%, #3a2a6a 60%, #5a3d8c 100%); }
