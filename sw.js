@@ -1,5 +1,12 @@
 /* ===== Service Worker — עבודה אופליין מלאה ===== */
-const CACHE = 'ella-cart-v3';
+const CACHE = 'ella-cart-v4';
+const ART = [
+  'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
+  'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',
+  'food_shake','food_burger','food_pizza','food_donut',
+  'ing_bun_top','ing_bun_bottom','ing_patty','ing_cheese','ing_lettuce','ing_tomato','ing_cucumber','ing_onion',
+  'ing_straw','ing_choc','ing_vanilla','ing_blue','ing_cherry','ing_mushroom','ing_pepper','ing_olive','ing_pineapple'
+].map(function (k) { return './assets/art/' + k + '.svg'; });
 const ASSETS = [
   './',
   './index.html',
@@ -11,19 +18,8 @@ const ASSETS = [
   './js/state.js',
   './js/world.js',
   './js/minigame.js',
-  './js/game.js',
-  './assets/art/ella.svg',
-  './assets/art/cust_girl.svg',
-  './assets/art/cust_boy.svg',
-  './assets/art/cust_bunny.svg',
-  './assets/art/cust_bear.svg',
-  './assets/art/cust_cat.svg',
-  './assets/art/cust_panda.svg',
-  './assets/art/food_shake.svg',
-  './assets/art/food_burger.svg',
-  './assets/art/food_pizza.svg',
-  './assets/art/food_donut.svg'
-];
+  './js/game.js'
+].concat(ART);
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();

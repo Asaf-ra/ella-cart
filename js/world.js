@@ -254,8 +254,8 @@ class WorldScene extends Phaser.Scene {
   }
 
   /* ----- לקוחות ----- */
-  chars() { return ['cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda']; }
-  faces() { return ['🧒','👦','🐰','🐻','🐱','🐼']; }
+  chars() { return ['cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda','cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse']; }
+  faces() { return ['🧒','👦','🐰','🐻','🐱','🐼','🐶','🦊','🐸','🐧','🐷','🐭']; }
   foodKeys() { return Object.keys(G.FOODS); }
 
   slotPositions() {

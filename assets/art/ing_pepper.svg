@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- טבעת פלפל ירוק -->
+  <path d="M60 24 q6 0 6 8 v2 q-6 -2 -12 0 v-2 q0 -8 6 -8 Z" fill="#4a8a2a"/>
+  <circle cx="60" cy="64" r="40" fill="#5fb83a"/>
+  <path d="M60 64 m-40 0 a40 40 0 1 0 80 0 a40 40 0 1 0 -80 0 M60 64 m-22 0 a22 22 0 1 1 44 0 a22 22 0 1 1 -44 0" fill-rule="evenodd" fill="#5fb83a"/>
+  <circle cx="60" cy="64" r="40" fill="none" stroke="#3f9a2a" stroke-width="4"/>
+  <circle cx="60" cy="64" r="22" fill="#eafbe0"/>
+  <path d="M60 50 Q52 64 60 78 M60 64 H44 M60 64 H76" stroke="#7ec85a" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>

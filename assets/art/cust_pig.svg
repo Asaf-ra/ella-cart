@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+  <path d="M44 220 Q44 156 100 156 Q156 156 156 220 Z" fill="#7ee8c0"/>
+  <!-- אוזניים -->
+  <path d="M58 64 L52 96 L88 80 Z" fill="#ff9ec4"/>
+  <path d="M142 64 L148 96 L112 80 Z" fill="#ff9ec4"/>
+  <!-- ראש -->
+  <circle cx="100" cy="104" r="54" fill="#ffaed4"/>
+  <circle cx="80" cy="98" r="8" fill="#3a2a2a"/>
+  <circle cx="120" cy="98" r="8" fill="#3a2a2a"/>
+  <circle cx="83" cy="95" r="3" fill="#fff"/>
+  <circle cx="123" cy="95" r="3" fill="#fff"/>
+  <circle cx="66" cy="116" r="9" fill="#ff7aa8" opacity="0.6"/>
+  <circle cx="134" cy="116" r="9" fill="#ff7aa8" opacity="0.6"/>
+  <!-- חרטום -->
+  <ellipse cx="100" cy="120" rx="24" ry="17" fill="#ff8ac4"/>
+  <ellipse cx="91" cy="120" rx="4" ry="6" fill="#d95a9a"/>
+  <ellipse cx="109" cy="120" rx="4" ry="6" fill="#d95a9a"/>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+  <path d="M44 220 Q44 158 100 158 Q156 158 156 220 Z" fill="#ffd24c"/>
+  <!-- ראש -->
+  <circle cx="100" cy="108" r="56" fill="#6fcf57"/>
+  <!-- עיניים בולטות -->
+  <circle cx="68" cy="62" r="24" fill="#6fcf57"/>
+  <circle cx="132" cy="62" r="24" fill="#6fcf57"/>
+  <circle cx="68" cy="60" r="16" fill="#fff"/>
+  <circle cx="132" cy="60" r="16" fill="#fff"/>
+  <circle cx="70" cy="62" r="8" fill="#2a2a2a"/>
+  <circle cx="130" cy="62" r="8" fill="#2a2a2a"/>
+  <circle cx="72" cy="59" r="3" fill="#fff"/>
+  <circle cx="132" cy="59" r="3" fill="#fff"/>
+  <!-- לחיים -->
+  <circle cx="62" cy="116" r="9" fill="#ff9eb0" opacity="0.6"/>
+  <circle cx="138" cy="116" r="9" fill="#ff9eb0" opacity="0.6"/>
+  <!-- פה רחב -->
+  <path d="M64 112 Q100 142 136 112" fill="none" stroke="#3a8a2a" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="92" cy="104" r="3" fill="#3a8a2a"/>
+  <circle cx="108" cy="104" r="3" fill="#3a8a2a"/>
+</svg>

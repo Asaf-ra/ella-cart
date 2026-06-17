@@ -1,5 +1,13 @@
 /* ===== מיני-משחקים + חנות (Phaser) ===== */
 
+/* מיפוי אמוג'י → טקסטורת איור מצוירת (נפילה לאמוג'י אם אין) */
+const ING = {
+  '🍞':'ing_bun_bottom', '🍔':'ing_bun_top', '🥩':'ing_patty', '🧀':'ing_cheese', '🥬':'ing_lettuce',
+  '🍅':'ing_tomato', '🥒':'ing_cucumber', '🧅':'ing_onion',
+  '🍓':'ing_straw', '🍫':'ing_choc', '🍦':'ing_vanilla', '🫐':'ing_blue',
+  '🍒':'ing_cherry', '⭐':'star', '🍄':'ing_mushroom', '🫑':'ing_pepper', '🫒':'ing_olive', '🍍':'ing_pineapple'
+};
+
 class MiniGameScene extends Phaser.Scene {
   constructor() { super('MiniGame'); }
   init(data) { this.food = data.food; }
@@ -32,7 +40,7 @@ class MiniGameScene extends Phaser.Scene {
 
   // כפתור הגשה עם מצב פעיל/כבוי
   serveButton() {
-    const c = this.add.container(DESIGN.w / 2, DESIGN.h - 90);
+    const c = this.add.container(DESIGN.w / 2, DESIGN.h - 58);
     const g = this.add.graphics();
     const t = this.add.text(0, 0, '✓ הגישו!', { fontFamily:'Heebo, sans-serif', fontSize:'42px', color:'#fff', fontStyle:'bold' }).setOrigin(0.5);
     const draw = (on) => { g.clear(); g.fillStyle(0x000000, 0.18); g.fillRoundedRect(-150, -40, 300, 86, 43);
@@ -47,15 +55,26 @@ class MiniGameScene extends Phaser.Scene {
     return c;
   }
 
+  /* ---------- אובייקט מרכיב: תמונה מצוירת אם קיימת, אחרת אמוג'י ---------- */
+  imgOrText(x, y, emoji, size) {
+    const key = ING[emoji];
+    if (key && this.textures.exists(key)) {
+      const im = this.add.image(x, y, key); im.setScale(size / im.width); im._base = im.scaleX; return im;
+    }
+    const t = this.add.text(x, y, emoji, { fontSize: Math.round(size * 0.95) + 'px' }).setOrigin(0.5);
+    t._base = 1; return t;
+  }
+
   /* ---------- מגש מרכיבים נגרר ---------- */
   ingredient(x, y, emoji, onPlace) {
-    const t = this.add.text(x, y, emoji, { fontSize: '74px' }).setOrigin(0.5).setInteractive({ draggable: true });
+    const t = this.imgOrText(x, y, emoji, 88);
+    t.setInteractive({ draggable: true });
     const home = { x, y };
     let moved = false;
     this.input.setDraggable(t);
     t.on('pointerdown', () => { moved = false; });
-    t.on('drag', (p, dx, dy) => { moved = true; t.x = dx; t.y = dy; t.setScale(1.15); });
-    t.on('dragend', (p) => { t.setScale(1); if (p.y < DESIGN.h - 230) { Sound.pop(); onPlace(); }
+    t.on('drag', (p, dx, dy) => { moved = true; t.x = dx; t.y = dy; t.setScale(t._base * 1.15); });
+    t.on('dragend', (p) => { t.setScale(t._base); if (p.y < DESIGN.h - 230) { Sound.pop(); onPlace(); }
       this.tweens.add({ targets: t, x: home.x, y: home.y, duration: 150 }); });
     t.on('pointerup', () => { if (!moved) { Sound.pop(); onPlace(); } });
     return t;
@@ -76,7 +95,8 @@ class MiniGameScene extends Phaser.Scene {
     let idx = 0;
 
     const loadVeg = () => {
-      const veg = this.add.text(DESIGN.w / 2, 380, vegs[idx], { fontSize: '130px' }).setOrigin(0.5);
+      const veg = this.imgOrText(DESIGN.w / 2, 380, vegs[idx], 150);
+      this.cutObjs.push(veg);
       let cuts = 0, lastX = null, pressing = false;
       const needed = 3;
       const onDown = (p) => { pressing = true; lastX = p.x; knife.setVisible(true).setPosition(p.x, p.y); };
@@ -90,10 +110,10 @@ class MiniGameScene extends Phaser.Scene {
         if (cuts >= needed) return;
         cuts++; Sound.chop();
         this.cutFx(p.x, p.y);
-        const s = this.add.text(DESIGN.w/2 + (cuts - 2) * 90, 430, vegs[idx], { fontSize: '70px' }).setOrigin(0.5).setAngle((cuts-2)*12);
+        const s = this.imgOrText(DESIGN.w/2 + (cuts - 2) * 90, 430, vegs[idx], 80); s.setAngle((cuts-2)*12);
         this.cutObjs.push(s);
         this.tweens.add({ targets: s, y: 440, duration: 200, ease: 'Bounce.out' });
-        veg.setScale(1 - cuts * 0.18);
+        veg.setScale(veg._base * (1 - cuts * 0.18));
         if (cuts >= needed) {
           this.tweens.add({ targets: veg, alpha: 0, duration: 300, onComplete: () => veg.destroy() });
           this.time.delayedCall(400, nextVeg);
@@ -128,8 +148,8 @@ class MiniGameScene extends Phaser.Scene {
     const serve = this.serveButton();
 
     const addLayer = (emoji) => {
-      const ly = baseY - count * 34;
-      const L = this.add.text(DESIGN.w / 2, ly - 200, emoji, { fontSize: '96px' }).setOrigin(0.5);
+      const ly = baseY - count * 30;
+      const L = this.imgOrText(DESIGN.w / 2, ly - 200, emoji, 150);
       this.tweens.add({ targets: L, y: ly, duration: 300, ease: 'Bounce.out' });
       count++;
       if (count >= 4) serve.enable(true);
@@ -137,7 +157,7 @@ class MiniGameScene extends Phaser.Scene {
 
     const items = ['🍞','🥩','🧀','🥬','🍅','🥒','🧅','🍔'];
     const startX = DESIGN.w / 2 - (items.length - 1) * 70 / 2;
-    items.forEach((e, i) => this.ingredient(startX + i * 70, DESIGN.h - 130, e, () => addLayer(e)));
+    items.forEach((e, i) => this.ingredient(startX + i * 70, DESIGN.h - 158, e, () => addLayer(e)));
   }
 
   /* ============ מילקשייק ============ */
@@ -174,24 +194,24 @@ class MiniGameScene extends Phaser.Scene {
     ];
     const startX = cx - 360;
     flavors.forEach((f, i) => {
-      this.ingredient(startX + i * 90, DESIGN.h - 130, f.e, () => {
+      this.ingredient(startX + i * 90, DESIGN.h - 158, f.e, () => {
         flavor = f; level = Math.min(100, level + 24); fill.setFillStyle(f.c); setLevel(); Sound.bubble();
       });
     });
 
     // קצפת
-    this.tapItem(startX + 4 * 90 + 40, DESIGN.h - 130, '🍶', () => {
-      if (!cream && level >= 40) { cream = true; const c = this.add.text(cx, cyTop + 6, '🍦', { fontSize:'70px' }).setOrigin(0.5); tops.push(c); Sound.pop(); }
+    this.tapItem(startX + 4 * 90 + 40, DESIGN.h - 158, '🍦', () => {
+      if (!cream && level >= 40) { cream = true; const c = this.imgOrText(cx, cyTop + 6, '🍦', 80); tops.push(c); Sound.pop(); }
     });
 
     // תוספות
-    const toppings = ['🍒','🌈','🍓','🍫','🥥','⭐'];
+    const toppings = ['🍒','🍓','🍫','🫐','🥥','⭐'];
     const allowed = 4 + G.extraToppings();
     toppings.forEach((t, i) => {
       const locked = i >= allowed;
-      this.tapItem(cx + 120 + i * 80, DESIGN.h - 130, t, () => {
+      this.tapItem(cx + 120 + i * 80, DESIGN.h - 158, t, () => {
         if (locked || level < 20) { Sound.tap(); return; }
-        const obj = this.add.text(cx - 60 + tops.length * 26, cyTop - 10, t, { fontSize:'44px' }).setOrigin(0.5);
+        const obj = this.imgOrText(cx - 60 + tops.length * 26, cyTop - 10, t, 48);
         tops.push(obj); Sound.sparkle();
       }, locked);
     });
@@ -199,10 +219,10 @@ class MiniGameScene extends Phaser.Scene {
 
   // פריט שמגיבים בהקשה (לא נגרר)
   tapItem(x, y, emoji, onTap, locked) {
-    const t = this.add.text(x, y, emoji, { fontSize: '64px' }).setOrigin(0.5);
+    const t = this.imgOrText(x, y, emoji, 70);
     if (locked) t.setAlpha(0.35);
     t.setInteractive({ useHandCursor: true });
-    t.on('pointerdown', () => { this.tweens.add({ targets:t, scale:1.2, duration:80, yoyo:true }); onTap(); });
+    t.on('pointerdown', () => { this.tweens.add({ targets:t, scale:t._base * 1.2, duration:80, yoyo:true }); onTap(); });
     return t;
   }
 
@@ -236,7 +256,7 @@ class MiniGameScene extends Phaser.Scene {
     let cheeseBtn, bakeBtn;
 
     const showCheese = () => {
-      cheeseBtn = this.tapItem(cx, DESIGN.h - 130, '🧀', () => {
+      cheeseBtn = this.tapItem(cx, DESIGN.h - 158, '🧀', () => {
         if (cheeseDone) return; cheeseDone = true;
         this.add.circle(cx, cy, R - 28, 0xffdd78, 0.5);
         Sound.pop(); this.hintText.setText('בחרו תוספת והקישו על הפיצה 🍕');
@@ -250,13 +270,13 @@ class MiniGameScene extends Phaser.Scene {
       const startX = cx - 320;
       list.forEach((t, i) => {
         const locked = i >= allowed;
-        const it = this.tapItem(startX + i * 90, DESIGN.h - 130, t, () => {
+        const it = this.tapItem(startX + i * 90, DESIGN.h - 158, t, () => {
           if (locked) { Sound.tap(); return; }
           selected = t; Sound.tap();
           list.forEach(() => {}); it.setTint(0xff7eb9);
         }, locked);
       });
-      bakeBtn = this.add.container(cx + 320, DESIGN.h - 130);
+      bakeBtn = this.add.container(cx + 320, DESIGN.h - 158);
       const bg = this.add.graphics(); bg.fillStyle(0xf5a800,1); bg.fillRoundedRect(-90,-40,180,80,40);
       const bt = this.add.text(0,0,'🔥 לאפות', { fontFamily:'Heebo,sans-serif', fontSize:'30px', color:'#fff', fontStyle:'bold' }).setOrigin(0.5);
       bakeBtn.add([bg, bt]); bakeBtn.setVisible(false).setSize(180,80)
@@ -273,7 +293,7 @@ class MiniGameScene extends Phaser.Scene {
         if (!selected || baked) return;
         const dx = p.x - cx, dy = p.y - cy;
         if (dx*dx + dy*dy > R*R) return;
-        this.add.text(p.x, p.y, selected, { fontSize: '46px' }).setOrigin(0.5);
+        this.imgOrText(p.x, p.y, selected, 50);
         Sound.pop(); bakeBtn.setVisible(true);
       });
     };
@@ -304,7 +324,7 @@ class MiniGameScene extends Phaser.Scene {
 
     const colors = [ {e:'🩷', c:0xff8ac4}, {e:'🤎', c:0x8a5a3c}, {e:'🤍', c:0xfff3da}, {e:'💙', c:0x7ec8ff} ];
     const startX = cx - 300;
-    colors.forEach((f, i) => this.tapItem(startX + i * 100, DESIGN.h - 130, f.e, () => drawGlaze(f.c)));
+    colors.forEach((f, i) => this.tapItem(startX + i * 100, DESIGN.h - 158, f.e, () => drawGlaze(f.c)));
 
     const sprinkles = ['🔴','🟡','🟢','🔵','⭐','🍫'];
     // הקשה על הדונאט מוסיפה סוכריות אקראיות
