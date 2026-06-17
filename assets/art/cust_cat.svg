@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+  <path d="M44 220 Q44 156 100 156 Q156 156 156 220 Z" fill="#ffd24c"/>
+  <!-- אוזניים -->
+  <path d="M52 96 L48 44 L96 78 Z" fill="#ff9f43"/>
+  <path d="M148 96 L152 44 L104 78 Z" fill="#ff9f43"/>
+  <path d="M58 86 L56 58 L84 78 Z" fill="#ffc89a"/>
+  <path d="M142 86 L144 58 L116 78 Z" fill="#ffc89a"/>
+  <!-- ראש -->
+  <circle cx="100" cy="104" r="54" fill="#ff9f43"/>
+  <circle cx="80" cy="100" r="8" fill="#3a2a2a"/>
+  <circle cx="120" cy="100" r="8" fill="#3a2a2a"/>
+  <circle cx="83" cy="97" r="3" fill="#fff"/>
+  <circle cx="123" cy="97" r="3" fill="#fff"/>
+  <circle cx="66" cy="116" r="8" fill="#ff7a5c" opacity="0.6"/>
+  <circle cx="134" cy="116" r="8" fill="#ff7a5c" opacity="0.6"/>
+  <!-- אף + פה -->
+  <path d="M94 114 L106 114 L100 122 Z" fill="#ff6f8a"/>
+  <path d="M100 122 V128 M100 128 Q92 134 86 129 M100 128 Q108 134 114 129" fill="none" stroke="#c96a4a" stroke-width="3" stroke-linecap="round"/>
+  <!-- שפמים -->
+  <path d="M58 110 H30 M60 120 H34 M142 110 H170 M140 120 H166" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- פרוסת פיצה -->
+  <path d="M60 14 L100 100 Q60 112 20 100 Z" fill="#f0b34d"/>
+  <!-- גבינה -->
+  <path d="M60 22 L94 96 Q60 106 26 96 Z" fill="#ffd97a"/>
+  <!-- רוטב נוטף -->
+  <path d="M60 22 L94 96 Q60 106 26 96 Z" fill="#ffcf6a" opacity="0.5"/>
+  <!-- פפרוני -->
+  <circle cx="60" cy="48" r="8" fill="#e0483c"/>
+  <circle cx="44" cy="78" r="8" fill="#e0483c"/>
+  <circle cx="78" cy="80" r="8" fill="#e0483c"/>
+  <circle cx="60" cy="48" r="3" fill="#ff7a6a" opacity="0.6"/>
+  <circle cx="44" cy="78" r="3" fill="#ff7a6a" opacity="0.6"/>
+  <circle cx="78" cy="80" r="3" fill="#ff7a6a" opacity="0.6"/>
+  <!-- בזיליקום -->
+  <ellipse cx="70" cy="64" rx="6" ry="4" fill="#5fb04a" transform="rotate(30 70 64)"/>
+  <ellipse cx="50" cy="60" rx="5" ry="3" fill="#5fb04a" transform="rotate(-20 50 60)"/>
+  <!-- שוליים -->
+  <path d="M60 14 L100 100 Q60 112 20 100 Z" fill="none" stroke="#e09a3a" stroke-width="3" stroke-linejoin="round"/>
+</svg>

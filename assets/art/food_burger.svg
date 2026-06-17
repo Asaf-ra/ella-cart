@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- לחמנייה עליונה -->
+  <path d="M16 52 Q16 16 60 16 Q104 16 104 52 Z" fill="#f0a850"/>
+  <path d="M16 52 Q16 20 60 20 Q104 20 104 52 Q60 44 16 52 Z" fill="#ffc36e"/>
+  <circle cx="44" cy="34" r="3" fill="#fff1cf"/>
+  <circle cx="62" cy="28" r="3" fill="#fff1cf"/>
+  <circle cx="80" cy="34" r="3" fill="#fff1cf"/>
+  <!-- חסה -->
+  <path d="M12 54 Q24 46 36 54 Q48 46 60 54 Q72 46 84 54 Q96 46 108 54 L106 62 H14 Z" fill="#7ec85a"/>
+  <!-- עגבנייה -->
+  <rect x="16" y="60" width="88" height="9" rx="4" fill="#ff6b5c"/>
+  <!-- גבינה -->
+  <path d="M16 66 H104 L92 80 L80 70 L64 80 L48 70 L32 80 Z" fill="#ffcf4d"/>
+  <!-- קציצה -->
+  <rect x="16" y="76" width="88" height="16" rx="8" fill="#8a4a2a"/>
+  <!-- לחמנייה תחתונה -->
+  <path d="M18 90 H102 Q102 106 60 106 Q18 106 18 90 Z" fill="#f0a850"/>
+</svg>

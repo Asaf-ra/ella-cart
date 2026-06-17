@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+  <path d="M44 220 Q44 156 100 156 Q156 156 156 220 Z" fill="#a6e3a1"/>
+  <!-- אוזניים -->
+  <circle cx="58" cy="62" r="22" fill="#3a3a3a"/>
+  <circle cx="142" cy="62" r="22" fill="#3a3a3a"/>
+  <!-- ראש -->
+  <circle cx="100" cy="104" r="56" fill="#ffffff"/>
+  <!-- כתמי עיניים -->
+  <ellipse cx="78" cy="100" rx="16" ry="20" fill="#3a3a3a" transform="rotate(-12 78 100)"/>
+  <ellipse cx="122" cy="100" rx="16" ry="20" fill="#3a3a3a" transform="rotate(12 122 100)"/>
+  <circle cx="80" cy="100" r="7" fill="#fff"/>
+  <circle cx="120" cy="100" r="7" fill="#fff"/>
+  <circle cx="80" cy="100" r="4" fill="#2a2a2a"/>
+  <circle cx="120" cy="100" r="4" fill="#2a2a2a"/>
+  <!-- אף + פה -->
+  <ellipse cx="100" cy="118" rx="8" ry="6" fill="#3a3a3a"/>
+  <path d="M100 124 V130 M100 130 Q92 136 86 131 M100 130 Q108 136 114 131" fill="none" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="64" cy="120" r="8" fill="#ffb3c8" opacity="0.7"/>
+  <circle cx="136" cy="120" r="8" fill="#ffb3c8" opacity="0.7"/>
+</svg>

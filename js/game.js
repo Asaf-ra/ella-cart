@@ -53,6 +53,23 @@ const Helper = {
   txt(scene, x, y, s, size, color) {
     return scene.add.text(x, y, s, { fontFamily:'Varela Round, Heebo, sans-serif',
       fontSize: size + 'px', color: color || '#5a3d5c', fontStyle:'bold' }).setOrigin(0.5);
+  },
+
+  // אייקון מאכל: תמונה מצוירת אם קיימת, אחרת אמוג'י (נפילה חכמה)
+  foodIcon(scene, x, y, foodKey, displaySize) {
+    const key = 'food_' + foodKey;
+    if (scene.textures.exists(key)) {
+      const im = scene.add.image(x, y, key); im.setDisplaySize(displaySize, displaySize); return im;
+    }
+    return scene.add.text(x, y, G.FOODS[foodKey].emoji, { fontSize: Math.round(displaySize * 0.9) + 'px' }).setOrigin(0.5);
+  },
+
+  // תמונת דמות בגובה רצוי; null אם אין טקסטורה
+  charImg(scene, x, y, key, displayH) {
+    if (!scene.textures.exists(key)) return null;
+    const im = scene.add.image(x, y, key);
+    im.setScale(displayH / im.height);
+    return im;
   }
 };
 
@@ -94,6 +111,12 @@ class BootScene extends Phaser.Scene {
     g.generateTexture('heart', 48, 48); g.clear();
 
     g.destroy();
+
+    // טעינת אומנות וקטורית מצוירת (SVG) — דמויות ומאכלים
+    ['ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda']
+      .forEach(k => this.load.svg(k, 'assets/art/' + k + '.svg', { width: 240, height: 264 }));
+    ['food_shake','food_burger','food_pizza','food_donut']
+      .forEach(k => this.load.svg(k, 'assets/art/' + k + '.svg', { width: 150, height: 150 }));
   }
 
   starTexture(g) {

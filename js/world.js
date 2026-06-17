@@ -99,19 +99,23 @@ function buildCart(scene, x, y) {
   const counter = scene.add.graphics();
   counter.fillStyle(0xfff0c2, 1); counter.fillRoundedRect(-235, 20, 470, 26, 12);
 
-  // חלון + אלה
+  // חלון + אלה (תמונה מצוירת, עם נפילה לאמוג'י)
   const win = scene.add.graphics();
-  win.fillStyle(0xffffff, 1); win.fillRoundedRect(-150, -110, 130, 110, 16);
-  win.fillStyle(0xd9f3ff, 1); win.fillRoundedRect(-140, -100, 110, 90, 12);
-  const ella = scene.add.text(-85, -55, '👧', { fontSize: '78px' }).setOrigin(0.5);
-  scene.tweens.add({ targets: ella, y: -62, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+  win.fillStyle(0xffffff, 1); win.fillRoundedRect(-150, -120, 130, 120, 16);
+  win.fillStyle(0xd9f3ff, 1); win.fillRoundedRect(-140, -110, 110, 100, 12);
+  let ella = Helper.charImg(scene, -85, -48, 'ella', 120);
+  if (!ella) ella = scene.add.text(-85, -55, '👧', { fontSize: '78px' }).setOrigin(0.5);
+  scene.tweens.add({ targets: ella, y: ella.y - 7, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
 
-  // שלט תפריט
+  // שלט תפריט עם אייקוני מאכל
   const board = scene.add.graphics();
-  board.fillStyle(0xffffff, 1); board.fillRoundedRect(10, -120, 150, 120, 16);
-  board.fillStyle(0xff5ca8, 1); board.fillRoundedRect(10, -120, 150, 30, { tl:16, tr:16, bl:0, br:0 });
-  const boardTitle = scene.add.text(85, -105, 'תפריט', { fontFamily:'Heebo, sans-serif', fontSize:'20px', color:'#fff', fontStyle:'bold' }).setOrigin(0.5);
-  const menuItems = scene.add.text(85, -50, '🥤  🍔\n🍕  🍩', { fontSize:'30px', align:'center' }).setOrigin(0.5);
+  board.fillStyle(0xffffff, 1); board.fillRoundedRect(10, -130, 150, 130, 16);
+  board.fillStyle(0xff5ca8, 1); board.fillRoundedRect(10, -130, 150, 30, { tl:16, tr:16, bl:0, br:0 });
+  const boardTitle = scene.add.text(85, -115, 'תפריט', { fontFamily:'Heebo, sans-serif', fontSize:'20px', color:'#fff', fontStyle:'bold' }).setOrigin(0.5);
+  const m1 = Helper.foodIcon(scene, 50, -70, 'shake', 40);
+  const m2 = Helper.foodIcon(scene, 120, -70, 'burger', 40);
+  const m3 = Helper.foodIcon(scene, 50, -28, 'pizza', 40);
+  const m4 = Helper.foodIcon(scene, 120, -28, 'donut', 40);
 
   // סוכך מפוספס עם שוליים מסולסלים
   const awning = scene.add.graphics();
@@ -139,7 +143,7 @@ function buildCart(scene, x, y) {
     speedY: { min: -40, max: -70 }, lifespan: 1500, frequency: 400, tint: 0xffffff
   });
 
-  cart.add([shadow, wheels, body, counter, win, ella, board, boardTitle, menuItems, awning, steam]);
+  cart.add([shadow, wheels, body, counter, win, ella, board, boardTitle, m1, m2, m3, m4, awning, steam]);
   scene.tweens.add({ targets: cart, y: y - 8, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
   return cart;
 }
@@ -250,7 +254,8 @@ class WorldScene extends Phaser.Scene {
   }
 
   /* ----- לקוחות ----- */
-  faces() { return ['🧒','👦','👧','🧑','👶','👩','🧓','🐰','🐻','🐱','🐶','🐼','🦄','🐯','🐸','🐵','🦊','🐨']; }
+  chars() { return ['cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda']; }
+  faces() { return ['🧒','👦','🐰','🐻','🐱','🐼']; }
   foodKeys() { return Object.keys(G.FOODS); }
 
   slotPositions() {
@@ -273,48 +278,60 @@ class WorldScene extends Phaser.Scene {
     const foods = this.foodKeys();
     const food = foods[(Math.random() * foods.length) | 0];
     const golden = Math.random() < 0.12;            // לקוח זהב (תוכן/גיוון)
-    const face = this.faces()[(Math.random() * this.faces().length) | 0];
+    const i = (Math.random() * this.chars().length) | 0;
     const patienceMax = this.PATIENCE_BASE * G.patienceMul() * (golden ? 0.85 : 1);
 
     const cont = this.add.container(slot.x, slot.y + 400).setDepth(6);
 
-    const shadow = this.add.ellipse(0, 70, 120, 26, 0x000000, 0.12);
-    const faceTxt = this.add.text(0, 0, face, { fontSize: '96px' }).setOrigin(0.5);
+    const shadow = this.add.ellipse(0, 72, 120, 26, 0x000000, 0.12);
+
+    // דמות מצוירת (תמונה) עם נפילה לאמוג'י
+    let faceObj = Helper.charImg(this, 0, -28, this.chars()[i], 168);
+    let faceBaseY = -28;
+    if (!faceObj) { faceObj = this.add.text(0, 0, this.faces()[i], { fontSize: '96px' }).setOrigin(0.5); faceBaseY = 0; }
+
     let goldEmitter = null;
     if (golden) {
-      faceTxt.setTint(0xffe27a);
+      faceObj.setTint(0xffe27a);
       goldEmitter = this.add.particles(0, 0, 'spark', { lifespan: 800, scale:{start:0.5,end:0}, alpha:{start:1,end:0},
-        speed:{min:20,max:60}, frequency: 200, emitZone: { type:'random', source: new Phaser.Geom.Circle(0,0,50) } });
+        speed:{min:20,max:60}, frequency: 200, emitZone: { type:'random', source: new Phaser.Geom.Circle(0,0,60) } });
     }
 
     // בועת הזמנה
     const bubble = this.add.graphics();
     bubble.fillStyle(0xffffff, 1);
-    bubble.fillRoundedRect(-55, -180, 110, 90, 20);
-    bubble.fillTriangle(-12, -92, 12, -92, 0, -70);
-    const orderTxt = this.add.text(0, -135, G.FOODS[food].emoji, { fontSize: '54px' }).setOrigin(0.5);
+    bubble.fillRoundedRect(-58, -210, 116, 96, 22);
+    bubble.fillTriangle(-12, -116, 12, -116, 0, -94);
+    const orderObj = Helper.foodIcon(this, 0, -162, food, 70);
 
     // מד סבלנות
     const barBg = this.add.graphics();
-    barBg.fillStyle(0xeadff0, 1); barBg.fillRoundedRect(-65, 52, 130, 18, 9);
-    const barFill = this.add.rectangle(-63, 61, 126, 12, 0x48d39a).setOrigin(0, 0.5);
+    barBg.fillStyle(0xeadff0, 1); barBg.fillRoundedRect(-65, 54, 130, 18, 9);
+    const barFill = this.add.rectangle(-63, 63, 126, 12, 0x48d39a).setOrigin(0, 0.5);
 
     const parts = [shadow];
     if (goldEmitter) parts.push(goldEmitter);
-    parts.push(faceTxt, bubble, orderTxt, barBg, barFill);
+    parts.push(faceObj, bubble, orderObj, barBg, barFill);
     cont.add(parts);
-    this.tweens.add({ targets: faceTxt, y: -8, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
-    this.tweens.add({ targets: orderTxt, scale: 1.12, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    this.tweens.add({ targets: faceObj, y: faceBaseY - 8, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    this.tweens.add({ targets: orderObj, scale: orderObj.scale * 1.12, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
 
-    const c = { food, golden, cont, faceTxt, orderTxt, barFill, patienceMax, patience: patienceMax, busy: false, leaving: false, slot };
+    const c = { food, golden, cont, faceObj, faceBaseY, orderObj, bubble, barFill, patienceMax, patience: patienceMax, busy: false, leaving: false, slot };
 
     // כניסה עם קפיצה
     this.tweens.add({ targets: cont, y: slot.y, duration: 500, ease: 'Back.out' });
 
-    faceTxt.setInteractive({ useHandCursor: true });
-    faceTxt.on('pointerdown', () => { if (!c.busy && !c.leaving) this.startOrder(c); });
+    faceObj.setInteractive({ useHandCursor: true });
+    faceObj.on('pointerdown', () => { if (!c.busy && !c.leaving) this.startOrder(c); });
 
     this.customers.push(c);
+  }
+
+  // החלפת תוכן הבועה (כוכבים / "אוף!") כשתמונת המאכל בפנים
+  setBubble(c, str, size) {
+    if (c.orderObj) { this.tweens.killTweensOf(c.orderObj); c.orderObj.destroy(); }
+    c.orderObj = this.add.text(0, -162, str, { fontFamily:'Heebo, sans-serif', fontSize: size + 'px', color:'#ff5ca8', fontStyle:'bold' }).setOrigin(0.5);
+    c.cont.add(c.orderObj);
   }
 
   update(time, delta) {
@@ -326,7 +343,7 @@ class WorldScene extends Phaser.Scene {
       const r = Phaser.Math.Clamp(c.patience / c.patienceMax, 0, 1);
       c.barFill.width = 126 * r;
       c.barFill.setFillStyle(r > 0.5 ? 0x48d39a : r > 0.25 ? 0xf5b301 : 0xff5b5b);
-      if (r < 0.5 && !c.busy) c.faceTxt.setAngle(r < 0.25 ? 4 : -3);
+      if (r < 0.5 && !c.busy) c.faceObj.setAngle(r < 0.25 ? 4 : -3);
       if (c.patience <= 0) { if (c.busy) c.patience = 0; else this.leaveAngry(c); }
     });
 
@@ -353,7 +370,7 @@ class WorldScene extends Phaser.Scene {
     if (this.freeMode) { this.openFreeMenu(); return; }
     if (!c) return;
     if (data && data.success) this.serve(c);
-    else { c.busy = false; if (c.faceTxt) c.faceTxt.setAngle(0); } // ויתור — בלי עונש
+    else { c.busy = false; if (c.faceObj) c.faceObj.setAngle(0); } // ויתור — בלי עונש
   }
 
   serve(c) {
@@ -377,8 +394,9 @@ class WorldScene extends Phaser.Scene {
 
   leaveHappy(c, stars) {
     c.leaving = true;
-    c.orderTxt.setText('⭐'.repeat(stars));
-    c.faceTxt.setText('😄').setAngle(0);
+    this.setBubble(c, '⭐'.repeat(stars), 40);
+    c.faceObj.setAngle(0).clearTint();
+    if (c.faceObj.type === 'Text') c.faceObj.setText('😄');
     this.tweens.add({ targets: c.cont, y: c.cont.y - 60, duration: 200, yoyo: true });
     this.tweens.add({ targets: c.cont, y: c.cont.y - 260, alpha: 0, angle: 8, duration: 700, delay: 200,
       onComplete: () => this.removeCustomer(c) });
@@ -387,8 +405,8 @@ class WorldScene extends Phaser.Scene {
   leaveAngry(c) {
     c.leaving = true;
     this.combo = 0; this.comboText.setText('');
-    c.faceTxt.setText('😣');
-    c.orderTxt.setText('אוף!').setFontSize(24);
+    if (c.faceObj.type === 'Text') c.faceObj.setText('😣'); else c.faceObj.setTint(0xffb3b3);
+    this.setBubble(c, 'אוף!', 30);
     Sound.sad();
     this.tweens.add({ targets: c.cont, x: c.cont.x + 300, alpha: 0, angle: 10, duration: 700,
       onComplete: () => this.removeCustomer(c) });
@@ -397,6 +415,7 @@ class WorldScene extends Phaser.Scene {
   removeCustomer(c) {
     const i = this.customers.indexOf(c);
     if (i >= 0) this.customers.splice(i, 1);
+    this.tweens.killTweensOf([c.cont, c.faceObj, c.orderObj, c.barFill]);
     c.cont.destroy();
     this.time.delayedCall(600, () => { if (!this.freeMode && this.scene.isActive()) this.fillSlots(); });
   }
@@ -441,7 +460,7 @@ class WorldScene extends Phaser.Scene {
       const btn = this.add.container(startX + i * gap, 420);
       const g = this.add.graphics();
       g.fillStyle(0xffffff, 1); g.fillRoundedRect(-90, -90, 180, 180, 28);
-      const e = this.add.text(0, -20, G.FOODS[k].emoji, { fontSize: '90px' }).setOrigin(0.5);
+      const e = Helper.foodIcon(this, 0, -20, k, 110);
       const nm = Helper.txt(this, 0, 60, G.FOODS[k].name, 30, '#5a3d5c');
       btn.add([g, e, nm]); btn.setSize(180, 180);
       btn.setInteractive(new Phaser.Geom.Rectangle(-90, -90, 180, 180), Phaser.Geom.Rectangle.Contains);

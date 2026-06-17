@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+  <path d="M40 220 Q40 150 100 150 Q160 150 160 220 Z" fill="#ff9f43"/>
+  <path d="M82 150 H118 L110 170 H90 Z" fill="#fff4e6"/>
+  <rect x="90" y="128" width="20" height="24" rx="9" fill="#e8a673"/>
+  <circle cx="100" cy="92" r="52" fill="#f3c08a"/>
+  <!-- שיער קצר -->
+  <path d="M48 84 Q44 34 100 34 Q156 34 152 84 Q150 58 100 56 Q50 58 48 84 Z" fill="#4a3a2a"/>
+  <circle cx="80" cy="92" r="8" fill="#3a2a2a"/>
+  <circle cx="120" cy="92" r="8" fill="#3a2a2a"/>
+  <circle cx="83" cy="89" r="3" fill="#fff"/>
+  <circle cx="123" cy="89" r="3" fill="#fff"/>
+  <circle cx="68" cy="108" r="9" fill="#ff9472" opacity="0.6"/>
+  <circle cx="132" cy="108" r="9" fill="#ff9472" opacity="0.6"/>
+  <path d="M82 112 Q100 130 118 112" fill="none" stroke="#a85a3c" stroke-width="5" stroke-linecap="round"/>
+</svg>

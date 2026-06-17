@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- קצפת -->
+  <circle cx="48" cy="36" r="14" fill="#fff5fb"/>
+  <circle cx="68" cy="32" r="16" fill="#fff5fb"/>
+  <circle cx="58" cy="26" r="13" fill="#ffffff"/>
+  <!-- דובדבן -->
+  <path d="M70 18 Q74 8 82 10" fill="none" stroke="#6b9b3a" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="70" cy="20" r="7" fill="#ff4d6d"/>
+  <circle cx="68" cy="18" r="2.4" fill="#ff9eb0"/>
+  <!-- קשית -->
+  <rect x="74" y="22" width="8" height="52" rx="4" fill="#ff5ca8" transform="rotate(18 78 48)"/>
+  <!-- כוס -->
+  <path d="M34 44 H86 L78 110 Q60 116 42 110 Z" fill="#ffb3d1"/>
+  <path d="M34 44 H86 L84 58 H36 Z" fill="#ffd1e6"/>
+  <path d="M40 64 Q60 70 80 64 L76 104 Q60 110 44 104 Z" fill="#ff9ec4"/>
+  <ellipse cx="34" cy="44" rx="26" ry="6" fill="#ffd1e6"/>
+  <rect x="46" y="74" width="6" height="22" rx="3" fill="#fff" opacity="0.5"/>
+</svg>
