@@ -14,6 +14,7 @@ class MiniGameScene extends Phaser.Scene {
 
   create() {
     const W = DESIGN.w, H = DESIGN.h;
+    this.cameras.main.fadeIn(250, 255, 246, 252);
     // רקע מלא
     const bg = this.add.graphics();
     bg.fillStyle(0xfff6fc, 1); bg.fillRect(0, 0, W, H);
@@ -82,49 +83,53 @@ class MiniGameScene extends Phaser.Scene {
 
   /* ============ המבורגר ============ */
   startBurgerCut() {
-    this.hintText.setText('העבירו את האצבע על הירק כדי לחתוך! 🔪');
+    this.hintText.setText('העבירו את האצבע על הירק כדי לחתוך — כמה שרוצים! 🔪');
     this.cutObjs = [];
+    // קרש חיתוך תלת-ממדי
+    Helper.shadowEl(this, DESIGN.w/2, 514, 740, 60);
     const board = this.add.graphics();
-    board.fillStyle(0x000000, 0.12); board.fillRoundedRect(DESIGN.w/2 - 360, 268, 720, 240, 30);
-    board.fillStyle(0xc49a63, 1); board.fillRoundedRect(DESIGN.w/2 - 360, 260, 720, 240, 30);
-    board.fillStyle(0xb0884f, 1); board.fillRoundedRect(DESIGN.w/2 - 340, 280, 680, 30, 14);
+    board.fillStyle(0x946c34, 1); board.fillRoundedRect(DESIGN.w/2 - 360, 272, 720, 238, 30);
+    board.fillGradientStyle(0xdab474, 0xdab474, 0xc09250, 0xc09250, 1); board.fillRoundedRect(DESIGN.w/2 - 360, 262, 720, 238, 30);
+    board.fillStyle(0xffffff, 0.10); board.fillRoundedRect(DESIGN.w/2 - 340, 276, 680, 40, 18);
     this.cutObjs.push(board);
 
     const knife = this.add.text(0, 0, '🔪', { fontSize: '90px' }).setOrigin(0.5).setDepth(5).setVisible(false);
     const vegs = ['🥒', '🍅', '🧅'];
     let idx = 0;
+    const continueBtn = this.actionBtn(DESIGN.w / 2, DESIGN.h - 58, '✓ המשך', 0x34c79a);
 
     const loadVeg = () => {
-      const veg = this.imgOrText(DESIGN.w / 2, 380, vegs[idx], 150);
+      const veg = this.imgOrText(DESIGN.w / 2, 360, vegs[idx], 150);
       this.cutObjs.push(veg);
-      let cuts = 0, lastX = null, pressing = false;
-      const needed = 3;
+      const slices = [];
+      let lastX = null, pressing = false;
+      continueBtn.enable(false).setLabel(idx < vegs.length - 1 ? '✓ המשך' : '✓ סיימתי');
+
       const onDown = (p) => { pressing = true; lastX = p.x; knife.setVisible(true).setPosition(p.x, p.y); };
       const onMove = (p) => {
         if (!pressing) return;
         knife.setPosition(p.x, p.y);
-        if (lastX != null && Math.abs(p.x - lastX) > 70) { lastX = p.x; doCut(p); }
+        if (lastX != null && Math.abs(p.x - lastX) > 60) { lastX = p.x; doCut(p); }
       };
       const onUp = () => { pressing = false; };
       const doCut = (p) => {
-        if (cuts >= needed) return;
-        cuts++; Sound.chop();
-        this.cutFx(p.x, p.y);
-        const s = this.imgOrText(DESIGN.w/2 + (cuts - 2) * 90, 430, vegs[idx], 80); s.setAngle((cuts-2)*12);
-        this.cutObjs.push(s);
-        this.tweens.add({ targets: s, y: 440, duration: 200, ease: 'Bounce.out' });
-        veg.setScale(veg._base * (1 - cuts * 0.18));
-        if (cuts >= needed) {
-          this.tweens.add({ targets: veg, alpha: 0, duration: 300, onComplete: () => veg.destroy() });
-          this.time.delayedCall(400, nextVeg);
-        }
+        Sound.chop(); this.cutFx(p.x, p.y);
+        this.tweens.add({ targets: veg, scaleX: veg._base * 1.08, duration: 80, yoyo: true });
+        const slot = slices.length % 8;
+        const s = this.imgOrText(DESIGN.w/2 - 280 + slot * 80, 466, vegs[idx], 70); s.setAngle(Phaser.Math.Between(-20, 20));
+        const b = s._base || 1; s.setScale(b * 0.4); this.tweens.add({ targets: s, scale: b, duration: 200, ease: 'Back.out' });
+        if (slices[slot]) slices[slot].destroy();
+        slices[slot] = s; this.cutObjs.push(s);
+        continueBtn.enable(true);
       };
-      const nextVeg = () => {
+      continueBtn.onTap(() => {
         this.input.off('pointerdown', onDown); this.input.off('pointermove', onMove); this.input.off('pointerup', onUp);
+        this.tweens.add({ targets: veg, alpha: 0, duration: 200, onComplete: () => veg.destroy() });
+        slices.forEach(o => o && this.tweens.add({ targets: o, alpha: 0, y: o.y + 40, duration: 250, onComplete: () => o.destroy() }));
         idx++;
         if (idx < vegs.length) { knife.setVisible(false); loadVeg(); }
         else { Sound.ding(); knife.destroy(); this.startBurgerStack(); }
-      };
+      });
       this.input.on('pointerdown', onDown); this.input.on('pointermove', onMove); this.input.on('pointerup', onUp);
     };
     loadVeg();
@@ -142,7 +147,13 @@ class MiniGameScene extends Phaser.Scene {
     this.cutObjs = [];
     this.hintText.setText('גררו או הקישו על המרכיבים לבניית ההמבורגר! 🍔');
 
-    const plate = this.add.ellipse(DESIGN.w / 2, 560, 360, 60, 0xffffff).setStrokeStyle(6, 0xe0e0ee);
+    // צלחת תלת-ממדית
+    const cx = DESIGN.w / 2;
+    Helper.shadowEl(this, cx, 588, 420, 56);
+    const pg = this.add.graphics();
+    pg.fillStyle(0xcdc7da, 1); pg.fillEllipse(cx, 572, 380, 76);
+    pg.fillGradientStyle(0xffffff, 0xffffff, 0xe6e2ee, 0xe6e2ee, 1); pg.fillEllipse(cx, 564, 360, 64);
+    pg.fillStyle(0xffffff, 0.6); pg.fillEllipse(cx - 60, 552, 120, 20);
     let count = 0;
     const baseY = 540;
     const serve = this.serveButton();
@@ -165,8 +176,10 @@ class MiniGameScene extends Phaser.Scene {
     this.hintText.setText('בחרו טעם, מלאו את הכוס, והוסיפו קצפת ותוספות! 🥤');
     const cx = DESIGN.w / 2, cyTop = 250, cupW = 200, cupH = 300, cyBot = cyTop + cupH;
 
+    // כוס תלת-ממדית: צל + זכוכית עם גרדיאנט
+    Helper.shadowEl(this, cx, cyBot + 18, cupW + 30, 40);
     const cup = this.add.graphics();
-    cup.fillStyle(0xffffff, 0.18); cup.fillRoundedRect(cx - cupW/2, cyTop, cupW, cupH, { tl:24, tr:24, bl:48, br:48 });
+    cup.fillGradientStyle(0xffffff, 0xdfeaf2, 0xeef4f8, 0xcdd9e2, 0.5); cup.fillRoundedRect(cx - cupW/2, cyTop, cupW, cupH, { tl:24, tr:24, bl:48, br:48 });
 
     // מסכה לפי צורת הכוס
     const maskG = this.make.graphics();
@@ -175,6 +188,9 @@ class MiniGameScene extends Phaser.Scene {
 
     const fill = this.add.rectangle(cx, cyBot - 8, cupW - 16, 0, 0xff9ec4).setOrigin(0.5, 1);
     fill.setMask(mask);
+    // ברק זכוכית
+    const gloss = this.add.graphics();
+    gloss.fillStyle(0xffffff, 0.35); gloss.fillRoundedRect(cx - cupW/2 + 18, cyTop + 20, 26, cupH - 80, 13);
 
     const rim = this.add.graphics();
     rim.lineStyle(10, 0xffffff, 1); rim.strokeRoundedRect(cx - cupW/2, cyTop, cupW, cupH, { tl:24, tr:24, bl:48, br:48 });
@@ -227,116 +243,159 @@ class MiniGameScene extends Phaser.Scene {
   }
 
   /* ============ פיצה ============ */
-  startPizza() {
-    this.hintText.setText('מרחו רוטב בתנועה מעגלית! 🍕');
-    const cx = DESIGN.w / 2, cy = 400, R = 210;
-
-    const dough = this.add.graphics();
-    dough.fillStyle(0xe0a85a, 1); dough.fillCircle(cx, cy, R);
-    dough.fillStyle(0xf6c87a, 1); dough.fillCircle(cx, cy, R - 24);
-
-    const rt = this.add.renderTexture(cx - R, cy - R, R * 2, R * 2).setOrigin(0, 0);
-    const stamp = this.add.image(0, 0, 'dot').setVisible(false).setTint(0xd62828).setScale(2.2);
-
-    let dabs = 0, pressing = false, sauceDone = false, cheeseDone = false, baked = false, selected = null;
-
-    const onDown = (p) => { if (sauceDone) return; pressing = true; paint(p); Sound.bubble(); };
-    const onMove = (p) => { if (pressing && !sauceDone) paint(p); };
-    const onUp = () => { pressing = false; };
-    const paint = (p) => {
-      const dx = p.x - cx, dy = p.y - cy;
-      if (dx*dx + dy*dy > (R-20)*(R-20)) return;
-      rt.draw(stamp, p.x - (cx - R), p.y - (cy - R));
-      dabs++;
-      if (!sauceDone && dabs > 32) { sauceDone = true; Sound.ding(); this.hintText.setText('יופי! עכשיו פזרו גבינה 🧀'); showCheese(); }
+  // כפתור פעולה תלת-ממדי עם מצב פעיל/כבוי, תווית ופעולה דינמיות
+  actionBtn(x, y, label, color) {
+    const c = this.add.container(x, y);
+    const g = this.add.graphics();
+    const t = this.add.text(0, 0, label, { fontFamily:'Heebo,sans-serif', fontSize:'38px', color:'#fff', fontStyle:'bold' }).setOrigin(0.5);
+    t.setShadow(0, 2, 'rgba(0,0,0,0.25)', 2);
+    const dark = Phaser.Display.Color.IntegerToColor(color).darken(24).color;
+    const light = Phaser.Display.Color.IntegerToColor(color).lighten(16).color;
+    const draw = (on) => { g.clear();
+      g.fillStyle(0x000000, 0.22); g.fillRoundedRect(-150, -36, 300, 86, 43);
+      g.fillStyle(on ? dark : 0x9aa39c, 1); g.fillRoundedRect(-150, -43, 300, 86, 43);
+      g.fillGradientStyle(on?light:0xc6cdc8, on?light:0xc6cdc8, on?color:0xafb8b2, on?color:0xafb8b2, 1); g.fillRoundedRect(-150, -48, 300, 86, 43);
+      g.fillStyle(0xffffff, 0.28); g.fillRoundedRect(-140, -42, 280, 30, 15);
     };
+    c.add([g, t]); c.setSize(300, 86).setInteractive(new Phaser.Geom.Rectangle(-150, -48, 300, 86), Phaser.Geom.Rectangle.Contains);
+    c._on = false; draw(false);
+    c.enable = (v) => { c._on = v; draw(v); return c; };
+    c.setLabel = (s) => { t.setText(s); return c; };
+    c.onTap = (fn) => { c._fn = fn; return c; };
+    c.on('pointerdown', () => { if (c._on && c._fn) { this.tweens.add({ targets:c, scale:0.92, duration:70, yoyo:true }); c._fn(); } else Sound.tap(); });
+    return c;
+  }
+
+  startPizza() {
+    this.hintText.setText('מרחו רוטב על כל הפיצה! 🍅');
+    const cx = DESIGN.w / 2, cy = 372, R = 200;
+
+    // בצק תלת-ממדי: צל, שוליים, קרום, בצק פנימי, ברק (הצללה חלקה, בלי גרדיאנט על עיגול)
+    Helper.shadowEl(this, cx, cy + R * 0.86, R * 2.1, R * 0.5);
+    const dough = this.add.graphics();
+    dough.fillStyle(0xb87838, 1); dough.fillCircle(cx, cy + 9, R);            // עומק שוליים
+    dough.fillStyle(0xd99a52, 1); dough.fillCircle(cx, cy, R);                // קרום
+    dough.fillStyle(0xe7ad62, 1); dough.fillCircle(cx, cy - 4, R - 5);        // הארה עליונה לקרום
+    dough.fillStyle(0xe6b878, 1); dough.fillCircle(cx, cy, R - 26);           // בצק פנימי
+    dough.fillStyle(0xf6cf90, 1); dough.fillEllipse(cx, cy - 12, (R - 30) * 1.9, (R - 30) * 1.5); // הארה עליונה לבצק
+    dough.fillStyle(0xffffff, 0.12); dough.fillEllipse(cx, cy - R * 0.42, R * 1.1, R * 0.5);      // ברק
+
+    const rt = this.add.renderTexture(cx - R, cy - R, R * 2, R * 2).setOrigin(0, 0).setDepth(1);
+    const sauceStamp = this.add.image(0, 0, 'dot').setVisible(false).setTint(0xd62828).setScale(2.4);
+    const cheeseLayer = this.add.container(0, 0).setDepth(2);
+    const topLayer = this.add.container(0, 0).setDepth(3);
+
+    let step = 'sauce', dabs = 0, shreds = 0, baked = false, selected = null, pressing = false, lastSnd = 0;
+    const throttle = (fn) => { const n = this.time.now; if (n - lastSnd > 90) { lastSnd = n; fn(); } };
+    const inR = (p, rad) => { const dx = p.x - cx, dy = p.y - cy; return dx*dx + dy*dy <= rad*rad; };
+
+    const serve = this.serveButton(); serve.setVisible(false);
+    const stepBtn = this.actionBtn(cx, DESIGN.h - 58, '🧀 עכשיו גבינה', 0xffb02e);
+
+    const paintSauce = (p) => { if (!inR(p, R - 16)) return;
+      rt.draw(sauceStamp, p.x - (cx - R), p.y - (cy - R)); dabs++;
+      if (dabs >= 12) stepBtn.enable(true); };
+    const sprinkleCheese = (p) => { if (!inR(p, R - 12)) return;
+      for (let i = 0; i < 2; i++) { const a = Math.random()*6.283, rr = Math.random()*20;
+        cheeseLayer.add(this.add.image(p.x+Math.cos(a)*rr, p.y+Math.sin(a)*rr, 'shred').setAngle(Math.random()*360).setScale(0.8+Math.random()*0.5)); shreds++; }
+      if (shreds >= 16) stepBtn.enable(true); };
+    const placeTopping = (p) => { if (!selected || !inR(p, R)) return;
+      const o = this.imgOrText(p.x, p.y, selected, 52); topLayer.add(o);
+      const b = o._base || 1; o.setScale(b*0.4); this.tweens.add({ targets:o, scale:b, duration:200, ease:'Back.out' });
+      Sound.pop(); stepBtn.enable(true); };
+
+    const onDown = (p) => { if (baked) return; pressing = true;
+      if (step === 'sauce') { paintSauce(p); throttle(()=>Sound.bubble()); }
+      else if (step === 'cheese') { sprinkleCheese(p); throttle(()=>Sound.pop()); }
+      else if (step === 'toppings') placeTopping(p); };
+    const onMove = (p) => { if (!pressing || baked) return;
+      if (step === 'sauce') { paintSauce(p); throttle(()=>Sound.bubble()); }
+      else if (step === 'cheese') { sprinkleCheese(p); throttle(()=>Sound.pop()); } };
+    const onUp = () => { pressing = false; };
     this.input.on('pointerdown', onDown); this.input.on('pointermove', onMove); this.input.on('pointerup', onUp);
 
-    const serve = this.serveButton();
-    let cheeseBtn, bakeBtn;
-
-    const showCheese = () => {
-      cheeseBtn = this.tapItem(cx, DESIGN.h - 158, '🧀', () => {
-        if (cheeseDone) return; cheeseDone = true;
-        this.add.circle(cx, cy, R - 28, 0xffdd78, 0.5);
-        Sound.pop(); this.hintText.setText('בחרו תוספת והקישו על הפיצה 🍕');
-        cheeseBtn.destroy(); showToppings();
-      });
-    };
-
-    const showToppings = () => {
+    const trayItems = [];
+    const buildToppingTray = () => {
       const list = ['🍄','🫑','🌶️','🫒','🧅','🍍'];
       const allowed = 4 + G.extraToppings();
       const startX = cx - 320;
       list.forEach((t, i) => {
         const locked = i >= allowed;
-        const it = this.tapItem(startX + i * 90, DESIGN.h - 158, t, () => {
+        const it = this.tapItem(startX + i * 86, DESIGN.h - 158, t, () => {
           if (locked) { Sound.tap(); return; }
           selected = t; Sound.tap();
-          list.forEach(() => {}); it.setTint(0xff7eb9);
+          trayItems.forEach(o => o.clearTint && o.clearTint());
+          it.setTint && it.setTint(0x9ad0ff);
         }, locked);
-      });
-      bakeBtn = this.add.container(cx + 320, DESIGN.h - 158);
-      const bg = this.add.graphics(); bg.fillStyle(0xf5a800,1); bg.fillRoundedRect(-90,-40,180,80,40);
-      const bt = this.add.text(0,0,'🔥 לאפות', { fontFamily:'Heebo,sans-serif', fontSize:'30px', color:'#fff', fontStyle:'bold' }).setOrigin(0.5);
-      bakeBtn.add([bg, bt]); bakeBtn.setVisible(false).setSize(180,80)
-        .setInteractive(new Phaser.Geom.Rectangle(-90,-40,180,80), Phaser.Geom.Rectangle.Contains);
-      bakeBtn.on('pointerdown', () => {
-        if (baked) return; baked = true; Sound.ding();
-        this.hintText.setText('אופה... 🔥'); bakeBtn.setVisible(false);
-        this.tweens.add({ targets: dough, alpha: 0.85, duration: 800, yoyo: true });
-        this.time.delayedCall(1500, () => { this.hintText.setText('מוכן! הגישו 😋'); serve.enable(true); });
-      });
-
-      // הנחת תוספת בהקשה על הפיצה
-      this.input.on('pointerdown', (p) => {
-        if (!selected || baked) return;
-        const dx = p.x - cx, dy = p.y - cy;
-        if (dx*dx + dy*dy > R*R) return;
-        this.imgOrText(p.x, p.y, selected, 50);
-        Sound.pop(); bakeBtn.setVisible(true);
+        trayItems.push(it);
       });
     };
+
+    const goCheese = () => { step = 'cheese'; this.hintText.setText('פזרו גבינה — כמה שבא לכם! 🧀'); stepBtn.setLabel('🍅 עכשיו תוספות').enable(false).onTap(goToppings); };
+    const goToppings = () => { step = 'toppings'; this.hintText.setText('בחרו תוספת והניחו — כמה שרוצים! 🍕'); buildToppingTray(); stepBtn.setLabel('🔥 לאפות!').enable(true).onTap(bake); };
+    const bake = () => {
+      if (baked) return; baked = true; step = 'done'; Sound.ding();
+      this.hintText.setText('אופה... 🔥'); stepBtn.setVisible(false);
+      const heat = this.add.particles(cx, cy, 'spark', { tint: 0xffa030, lifespan: 900, speed:{min:20,max:90}, scale:{start:0.6,end:0}, quantity: 2, frequency: 60 });
+      this.tweens.add({ targets: dough, alpha: 0.9, duration: 700, yoyo: true });
+      this.time.delayedCall(1500, () => { heat.stop(); this.hintText.setText('מוכן! הגישו 😋'); serve.setVisible(true).enable(true); Sound.happy(); });
+    };
+    stepBtn.onTap(goCheese);
   }
 
   /* ============ דונאט (מאכל חדש) ============ */
   startDonut() {
-    this.hintText.setText('בחרו ציפוי, ואז הקישו על הדונאט לסוכריות! 🍩');
-    const cx = DESIGN.w / 2, cy = 400, R = 170;
+    this.hintText.setText('בחרו ציפוי, ואז העבירו אצבע על הדונאט לסוכריות — כמה שרוצים! 🍩');
+    const cx = DESIGN.w / 2, cy = 380, R = 175, hole = R * 0.36;
 
+    // דונאט תלת-ממדי: צל + בצק עם גרדיאנט + צל פנימי
+    Helper.shadowEl(this, cx, cy + R * 0.92, R * 2.1, R * 0.5);
     const base = this.add.graphics();
-    base.fillStyle(0xc98a4b, 1); base.fillCircle(cx, cy, R);
-    base.fillStyle(0xfff6fc, 1); base.fillCircle(cx, cy, R * 0.38);
+    base.fillStyle(0xa9743a, 1); base.fillCircle(cx, cy + 8, R);          // עומק
+    base.fillStyle(0xc98a4b, 1); base.fillCircle(cx, cy, R);              // בצק
+    base.fillStyle(0xdca263, 1); base.fillCircle(cx, cy - 5, R - 6);      // הארה עליונה
+    base.fillStyle(0x000000, 0.12); base.fillCircle(cx, cy, hole + 14);   // צל פנימי
+    base.fillStyle(0xfff6fc, 1); base.fillCircle(cx, cy, hole);           // חור
 
-    const glaze = this.add.graphics();
+    const glaze = this.add.graphics().setDepth(1);
+    const sprLayer = this.add.container(0, 0).setDepth(2);
     let glazed = false;
     const serve = this.serveButton();
 
     const drawGlaze = (color) => {
       glaze.clear();
+      const light = Phaser.Display.Color.IntegerToColor(color).lighten(14).color;
       glaze.fillStyle(color, 1);
-      glaze.beginPath();
-      glaze.arc(cx, cy, R - 6, 0, Math.PI * 2, false);
-      glaze.arc(cx, cy, R * 0.40, 0, Math.PI * 2, true);
-      glaze.fillPath();
+      glaze.beginPath(); glaze.arc(cx, cy - 4, R - 8, 0, Math.PI * 2, false); glaze.arc(cx, cy - 4, hole + 8, 0, Math.PI * 2, true); glaze.fillPath();
+      glaze.fillStyle(light, 1);
+      glaze.beginPath(); glaze.arc(cx, cy - 10, R - 14, Math.PI * 1.05, Math.PI * 1.95, false); glaze.arc(cx, cy - 10, hole + 12, Math.PI * 1.95, Math.PI * 1.05, true); glaze.fillPath();
+      // נטיפות תחתונות
+      glaze.fillStyle(color, 1);
+      for (let i = 0; i < 7; i++) { const a = 0.5 + i * 0.32; glaze.fillCircle(cx + Math.cos(a) * (R - 12), cy - 4 + Math.sin(a) * (R - 12), 9 + (i % 3) * 4); }
+      // ברק
+      glaze.fillStyle(0xffffff, 0.30); glaze.slice(cx, cy - 4, R - 14, Math.PI * 1.15, Math.PI * 1.55, false); glaze.fillPath();
       glazed = true; serve.enable(true); Sound.bubble();
+      this.tweens.add({ targets: glaze, scaleX: 1.04, scaleY: 1.04, duration: 120, yoyo: true });
     };
 
     const colors = [ {e:'🩷', c:0xff8ac4}, {e:'🤎', c:0x8a5a3c}, {e:'🤍', c:0xfff3da}, {e:'💙', c:0x7ec8ff} ];
     const startX = cx - 300;
     colors.forEach((f, i) => this.tapItem(startX + i * 100, DESIGN.h - 158, f.e, () => drawGlaze(f.c)));
 
-    const sprinkles = ['🔴','🟡','🟢','🔵','⭐','🍫'];
-    // הקשה על הדונאט מוסיפה סוכריות אקראיות
+    const sprColors = [0xff4d6d, 0xffd24c, 0x5fd06a, 0x5fb0ff, 0xa06bff, 0xffffff];
+    let pressing = false, lastSnd = 0;
+    const sprinkle = (p) => {
+      const dx = p.x - cx, dy = p.y - cy, d = Math.sqrt(dx*dx + dy*dy);
+      if (d < hole + 12 || d > R - 10) return;
+      const s = this.add.rectangle(p.x + Phaser.Math.Between(-8,8), p.y + Phaser.Math.Between(-8,8), 22, 8, sprColors[(Math.random()*sprColors.length)|0], 1)
+        .setAngle(Math.random() * 360);
+      sprLayer.add(s);
+      const n = this.time.now; if (n - lastSnd > 70) { lastSnd = n; Sound.sparkle(); }
+    };
     const hit = this.add.circle(cx, cy, R, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
-    hit.on('pointerdown', (p, lx, ly) => {
-      if (!glazed) { Sound.tap(); return; }
-      const ang = Math.random() * Math.PI * 2, rr = R * (0.5 + Math.random() * 0.4);
-      const sx = cx + Math.cos(ang) * rr, sy = cy + Math.sin(ang) * rr;
-      const s = sprinkles[(Math.random() * sprinkles.length) | 0];
-      this.add.text(sx, sy, s, { fontSize: '30px' }).setOrigin(0.5).setAngle(Math.random()*360);
-      Sound.sparkle();
-    });
+    hit.on('pointerdown', (p) => { if (!glazed) { Sound.tap(); return; } pressing = true; sprinkle(p); });
+    hit.on('pointermove', (p) => { if (pressing && glazed) sprinkle(p); });
+    this.input.on('pointerup', () => { pressing = false; });
   }
 }
 
@@ -346,6 +405,7 @@ class StoreScene extends Phaser.Scene {
 
   create() {
     const W = DESIGN.w, H = DESIGN.h;
+    this.cameras.main.fadeIn(250, 255, 246, 252);
     const bg = this.add.graphics();
     bg.fillStyle(0xfff6fc, 1); bg.fillRect(0, 0, W, H);
 

@@ -1,5 +1,5 @@
 /* ===== Service Worker — עבודה אופליין מלאה ===== */
-const CACHE = 'ella-cart-v4';
+const CACHE = 'ella-cart-v5';
 const ART = [
   'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
   'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',

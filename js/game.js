@@ -11,13 +11,30 @@ const Palette = {
 
 /* ---------- עוזרים גלובליים (נקראים בזמן ריצה) ---------- */
 const Helper = {
-  // כפתור עגול עם אמוג'י + מיץ לחיצה
+  // הוספת זוהר (רק ב-WebGL; לא שובר ב-Canvas)
+  glow(scene, obj, color, strength) {
+    try {
+      if (scene.renderer && scene.renderer.type === Phaser.WEBGL && obj.postFX)
+        return obj.postFX.addGlow(color == null ? 0xffffff : color, strength || 4);
+    } catch (e) {}
+    return null;
+  },
+
+  // הצללה רכה מתחת לאובייקט (תלת-ממד)
+  shadowEl(scene, x, y, w, h) {
+    return scene.add.ellipse(x, y, w, h, 0x000000, 0.18);
+  },
+
+  // כפתור עגול תלת-ממדי עם אמוג'י + מיץ לחיצה
   circleBtn(scene, x, y, emoji, r, onTap) {
     const c = scene.add.container(x, y);
     const g = scene.add.graphics();
-    g.fillStyle(0x000000, 0.12); g.fillCircle(0, 6, r);
-    g.fillStyle(Palette.white, 1); g.fillCircle(0, 0, r);
-    const t = scene.add.text(0, 0, emoji, { fontSize: (r * 1.1) + 'px' }).setOrigin(0.5);
+    g.fillStyle(0x000000, 0.18); g.fillEllipse(0, r * 0.5, r * 2, r * 0.7);   // צל
+    g.fillStyle(0xe8e0ef, 1); g.fillCircle(0, 0, r);                          // בסיס
+    g.fillGradientStyle(0xffffff, 0xffffff, 0xece4f2, 0xece4f2, 1);
+    g.fillCircle(0, -1, r - 3);                                               // פני הכפתור
+    g.fillStyle(0xffffff, 0.55); g.fillEllipse(0, -r * 0.42, r * 1.1, r * 0.6); // ברק עליון
+    const t = scene.add.text(0, 0, emoji, { fontSize: (r * 1.05) + 'px' }).setOrigin(0.5);
     c.add([g, t]);
     c.setSize(r * 2, r * 2);
     c.setInteractive(new Phaser.Geom.Circle(0, 0, r), Phaser.Geom.Circle.Contains);
@@ -29,15 +46,20 @@ const Helper = {
     return c;
   },
 
-  // כפתור גלולה עם טקסט (הגשה / שחקו)
+  // כפתור גלולה תלת-ממדי עם טקסט
   pillBtn(scene, x, y, label, color, onTap) {
     const c = scene.add.container(x, y);
     const w = Math.max(220, label.length * 26 + 120), h = 96;
+    const dark = Phaser.Display.Color.IntegerToColor(color).darken(22).color;
+    const light = Phaser.Display.Color.IntegerToColor(color).lighten(18).color;
     const g = scene.add.graphics();
-    g.fillStyle(0x000000, 0.18); g.fillRoundedRect(-w/2, -h/2 + 8, w, h, h/2);
-    g.fillStyle(color, 1); g.fillRoundedRect(-w/2, -h/2, w, h, h/2);
+    g.fillStyle(0x000000, 0.22); g.fillRoundedRect(-w/2, -h/2 + 10, w, h, h/2);     // צל
+    g.fillStyle(dark, 1); g.fillRoundedRect(-w/2, -h/2 + 5, w, h, h/2);             // שוליים תחתונים
+    g.fillGradientStyle(light, light, color, color, 1); g.fillRoundedRect(-w/2, -h/2, w, h, h/2); // פנים
+    g.fillStyle(0xffffff, 0.30); g.fillRoundedRect(-w/2 + 10, -h/2 + 8, w - 20, h * 0.4, h * 0.2); // ברק
     const t = scene.add.text(0, 0, label, { fontFamily:'Varela Round, Heebo, sans-serif',
       fontSize:'42px', color:'#ffffff', fontStyle:'bold' }).setOrigin(0.5);
+    t.setShadow(0, 2, 'rgba(0,0,0,0.25)', 2);
     c.add([g, t]);
     c.setSize(w, h);
     c.setInteractive(new Phaser.Geom.Rectangle(-w/2, -h/2, w, h), Phaser.Geom.Rectangle.Contains);
@@ -109,6 +131,11 @@ class BootScene extends Phaser.Scene {
     g.fillCircle(14, 14, 12); g.fillCircle(34, 14, 12);
     g.fillTriangle(2, 18, 46, 18, 24, 46);
     g.generateTexture('heart', 48, 48); g.clear();
+
+    // פתית גבינה מגוררת
+    g.fillStyle(0xffd24c, 1); g.fillRoundedRect(0, 4, 30, 9, 4);
+    g.fillStyle(0xffe27a, 1); g.fillRoundedRect(2, 5, 22, 4, 2);
+    g.generateTexture('shred', 32, 16); g.clear();
 
     g.destroy();
 

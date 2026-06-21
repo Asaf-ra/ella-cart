@@ -20,6 +20,7 @@ function buildEnvironment(scene) {
   core.fillStyle(0xffe27a, 1); core.fillCircle(0, 0, 62);
   core.fillStyle(0xfff6cf, 1); core.fillCircle(0, 0, 46);
   sun.add([rays, core]);
+  Helper.glow(scene, core, 0xfff2a8, 8);
   scene.tweens.add({ targets: rays, angle: 360, duration: 40000, repeat: -1 });
   scene.tweens.add({ targets: core, scale: 1.06, duration: 2000, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
 
@@ -92,12 +93,14 @@ function buildCart(scene, x, y) {
   const shadow = scene.add.ellipse(0, 150, 460, 50, 0x000000, 0.15);
 
   const body = scene.add.graphics();
-  body.fillStyle(0xffd24c, 1); body.fillRoundedRect(-220, -10, 440, 150, 26);
-  body.fillStyle(0xf5b301, 1); body.fillRoundedRect(-220, 90, 440, 50, 16);
+  body.fillGradientStyle(0xffe27a, 0xffe27a, 0xf2b62e, 0xf2b62e, 1); body.fillRoundedRect(-220, -10, 440, 150, 26); // גוף מבריק
+  body.fillStyle(0xe39e10, 1); body.fillRoundedRect(-220, 90, 440, 50, 16);
+  body.fillStyle(0xffffff, 0.18); body.fillRoundedRect(-205, 2, 410, 30, 14); // ברק עליון
 
-  // דלפק
+  // דלפק תלת-ממדי
   const counter = scene.add.graphics();
-  counter.fillStyle(0xfff0c2, 1); counter.fillRoundedRect(-235, 20, 470, 26, 12);
+  counter.fillStyle(0xe6c98e, 1); counter.fillRoundedRect(-235, 26, 470, 26, 12);
+  counter.fillGradientStyle(0xfff6e0, 0xfff6e0, 0xf0dcae, 0xf0dcae, 1); counter.fillRoundedRect(-235, 18, 470, 26, 12);
 
   // חלון + אלה (תמונה מצוירת, עם נפילה לאמוג'י)
   const win = scene.add.graphics();
@@ -153,11 +156,13 @@ class TitleScene extends Phaser.Scene {
   constructor() { super('Title'); }
 
   create() {
+    this.cameras.main.fadeIn(300, 174, 228, 255);
     buildEnvironment(this);
     buildCart(this, DESIGN.w / 2, 450);
 
     const t = Helper.txt(this, DESIGN.w / 2, 150, 'העגלה של אלה', 96, '#ffffff');
     t.setStroke('#ff5ca8', 12); t.setShadow(0, 8, 'rgba(90,61,92,0.3)', 12);
+    Helper.glow(this, t, 0xffd1ec, 5);
     this.tweens.add({ targets: t, scale: 1.04, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
 
     const sub = Helper.txt(this, DESIGN.w / 2, 232, 'פוד-טראק כיפי וצבעוני 🍔🍕🍦', 36, '#5a3d5c');
@@ -188,6 +193,7 @@ class WorldScene extends Phaser.Scene {
   init(data) { this.freeMode = !!(data && data.free); }
 
   create() {
+    this.cameras.main.fadeIn(300, 174, 228, 255);
     Sound.unlock();
     buildEnvironment(this);
     this.cart = buildCart(this, DESIGN.w / 2, 560);
@@ -220,6 +226,8 @@ class WorldScene extends Phaser.Scene {
     coinBg.fillStyle(0x000000, 0.12); coinBg.fillRoundedRect(DESIGN.w - 300, 36, 264, 76, 38);
     coinBg.fillStyle(0xffffff, 1); coinBg.fillRoundedRect(DESIGN.w - 300, 30, 264, 76, 38);
     const coinIco = this.add.image(DESIGN.w - 270, 68, 'coin').setScale(1.1);
+    Helper.glow(this, coinIco, 0xffd24c, 5);
+    this.tweens.add({ targets: coinIco, angle: 360, duration: 4000, repeat: -1 });
     this.coinText = this.add.text(DESIGN.w - 240, 68, '' + G.coins, {
       fontFamily:'Varela Round, Heebo, sans-serif', fontSize:'48px', color:'#e09b00', fontStyle:'bold'
     }).setOrigin(0, 0.5);
@@ -293,6 +301,7 @@ class WorldScene extends Phaser.Scene {
     let goldEmitter = null;
     if (golden) {
       faceObj.setTint(0xffe27a);
+      Helper.glow(this, faceObj, 0xffe27a, 6);
       goldEmitter = this.add.particles(0, 0, 'spark', { lifespan: 800, scale:{start:0.5,end:0}, alpha:{start:1,end:0},
         speed:{min:20,max:60}, frequency: 200, emitZone: { type:'random', source: new Phaser.Geom.Circle(0,0,60) } });
     }
