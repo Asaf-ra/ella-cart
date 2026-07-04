@@ -339,6 +339,10 @@ class MiniGameScene extends Phaser.Scene {
 
   startBurgerStack() {
     (this.cutObjs || []).forEach(o => o.destroy()); this.cutObjs = [];
+    // תלת-ממד חי אם Babylon מוכן; אחרת נפילה חכמה ל-2D המצויר
+    let use3d = false;
+    try { use3d = (typeof Hero3D !== 'undefined' && Hero3D.builderStart && Hero3D.builderStart('burger')); } catch (e) {}
+    if (use3d) return this.stack3D();
     this.hintText.setText('הוסיפו את מה שביקשו, ואז הגישו! 🍔');
     const cx = DESIGN.w / 2;
     Helper.shadowEl(this, cx, 600, 460, 56);
@@ -400,6 +404,32 @@ class MiniGameScene extends Phaser.Scene {
         this.cameras.main.shake(80, 0.003); Sound.bubble(); return;
       }
       dropLayer(e); this.addTop(e);
+      Voice.say(INGREDIENT_NAMES[e] || '');
+    }));
+  }
+
+  // הרכבה בתלת-ממד חי: המרכיבים נופלים כשכבות 3D, אצבע מסובבת את הבורגר
+  stack3D() {
+    this.hintText.setText('הוסיפו מרכיבים — ואפשר לסובב באצבע! 🍔');
+    this.events.once('shutdown', () => { try { Hero3D.builderEnd(); } catch (e) {} });
+    let served = false;
+
+    const serve = this.serveButton(() => {
+      if (served) return; served = true;
+      serve.enable(false);
+      Sound.happy();
+      Hero3D.builderServe(() => this.finish(true));   // לחמנייה עליונה + אדים, ואז הקולנוע של world
+    });
+    this.time.delayedCall(800, () => serve.enable(true));
+
+    const tops = Array.from(new Set(G.availToppings('burger').map(t => t.id).concat(['🍅', '🥒', '🧅'])));
+    const startX = DESIGN.w / 2 - (tops.length - 1) * 84 / 2;
+    tops.forEach((e, i) => this.ingredient(startX + i * 84, DESIGN.h - 158, e, () => {
+      if (served) return;
+      const r = Hero3D.builderAdd(e);
+      if (r === 'full') { this.cameras.main.shake(80, 0.003); Sound.bubble(); return; }  // מגדל ענק
+      if (!r) return;
+      this.addTop(e);
       Voice.say(INGREDIENT_NAMES[e] || '');
     }));
   }

@@ -330,57 +330,93 @@ const Hero3D = (function () {
       } }
     return node;
   }
+  // ---- חלקי בורגר לשימוש חוזר: גם למנה המוגמרת וגם לבנייה החיה ----
+  // כל חלק: TransformNode עם המשים ב-offset מקומי; adv = כמה גובה הוא מוסיף לערימה
+  let partSeq = 0;
+  function makeBurgerPart(key, parent) {
+    const id = 'bp' + (partSeq++);
+    const n = new BABYLON.TransformNode(id, scene); n.parent = parent;
+    let adv = 0;
+    switch (key) {
+      case 'bunB': {
+        const m = BABYLON.MeshBuilder.CreateCylinder(id + 'm', { diameter: 3, height: 0.6, tessellation: 56 }, scene);
+        m.material = pbr(id + 'mat', '#e6a85a', 0.5, 0, { bump: 'coarse' }); m.parent = n;
+        adv = 0.35; break;
+      }
+      case '🥬': {
+        const m = BABYLON.MeshBuilder.CreateTorus(id + 'm', { diameter: 3.05, thickness: 0.45, tessellation: 40 }, scene);
+        m.scaling.y = 0.5; m.material = pbr(id + 'mat', '#67bf4a', 0.55, 0, { bump: 'fine' }); m.parent = n;
+        adv = 0.22; break;
+      }
+      case 'patty': {
+        const m = BABYLON.MeshBuilder.CreateCylinder(id + 'm', { diameter: 3.1, height: 0.55, tessellation: 56 }, scene);
+        m.position.y = 0.14; m.material = pbr(id + 'mat', '#6b3a1e', 0.68, 0, { bump: 'coarse' }); m.parent = n;
+        adv = 0.42; break;
+      }
+      case '🧀': {
+        const m = BABYLON.MeshBuilder.CreateBox(id + 'm', { width: 3.15, height: 0.1, depth: 3.15 }, scene);
+        m.rotation.y = Math.PI / 4; m.material = pbr(id + 'mat', '#ffc23c', 0.32, 0, { trans: 0.35 }); m.parent = n;
+        adv = 0.12; break;
+      }
+      case '🍅': {
+        const m = BABYLON.MeshBuilder.CreateCylinder(id + 'm', { diameter: 2.7, height: 0.16, tessellation: 40 }, scene);
+        m.position.y = 0.06; m.material = pbr(id + 'mat', '#e0402e', 0.25, 0, { cc: 0.7, ccRough: 0.15 }); m.parent = n;
+        adv = 0.18; break;
+      }
+      case '🍳': {
+        const w = BABYLON.MeshBuilder.CreateCylinder(id + 'w', { diameter: 2.3, height: 0.1, tessellation: 36 }, scene);
+        w.position.y = 0.04; w.material = pbr(id + 'wm', '#fffaf2', 0.4, 0, { sheen: 0.4 }); w.parent = n;
+        const yk = BABYLON.MeshBuilder.CreateSphere(id + 'y', { diameter: 0.8, segments: 18 }, scene);
+        yk.position.y = 0.12; yk.scaling.y = 0.5; yk.material = pbr(id + 'ym', '#ffb527', 0.2, 0, { cc: 0.9, ccRough: 0.1 }); yk.parent = n;
+        adv = 0.16; break;
+      }
+      case '🥒': {
+        [0, 1, 2].forEach((i) => {
+          // חמוצים מציצים מעבר לשולי הלחמנייה (רדיוס 1.5) — שיהיו גלויים
+          const a = 0.6 + i * 2.1, rr = 1.45;
+          const pk = BABYLON.MeshBuilder.CreateCylinder(id + 'p' + i, { diameter: 0.7, height: 0.1, tessellation: 16 }, scene);
+          pk.position.set(Math.cos(a) * rr, 0.05, Math.sin(a) * rr);
+          pk.material = pbr(id + 'pm' + i, '#5f9e3a', 0.45, 0, { cc: 0.5, bump: 'fine' }); pk.parent = n;
+        });
+        adv = 0.07; break;
+      }
+      case '🧅': {
+        [0, 1].forEach((i) => {
+          const on = BABYLON.MeshBuilder.CreateTorus(id + 'o' + i, { diameter: 2.1 - i * 0.5, thickness: 0.09, tessellation: 24 }, scene);
+          on.position.set(i ? 0.55 : -0.4, 0.08, i ? -0.4 : 0.3); on.material = pbr(id + 'om' + i, '#f2e2ee', 0.35, 0, { trans: 0.4 }); on.parent = n;
+        });
+        adv = 0.07; break;
+      }
+      case 'bunT': {
+        const m = BABYLON.MeshBuilder.CreateSphere(id + 'm', { diameter: 3, slice: 0.52, segments: 40 }, scene);
+        m.position.y = 0.1; m.scaling.y = 0.95; m.material = pbr(id + 'mat', '#e8aa5c', 0.45, 0, { bump: 'coarse' }); m.parent = n;
+        for (let i = 0; i < 12; i++) {
+          const s = BABYLON.MeshBuilder.CreateSphere(id + 's' + i, { diameter: 0.17, segments: 8 }, scene);
+          s.material = pbr(id + 'sm' + i, '#fff2cf', 0.5);
+          const a = Math.random() * 6.283, rr = Math.random() * 0.95;
+          s.position.set(Math.cos(a) * rr, 0.27 + Math.random() * 0.5, Math.sin(a) * rr); s.parent = n;
+        }
+        adv = 0; break;
+      }
+      default: { n.dispose(); return null; }
+    }
+    return { node: n, adv };
+  }
+
   function buildBurger(build) {
     const node = new BABYLON.TransformNode('burger', scene); node.parent = root;
-    const all = !build; // בלי build — בורגר עשיר קלאסי
+    const all = !build;
     let y = -0.95;
-    const bunB = BABYLON.MeshBuilder.CreateCylinder('bBunB', { diameter: 3, height: 0.6, tessellation: 56 }, scene);
-    bunB.position.y = y; bunB.material = pbr('bBunBM', '#e6a85a', 0.5, 0, { bump: 'coarse' }); bunB.parent = node;
-    y += 0.35;
-    if (all || has(build, '🥬')) {
-      const lettuce = BABYLON.MeshBuilder.CreateTorus('bLet', { diameter: 3.05, thickness: 0.45, tessellation: 40 }, scene);
-      lettuce.position.y = y; lettuce.scaling.y = 0.5; lettuce.material = pbr('bLetM', '#67bf4a', 0.55, 0, { bump: 'fine' }); lettuce.parent = node;
-      y += 0.22;
-    }
-    const patty = BABYLON.MeshBuilder.CreateCylinder('bPatty', { diameter: 3.1, height: 0.55, tessellation: 56 }, scene);
-    patty.position.y = y + 0.14; patty.material = pbr('bPattyM', '#6b3a1e', 0.68, 0, { bump: 'coarse' }); patty.parent = node;
-    y += 0.42;
-    if (all || has(build, '🧀')) {
-      const cheese = BABYLON.MeshBuilder.CreateBox('bCheese', { width: 3.15, height: 0.1, depth: 3.15 }, scene);
-      cheese.position.y = y; cheese.rotation.y = Math.PI / 4; cheese.material = pbr('bCheeseM', '#ffc23c', 0.32, 0, { trans: 0.35 }); cheese.parent = node;
-      y += 0.12;
-    }
-    if (has(build, '🍅')) {
-      const tom = BABYLON.MeshBuilder.CreateCylinder('bTom', { diameter: 2.7, height: 0.16, tessellation: 40 }, scene);
-      tom.position.y = y + 0.06; tom.material = pbr('bTomM', '#e0402e', 0.25, 0, { cc: 0.7, ccRough: 0.15 }); tom.parent = node;
-      y += 0.18;
-    }
-    if (has(build, '🍳')) {
-      const white = BABYLON.MeshBuilder.CreateCylinder('bEgg', { diameter: 2.3, height: 0.1, tessellation: 36 }, scene);
-      white.position.y = y + 0.04; white.material = pbr('bEggM', '#fffaf2', 0.4, 0, { sheen: 0.4 }); white.parent = node;
-      const yolk = BABYLON.MeshBuilder.CreateSphere('bYolk', { diameter: 0.8, segments: 18 }, scene);
-      yolk.position.y = y + 0.12; yolk.scaling.y = 0.5; yolk.material = pbr('bYolkM', '#ffb527', 0.2, 0, { cc: 0.9, ccRough: 0.1 }); yolk.parent = node;
-      y += 0.16;
-    }
-    if (has(build, '🥒')) [0, 1, 2].forEach((i) => {
-      // חמוצים מציצים מתחת ללחמנייה — ברדיוס גדול, שיהיו גלויים
-      const a = 0.6 + i * 2.1, rr = 1.45; // מציץ מעבר לשולי הלחמנייה (רדיוס 1.5)
-      const pk = BABYLON.MeshBuilder.CreateCylinder('bPk' + i, { diameter: 0.7, height: 0.1, tessellation: 16 }, scene);
-      pk.position.set(Math.cos(a) * rr, y + 0.05, Math.sin(a) * rr);
-      pk.material = pbr('bPkM' + i, '#5f9e3a', 0.45, 0, { cc: 0.5, bump: 'fine' }); pk.parent = node;
-    });
-    if (has(build, '🧅')) [0, 1].forEach((i) => {
-      const on = BABYLON.MeshBuilder.CreateTorus('bOn' + i, { diameter: 2.1 - i * 0.5, thickness: 0.09, tessellation: 24 }, scene);
-      on.position.set(i ? 0.55 : -0.4, y + 0.08, i ? -0.4 : 0.3); on.material = pbr('bOnM' + i, '#f2e2ee', 0.35, 0, { trans: 0.4 }); on.parent = node;
-    });
-    if (has(build, '🥒') || has(build, '🧅')) y += 0.14;
-    const bunT = BABYLON.MeshBuilder.CreateSphere('bBunT', { diameter: 3, slice: 0.52, segments: 40 }, scene);
-    bunT.position.y = y + 0.1; bunT.scaling.y = 0.95; bunT.material = pbr('bBunTM', '#e8aa5c', 0.45, 0, { bump: 'coarse' }); bunT.parent = node;
-    for (let i = 0; i < 12; i++) {
-      const s = BABYLON.MeshBuilder.CreateSphere('se' + i, { diameter: 0.17, segments: 8 }, scene);
-      s.material = pbr('sem' + i, '#fff2cf', 0.5);
-      const a = Math.random() * 6.283, rr = Math.random() * 0.95; s.position.set(Math.cos(a) * rr, y + 0.27 + Math.random() * 0.5, Math.sin(a) * rr); s.parent = node;
-    }
+    const put = (key) => { const p = makeBurgerPart(key, node); p.node.position.y = y; y += p.adv; };
+    put('bunB');
+    if (all || has(build, '🥬')) put('🥬');
+    put('patty');
+    if (all || has(build, '🧀')) put('🧀');
+    if (has(build, '🍅')) put('🍅');
+    if (has(build, '🍳')) put('🍳');
+    if (has(build, '🥒')) put('🥒');
+    if (has(build, '🧅')) put('🧅');
+    put('bunT');
     return node;
   }
   function buildShake(build) {
@@ -429,7 +465,7 @@ const Hero3D = (function () {
 
   // בנייה טרייה בכל תצוגה — המנה משקפת את ה-build המדויק (צבע/תוספות).
   // הרכיבים ישנים נזרקים; טקסטורות ה-bump משותפות ולכן לא נמחקות.
-  function setCurrent(foodKey, build) {
+  function disposeBuilders() {
     Object.keys(builders).forEach(k => {
       try {
         builders[k].getChildMeshes().forEach(m => { if (m.material) m.material.dispose(false, false); });
@@ -437,6 +473,9 @@ const Hero3D = (function () {
       } catch (e) {}
     });
     builders = {};
+  }
+  function setCurrent(foodKey, build) {
+    disposeBuilders();
     const node = (FOOD_BUILDERS[foodKey] || FOOD_BUILDERS.donut)(build);
     builders[foodKey] = node;
     if (shadowGen) node.getChildMeshes().forEach(m => shadowGen.addShadowCaster(m));
@@ -445,7 +484,84 @@ const Hero3D = (function () {
 
   function easeOutBack(t) { const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
 
+  // ---- מצב בנייה חי: ההרכבה מתרחשת בתלת-ממד, מרכיבים נופלים על הצלחת ----
+  let buildMode = false, buildNode = null, buildY = 0, buildParts = 0;
+
+  function canvasFullscreen() {
+    Object.assign(canvas.style, { left: '0', top: '0', width: '100%', height: '100%' });
+  }
+  // הקנבס מכסה רק את אזור הבמה (70% העליונים של קנבס המשחק) — המגש והכפתורים שמתחת נשארים חיים
+  function canvasStageArea() {
+    const gc = document.querySelector('#game canvas');
+    if (!gc) return;
+    const r = gc.getBoundingClientRect();
+    Object.assign(canvas.style, { left: r.x + 'px', top: r.y + 'px', width: r.width + 'px', height: (r.height * 0.70) + 'px' });
+  }
+  // נפילה + באונס בקיפריימים ידניים — בלי easing functions (BounceEase עם
+  // פרמטרים שבריים מייצרת f(1)≠1 והחלקים בורחים מתחת ליעד)
+  function dropAnim(tn, targetY) {
+    const start = tn.position.y, dist = start - targetY;
+    const drop = new BABYLON.Animation('drop' + partSeq, 'position.y', 60,
+      BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    drop.setKeys([                                     // נפילה קוודרטית (תאוצה) + שתי קפיצות קטנות
+      { frame: 0,  value: start },
+      { frame: 4,  value: start - dist * 0.08 },
+      { frame: 8,  value: start - dist * 0.33 },
+      { frame: 12, value: start - dist * 0.72 },
+      { frame: 15, value: targetY },
+      { frame: 19, value: targetY + 0.34 },
+      { frame: 23, value: targetY },
+      { frame: 26, value: targetY + 0.1 },
+      { frame: 29, value: targetY }
+    ]);
+    const squash = new BABYLON.Animation('sq' + partSeq, 'scaling.y', 60,
+      BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+    squash.setKeys([                                   // סקווש בנחיתה הראשונה
+      { frame: 0,  value: 1 },
+      { frame: 15, value: 1 },
+      { frame: 17, value: 0.72 },
+      { frame: 22, value: 1.06 },
+      { frame: 26, value: 1 }
+    ]);
+    tn.animations = [drop, squash];
+    scene.beginAnimation(tn, 0, 29, false);
+  }
+  function builderRotDown(e) {
+    const r = canvas.getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+      dragging = true; dragX = e.clientX; lastInteract = performance.now();
+    }
+  }
+  function builderRotMove(e) {
+    if (dragging && buildMode) { root.rotation.y += (e.clientX - dragX) * 0.012; dragX = e.clientX; lastInteract = performance.now(); }
+  }
+  function builderRotUp() { if (buildMode) dragging = false; }
+  function builderListeners(on) {
+    const f = on ? 'addEventListener' : 'removeEventListener';
+    window[f]('pointerdown', builderRotDown); window[f]('pointermove', builderRotMove); window[f]('pointerup', builderRotUp);
+  }
+  // סגירה שקטה של מצב הבנייה (בלי להסתיר — show יכול לקחת פיקוד מיד)
+  function builderTeardown() {
+    if (!buildMode) return;
+    buildMode = false; buildNode = null;
+    builderListeners(false);
+    canvasFullscreen();
+    scene.clearColor = new BABYLON.Color4(0.03, 0.01, 0.06, 0.44);
+    try { const keyL = scene.getLightByName('key'); if (keyL) keyL.intensity = 1.7; } catch (e) {}
+    try { scene.imageProcessingConfiguration.exposure = 0.95; } catch (e) {}
+    try { sparks.emitter = new BABYLON.Vector3(0, 0.2, 0); steam.emitter = new BABYLON.Vector3(0, 1.3, 0); } catch (e) {}
+    try { cam.setTarget(BABYLON.Vector3.Zero()); } catch (e) {}
+    try { engine.resize(); } catch (e) {}
+  }
+
   function render() {
+    if (buildMode) {
+      // בנייה חיה: סיבוב עצל כשלא נוגעים; בלי בובינג/דחיפת מצלמה — שהנפילות ייקראו נקי
+      if (!dragging && performance.now() - lastInteract > 1500)
+        root.rotation.y += engine.getDeltaTime() / 1000 * 0.45;
+      scene.render();
+      return;
+    }
     const el = (performance.now() - t0) / 1000;
     // כניסה קופצת
     const s = el < 0.55 ? Math.max(0.001, easeOutBack(el / 0.55)) : 1;
@@ -466,9 +582,76 @@ const Hero3D = (function () {
 
   const api = {
     preload() { loadBabylon(); },
+
+    /* ---- מצב בנייה חי: הבורגר נבנה בתלת-ממד תוך כדי המשחק ---- */
+    builderStart(foodKey) {
+      loadBabylon();
+      if (!init() || foodKey !== 'burger') return false;
+      try {
+        builderTeardown();
+        disposeBuilders();
+        buildNode = new BABYLON.TransformNode('liveBuild', scene);
+        buildNode.parent = root;
+        builders.live = buildNode;
+        current = 'burger';
+        buildY = -0.95; buildParts = 0; buildMode = true;
+        root.scaling.setAll(1); root.rotation.y = 0; root.position.y = 0;
+        cam.radius = 9.8; cam.beta = Math.PI / 2.75;
+        cam.setTarget(new BABYLON.Vector3(0, 0.5, 0));                    // מסגור נמוך — הבורגר לא מסתיר את כרטיס ההזמנה
+        scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);                // שקוף לגמרי — אפס תפר בקצה הקנבס
+        // צבעים רוויים על רקע בהיר: מפתח חזק יותר + חשיפה נמוכה יותר (משוחזר ב-teardown)
+        const keyL = scene.getLightByName('key'); if (keyL) keyL.intensity = 2.1;
+        scene.imageProcessingConfiguration.exposure = 0.84;
+        canvasStageArea();
+        canvas.style.display = 'block';
+        canvas.style.pointerEvents = 'none';                              // מגע עובר למשחק; סיבוב דרך מאזיני window
+        requestAnimationFrame(() => { canvas.style.opacity = '1'; });
+        try { engine.resize(); } catch (e) {}
+        try { twinkle.stop(); steam.stop(); } catch (e) {}
+        clearTimeout(hideTimer);
+        if (!visible) { visible = true; engine.runRenderLoop(render); }
+        builderListeners(true);
+        // בסיס: לחמנייה תחתונה + קציצה נופלות אחת אחרי השנייה
+        api.builderAdd('bunB');
+        setTimeout(() => { if (buildMode) api.builderAdd('patty'); }, 300);
+        return true;
+      } catch (e) { console.warn('Hero3D builder failed', e); builderTeardown(); return false; }
+    },
+    builderAdd(key) {
+      if (!buildMode || !buildNode) return false;
+      if (buildParts >= 12) return 'full';
+      const p = makeBurgerPart(key, buildNode);
+      if (!p) return false;
+      buildParts++;
+      const target = buildY; buildY += p.adv;
+      p.node.position.y = target + 3.4;
+      dropAnim(p.node, target);
+      if (shadowGen) p.node.getChildMeshes().forEach(m => shadowGen.addShadowCaster(m));
+      try { sparks.emitter = new BABYLON.Vector3(0, target + 0.3, 0); sparks.manualEmitCount = 12; sparks.start(); } catch (e) {}
+      lastInteract = performance.now();                                   // שהסיבוב האוטומטי לא יפריע לנפילה
+      return true;
+    },
+    builderServe(onDone) {
+      if (!buildMode) { if (onDone) onDone(); return; }
+      api.builderAdd('bunT');
+      try {
+        steam.emitter = new BABYLON.Vector3(0, buildY + 1.1, 0);
+        setTimeout(() => { if (buildMode) steam.start(); }, 500);
+        sparks.emitter = new BABYLON.Vector3(0, buildY + 0.4, 0);
+        sparks.manualEmitCount = 40; sparks.start();
+      } catch (e) {}
+      if (onDone) setTimeout(onDone, 1300);
+    },
+    builderEnd() {
+      if (!buildMode) return;
+      builderTeardown();
+      api.hide();
+    },
+
     show(foodKey, ms, build) {
       loadBabylon();
       if (!init()) return;
+      builderTeardown();                                                  // אם באנו מבנייה חיה — show לוקח פיקוד חלק
       setCurrent(foodKey || 'donut', build);
       t0 = performance.now(); lastInteract = 0; dragging = false;
       root.scaling.setAll(0.001); root.rotation.y = 0;
