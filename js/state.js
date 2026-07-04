@@ -2,12 +2,35 @@
 const G = (function () {
   const KEY = 'ella_cart_save_v1';
 
-  // הגדרת שלושת המאכלים
+  // הגדרת המאכלים
   const FOODS = {
-    shake:  { id:'shake',  name:'מילקשייק', emoji:'🥤', base:10 },
+    shake:  { id:'shake',  name:'גלידה',    emoji:'🍦', base:10 },
     donut:  { id:'donut',  name:'דונאט',    emoji:'🍩', base:12 },
     burger: { id:'burger', name:'המבורגר',  emoji:'🍔', base:15 },
     pizza:  { id:'pizza',  name:'פיצה',      emoji:'🍕', base:20 }
+  };
+
+  // תפריט: בסיס (טעם/ציפוי — בוחרים אחד) + תוספות (מוסיפים את המבוקשות).
+  // lvl = רמת השדרוג "תפריט" שצריך כדי שהפריט ייפתח (מופיע בהזמנות ובהכנה).
+  const MENU = {
+    shake: {
+      bases: [ {id:'🍦', color:0xfff3da, lvl:0}, {id:'🍓', color:0xff9ec4, lvl:0},
+               {id:'🍫', color:0x8a5a3c, lvl:1}, {id:'🍋', color:0xfff08a, lvl:2}, {id:'🫐', color:0x7e8cff, lvl:2} ],
+      toppings: [ {id:'🌈', lvl:0}, {id:'🍒', lvl:0}, {id:'🍪', lvl:1}, {id:'🥥', lvl:2}, {id:'⭐', lvl:3} ]
+    },
+    donut: {
+      bases: [ {id:'🩷', color:0xff8ac4, lvl:0}, {id:'🤎', color:0x8a5a3c, lvl:0},
+               {id:'🤍', color:0xfff3da, lvl:1}, {id:'💙', color:0x7ec8ff, lvl:2}, {id:'💜', color:0xb98aff, lvl:3} ],
+      toppings: [ {id:'🌈', lvl:0}, {id:'🍒', lvl:1}, {id:'🍪', lvl:2}, {id:'⭐', lvl:2}, {id:'🍬', lvl:3} ]
+    },
+    burger: {
+      bases: null,
+      toppings: [ {id:'🧀', lvl:0}, {id:'🥬', lvl:0}, {id:'🍅', lvl:1}, {id:'🥒', lvl:2}, {id:'🍳', lvl:2}, {id:'🧅', lvl:3} ]
+    },
+    pizza: {
+      bases: null,
+      toppings: [ {id:'🍄', lvl:0}, {id:'🫑', lvl:0}, {id:'🫒', lvl:1}, {id:'🌽', lvl:1}, {id:'🍍', lvl:2}, {id:'🧅', lvl:3} ]
+    }
   };
 
   // הגדרת שדרוגים. כל שדרוג: רמות עם מחיר; effect מחושב לפי רמה.
@@ -22,8 +45,8 @@ const G = (function () {
       costs:[45,100,210], baseVal:1, perLvl:0.18 }, // מאט הגעת לקוחות
     { id:'helper', name:'עוזר לעגלה', ico:'🧑‍🍳',
       costs:[120,300,600], baseVal:0, perLvl:1 }, // הכנסה אוטומטית/עוזר
-    { id:'toppings', name:'תוספות חדשות', ico:'🍒',
-      costs:[70,160], baseVal:0, perLvl:1 }, // פותח תוספות נוספות
+    { id:'toppings', name:'תפריט מורחב', ico:'🍒',
+      costs:[40,90,160,260], baseVal:0, perLvl:1 }, // פותח טעמים/תוספות חדשים בהזמנות
     { id:'cart', name:'עיצוב עגלה', ico:'🎨',
       costs:[90,200], baseVal:0, perLvl:1, skins:['default','royal','rainbow'] },
     { id:'theme', name:'רקע חדש', ico:'🏝️',
@@ -87,14 +110,39 @@ const G = (function () {
   function tipMul()      { return val('tip'); }                          // 1..2.2
   function paceMul()     { return val('pace'); }                         // 1..1.5 (מאריך מרווחים)
   function helperRate()  { return lvl('helper'); }                       // 0..3 (מטבעות/מחזור)
-  function extraToppings(){ return lvl('toppings'); }                    // 0..2
+  function extraToppings(){ return lvl('toppings'); }
+  function menuLvl()      { return lvl('toppings'); }
+
+  // ----- הזמנות (התאמה) -----
+  function availBases(food)    { const m = MENU[food]; return m.bases ? m.bases.filter(b => b.lvl <= menuLvl()) : null; }
+  function availToppings(food) { return MENU[food].toppings.filter(t => t.lvl <= menuLvl()); }
+  function baseColor(food, id) { const m = MENU[food]; if (!m.bases) return null; const b = m.bases.find(x => x.id === id); return b ? b.color : null; }
+
+  function makeOrder(food) {
+    const bs = availBases(food);
+    const base = bs ? bs[(Math.random() * bs.length) | 0].id : null;
+    const at = availToppings(food).slice();
+    for (let i = at.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; const t = at[i]; at[i] = at[j]; at[j] = t; }
+    const maxN = Math.min(at.length, 1 + menuLvl());
+    const n = Math.floor(Math.random() * (maxN + 1));   // 0..maxN תוספות
+    const toppings = at.slice(0, n).map(t => t.id);
+    return { food, base, toppings };
+  }
+
+  // האם ההכנה תואמת להזמנה: בסיס נכון + כל התוספות המבוקשות נוכחות
+  function orderMatches(order, build) {
+    if (order.base && build.base !== order.base) return false;
+    for (let i = 0; i < order.toppings.length; i++) if (build.toppings.indexOf(order.toppings[i]) < 0) return false;
+    return true;
+  }
 
   return {
-    FOODS, UPGRADES,
+    FOODS, UPGRADES, MENU,
     get coins(){ return state.coins; },
     get soundOn(){ return state.soundOn; },
     set soundOn(v){ state.soundOn = v; save(); },
     lvl, val, nextCost, isMax, buy, addCoins, save, applyCosmetics,
-    maxSlots, patienceMul, tipMul, paceMul, helperRate, extraToppings
+    maxSlots, patienceMul, tipMul, paceMul, helperRate, extraToppings, menuLvl,
+    availBases, availToppings, baseColor, makeOrder, orderMatches
   };
 })();

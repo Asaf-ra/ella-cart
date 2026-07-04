@@ -1,0 +1,505 @@
+/* ===== רגע-גיבור תלת-ממד (Babylon.js) — הפקה קולנועית של המנה המוגמרת =====
+   שכבת קנבס שקופה מעל המשחק; נטענת ורצה רק כשמציגים. בלי תלות באסטים חיצוניים. */
+const Hero3D = (function () {
+  let engine = null, scene = null, canvas = null, root = null, pipeline = null, cam = null;
+  let plate = null, shadowDisc = null, ring = null, sparks = null, twinkle = null, steam = null, shadowGen = null;
+  let ready = false, visible = false, hideTimer = null, fadeTimer = null, builders = {}, current = null, t0 = 0;
+  let babylonLoading = false;
+  let bumpFine = null, bumpCoarse = null;
+  let dragging = false, dragX = 0, lastInteract = 0;
+
+  // ---- טעינת Babylon דינמית ברקע (המשחק נפתח מיד) ----
+  function loadBabylon() {
+    if (typeof BABYLON !== 'undefined' || babylonLoading) return;
+    babylonLoading = true;
+    const s = document.createElement('script');
+    s.src = 'vendor/babylon.js'; s.async = true;
+    s.onerror = () => { babylonLoading = false; console.warn('Hero3D: Babylon load failed'); };
+    document.head.appendChild(s);
+  }
+
+  // ---- טקסטורות קנבס (רדיאלי / כוכב / סביבת-סטודיו) ----
+  function radialURL(size, stops) {
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    const x = c.getContext('2d'), r = size / 2;
+    const g = x.createRadialGradient(r, r, 0, r, r, r);
+    stops.forEach(s => g.addColorStop(s[0], s[1]));
+    x.fillStyle = g; x.fillRect(0, 0, size, size);
+    return c.toDataURL();
+  }
+  function envURL() {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 256;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, 256);
+    g.addColorStop(0, '#eaf1ff'); g.addColorStop(0.42, '#ffffff');
+    g.addColorStop(0.6, '#ffe9c8'); g.addColorStop(1, '#5a4a5e');
+    x.fillStyle = g; x.fillRect(0, 0, 512, 256);
+    // כתמי אור רכים (key lights) לרפלקציות מעניינות
+    [[140, 70, 70, 'rgba(255,255,255,0.9)'], [380, 90, 90, 'rgba(255,240,210,0.8)'], [260, 40, 50, 'rgba(255,255,255,0.7)']]
+      .forEach(([cx, cy, rr, col]) => { const rg = x.createRadialGradient(cx, cy, 0, cx, cy, rr);
+        rg.addColorStop(0, col); rg.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = rg; x.fillRect(0, 0, 512, 256); });
+    return c.toDataURL();
+  }
+  // מפת נורמלים פרוצדורלית מרעש-כתמים — בליטות אמיתיות (סוכר / בצק / פטי)
+  function noiseNormalURL(size, blobs, amp) {
+    const h = new Float32Array(size * size);
+    for (let i = 0; i < blobs; i++) {
+      const bx = Math.random() * size, by = Math.random() * size;
+      const br = size * (0.015 + Math.random() * 0.05), bh = Math.random() * 2 - 1;
+      // עטיפה מודולרית — טקסטורה ללא-תפר (הטורוס חושף כל תפר)
+      for (let y = Math.floor(by - br); y <= Math.ceil(by + br); y++) for (let x = Math.floor(bx - br); x <= Math.ceil(bx + br); x++) {
+        const d = Math.hypot(x - bx, y - by) / br;
+        if (d < 1) { const f = 1 - d; h[((y + size) % size) * size + ((x + size) % size)] += bh * f * f; }
+      }
+    }
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    const ctx = c.getContext('2d'), img = ctx.createImageData(size, size);
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      const l = h[y * size + (x - 1 + size) % size], r = h[y * size + (x + 1) % size];
+      const u = h[((y - 1 + size) % size) * size + x], d = h[((y + 1) % size) * size + x];
+      let nx = (l - r) * amp, ny = (u - d) * amp;
+      const n = Math.hypot(nx, ny, 1), o = (y * size + x) * 4;
+      img.data[o] = (nx / n * 0.5 + 0.5) * 255; img.data[o + 1] = (ny / n * 0.5 + 0.5) * 255;
+      img.data[o + 2] = (1 / n * 0.5 + 0.5) * 255; img.data[o + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    return c.toDataURL();
+  }
+  function getBump(kind) {
+    if (kind === 'coarse') { if (!bumpCoarse) bumpCoarse = new BABYLON.Texture(noiseNormalURL(256, 260, 3.2), scene); return bumpCoarse; }
+    if (!bumpFine) bumpFine = new BABYLON.Texture(noiseNormalURL(256, 1400, 2.2), scene);
+    return bumpFine;
+  }
+
+  // חומר PBR מלא — o: cc (לכה רטובה) / sheen (קטיפת קצפת) / trans (אור חודר) / bump / alpha
+  function pbr(name, hex, rough, metal, o) {
+    o = o || {};
+    const m = new BABYLON.PBRMaterial(name, scene);
+    m.albedoColor = BABYLON.Color3.FromHexString(hex);
+    m.metallic = metal || 0; m.roughness = rough == null ? 0.4 : rough;
+    if (o.alpha != null) m.alpha = o.alpha;
+    if (o.cc) { m.clearCoat.isEnabled = true; m.clearCoat.intensity = o.cc; m.clearCoat.roughness = o.ccRough == null ? 0.12 : o.ccRough; }
+    if (o.sheen) { m.sheen.isEnabled = true; m.sheen.intensity = o.sheen; }
+    if (o.trans) { m.subSurface.isTranslucencyEnabled = true; m.subSurface.translucencyIntensity = o.trans; m.subSurface.tintColor = m.albedoColor.clone(); }
+    if (o.bump) m.bumpTexture = getBump(o.bump);
+    return m;
+  }
+
+  function init() {
+    if (ready) return true;
+    if (typeof BABYLON === 'undefined') return false;
+    try {
+      canvas = document.createElement('canvas');
+      canvas.id = 'hero3d';
+      Object.assign(canvas.style, { position: 'fixed', left: '0', top: '0', width: '100%', height: '100%',
+        zIndex: '80', pointerEvents: 'none', display: 'none', opacity: '0', transition: 'opacity 0.3s ease' });
+      document.body.appendChild(canvas);
+
+      engine = new BABYLON.Engine(canvas, true, { alpha: true, premultipliedAlpha: false, stencil: true });
+      scene = new BABYLON.Scene(engine);
+      scene.clearColor = new BABYLON.Color4(0.03, 0.01, 0.06, 0.44);   // עמעום-תיאטרון: מחשיך את המשחק, המנה זוהרת
+
+      // תאורת סביבה (IBL) — השתקפויות אמיתיות על ה-PBR
+      try {
+        const env = new BABYLON.EquiRectangularCubeTexture(envURL(), scene, 256);
+        scene.environmentTexture = env; scene.environmentIntensity = 0.5;
+      } catch (e) { console.warn('Hero3D: env skipped', e); }
+
+      const ip = scene.imageProcessingConfiguration;
+      ip.toneMappingEnabled = true;
+      ip.toneMappingType = BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;
+      ip.contrast = 1.12; ip.exposure = 0.95;
+
+      cam = new BABYLON.ArcRotateCamera('cam', Math.PI / 2, Math.PI / 2.75, 11, BABYLON.Vector3.Zero(), scene);
+      cam.fov = 0.55;
+
+      const hemi = new BABYLON.HemisphericLight('hemi', new BABYLON.Vector3(0.2, 1, 0.1), scene);
+      hemi.intensity = 0.35; hemi.groundColor = new BABYLON.Color3(0.35, 0.3, 0.4);
+      const key = new BABYLON.DirectionalLight('key', new BABYLON.Vector3(-0.55, -1, -0.45), scene);
+      key.intensity = 1.7; key.position = new BABYLON.Vector3(7, 12, 5);
+      key.shadowMinZ = 1; key.shadowMaxZ = 40;
+      const rim = new BABYLON.PointLight('rim', new BABYLON.Vector3(-6, 3, -6), scene);
+      rim.intensity = 0.6; rim.diffuse = new BABYLON.Color3(1, 0.8, 0.92);
+      const fillp = new BABYLON.PointLight('fill', new BABYLON.Vector3(6, -2, 6), scene);
+      fillp.intensity = 0.28; fillp.diffuse = new BABYLON.Color3(1, 0.95, 0.85);
+
+      // צל אמיתי רך מהמנה על הצלחת (מחליף "קרקוע" מזויף)
+      try {
+        shadowGen = new BABYLON.ShadowGenerator(1024, key);
+        shadowGen.usePercentageCloserFiltering = true;
+        shadowGen.filteringQuality = BABYLON.ShadowGenerator.QUALITY_MEDIUM;
+        shadowGen.darkness = 0.15; shadowGen.bias = 0.0005;
+      } catch (e) { console.warn('Hero3D: shadows skipped', e); }
+
+      // Bloom + FXAA + Depth of Field — זוהר קולנועי ורקע רך
+      try {
+        pipeline = new BABYLON.DefaultRenderingPipeline('heroPipe', true, scene, [cam]);
+        pipeline.bloomEnabled = true; pipeline.bloomThreshold = 0.92; pipeline.bloomWeight = 0.32;
+        pipeline.bloomKernel = 48; pipeline.bloomScale = 0.5;
+        pipeline.fxaaEnabled = true;
+        pipeline.depthOfFieldEnabled = true;
+        pipeline.depthOfFieldBlurLevel = BABYLON.DepthOfFieldEffectBlurLevel.Low;
+        pipeline.depthOfField.focalLength = 90; pipeline.depthOfField.fStop = 3.4; // פוקוס עמוק — המנה כולה חדה, רק שולי העומק רכים
+        pipeline.depthOfField.focusDistance = 11000;
+      } catch (e) { console.warn('Hero3D: pipeline skipped', e); }
+
+      root = new BABYLON.TransformNode('root', scene);
+
+      // צלחת קרמיקה לבנה מבריקה (clearcoat) + צל רך
+      plate = BABYLON.MeshBuilder.CreateCylinder('plate', { diameter: 5.2, height: 0.22, tessellation: 64 }, scene);
+      plate.position.y = -1.75;
+      plate.material = pbr('plateMat', '#ccd0dd', 0.32, 0, { cc: 0.7, ccRough: 0.18 });
+      plate.material.environmentIntensity = 0.3; // פחות אור-סביבה על הצלחת — שהצל של המנה ייקרא
+      plate.receiveShadows = true;
+
+      shadowDisc = BABYLON.MeshBuilder.CreateGround('shadow', { width: 6, height: 6 }, scene);
+      shadowDisc.position.y = -1.86;
+      const sm = new BABYLON.StandardMaterial('shadowMat', scene);
+      sm.disableLighting = true; sm.diffuseColor = new BABYLON.Color3(0, 0, 0); sm.specularColor = new BABYLON.Color3(0, 0, 0);
+      sm.opacityTexture = new BABYLON.Texture(radialURL(256, [[0, 'rgba(0,0,0,0.55)'], [0.5, 'rgba(0,0,0,0.28)'], [1, 'rgba(0,0,0,0)']]), scene);
+      shadowDisc.material = sm;
+
+      // גל-הלם (טבעת שמתרחבת בכניסה)
+      ring = BABYLON.MeshBuilder.CreateTorus('ring', { diameter: 3, thickness: 0.09, tessellation: 48 }, scene);
+      ring.rotation.x = Math.PI / 2; ring.position.y = -1.6;
+      const rm = new BABYLON.StandardMaterial('ringMat', scene);
+      rm.emissiveColor = new BABYLON.Color3(1, 0.82, 0.4); rm.disableLighting = true;
+      ring.material = rm; ring.setEnabled(false);
+
+      // זיקוקי-ניצוצות
+      sparks = new BABYLON.ParticleSystem('sparks', 700, scene);
+      sparks.particleTexture = new BABYLON.Texture(radialURL(64, [[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,240,180,0.8)'], [1, 'rgba(255,220,120,0)']]), scene);
+      sparks.emitter = new BABYLON.Vector3(0, 0.2, 0);
+      sparks.minEmitBox = new BABYLON.Vector3(-0.3, -0.3, -0.3);
+      sparks.maxEmitBox = new BABYLON.Vector3(0.3, 0.3, 0.3);
+      sparks.color1 = new BABYLON.Color4(1, 0.9, 0.4, 1); sparks.color2 = new BABYLON.Color4(1, 0.6, 0.85, 1);
+      sparks.colorDead = new BABYLON.Color4(1, 1, 1, 0);
+      sparks.minSize = 0.12; sparks.maxSize = 0.4;
+      sparks.minLifeTime = 0.5; sparks.maxLifeTime = 1.2;
+      sparks.emitRate = 1600;
+      sparks.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
+      sparks.gravity = new BABYLON.Vector3(0, -3.5, 0);
+      sparks.direction1 = new BABYLON.Vector3(-5, 5, -5); sparks.direction2 = new BABYLON.Vector3(5, 8, 5);
+      sparks.minEmitPower = 3; sparks.maxEmitPower = 8; sparks.updateSpeed = 0.02;
+
+      // נצנוץ עדין מתמשך — אבק-פיות שמרחף סביב המנה כל זמן התצוגה
+      twinkle = new BABYLON.ParticleSystem('twinkle', 120, scene);
+      twinkle.particleTexture = new BABYLON.Texture(radialURL(64, [[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,250,220,0.9)'], [1, 'rgba(255,240,180,0)']]), scene);
+      twinkle.emitter = new BABYLON.Vector3(0, 0.3, 0);
+      twinkle.minEmitBox = new BABYLON.Vector3(-2.4, -1.6, -2.4);
+      twinkle.maxEmitBox = new BABYLON.Vector3(2.4, 2.4, 2.4);
+      twinkle.color1 = new BABYLON.Color4(1, 0.95, 0.7, 0.9); twinkle.color2 = new BABYLON.Color4(1, 0.8, 0.95, 0.8);
+      twinkle.colorDead = new BABYLON.Color4(1, 1, 1, 0);
+      twinkle.minSize = 0.05; twinkle.maxSize = 0.16;
+      twinkle.minLifeTime = 1.2; twinkle.maxLifeTime = 2.4;
+      twinkle.emitRate = 26;
+      twinkle.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
+      twinkle.gravity = new BABYLON.Vector3(0, 0.35, 0);
+      twinkle.direction1 = new BABYLON.Vector3(-0.15, 0.1, -0.15); twinkle.direction2 = new BABYLON.Vector3(0.15, 0.4, 0.15);
+      twinkle.minEmitPower = 0.1; twinkle.maxEmitPower = 0.4; twinkle.updateSpeed = 0.016;
+
+      // אדים חמים — עולים מעל מנות חמות (בורגר/פיצה)
+      steam = new BABYLON.ParticleSystem('steam', 60, scene);
+      steam.particleTexture = new BABYLON.Texture(radialURL(128, [[0, 'rgba(255,255,255,0.5)'], [0.55, 'rgba(255,255,255,0.18)'], [1, 'rgba(255,255,255,0)']]), scene);
+      steam.emitter = new BABYLON.Vector3(0, 1.3, 0); // מעל המנה — שהפחזניות ייוולדו באוויר ולא בתוך הלחמנייה
+      steam.minEmitBox = new BABYLON.Vector3(-0.6, 0, -0.6);
+      steam.maxEmitBox = new BABYLON.Vector3(0.6, 0.3, 0.6);
+      steam.addColorGradient(0, new BABYLON.Color4(1, 1, 1, 0));
+      steam.addColorGradient(0.25, new BABYLON.Color4(1, 1, 1, 0.3));
+      steam.addColorGradient(1, new BABYLON.Color4(1, 1, 1, 0));
+      steam.addSizeGradient(0, 0.6); steam.addSizeGradient(1, 2.4);
+      steam.minLifeTime = 1.3; steam.maxLifeTime = 2.3;
+      steam.emitRate = 20;
+      steam.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
+      steam.direction1 = new BABYLON.Vector3(-0.12, 1, -0.12); steam.direction2 = new BABYLON.Vector3(0.12, 1, 0.12);
+      steam.minEmitPower = 0.5; steam.maxEmitPower = 1.1; steam.updateSpeed = 0.016;
+
+      // מגע: גרירה מסובבת את המנה, הקשה מנצנצת ומאריכה את התצוגה
+      canvas.addEventListener('pointerdown', (e) => {
+        dragging = true; dragX = e.clientX; lastInteract = performance.now();
+        try { sparks.manualEmitCount = 30; sparks.start(); } catch (err) {}
+        try { window.Sound && Sound.pop && Sound.pop(); } catch (err) {}
+        clearTimeout(hideTimer); hideTimer = setTimeout(() => api.hide(), 3200);
+      });
+      canvas.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        root.rotation.y += (e.clientX - dragX) * 0.012; dragX = e.clientX; lastInteract = performance.now();
+      });
+      window.addEventListener('pointerup', () => { dragging = false; });
+
+      window.addEventListener('resize', () => { try { engine.resize(); } catch (e) {} });
+      ready = true;
+    } catch (e) { console.warn('Hero3D init failed', e); ready = false; }
+    return ready;
+  }
+
+  // ---- עזרי build: המנה ה-3D משקפת את מה שהילדה באמת הכינה ----
+  function baseHex(food, build, fallback) {
+    try {
+      if (build && build.base && typeof G !== 'undefined' && G.baseColor) {   // const G לא יושב על window
+        const c = G.baseColor(food, build.base);
+        if (c != null) return '#' + ('000000' + c.toString(16)).slice(-6);
+      }
+    } catch (e) {}
+    return fallback;
+  }
+  function has(build, t) { return !!(build && build.toppings && build.toppings.indexOf(t) >= 0); }
+  // פיזור n עותקים על עיגול אופקי (תוספות על פיצה/דונאט)
+  function scatter(node, n, rMin, rMax, y, maker) {
+    for (let i = 0; i < n; i++) {
+      const m = maker(i);
+      const a = Math.random() * Math.PI * 2, rr = rMin + Math.random() * (rMax - rMin);
+      m.position.set(Math.cos(a) * rr, y, Math.sin(a) * rr);
+      m.parent = node;
+    }
+  }
+  // דובדבן עם גבעול (משותף לשייק/דונאט)
+  function makeCherry(name, scale) {
+    const n = new BABYLON.TransformNode(name, scene);
+    const c = BABYLON.MeshBuilder.CreateSphere(name + 'b', { diameter: 0.5 * scale, segments: 18 }, scene);
+    c.material = pbr(name + 'm', '#e23047', 0.1, 0, { cc: 1, ccRough: 0.06 }); c.parent = n;
+    const st = BABYLON.MeshBuilder.CreateCylinder(name + 's', { diameter: 0.055 * scale, height: 0.32 * scale, tessellation: 8 }, scene);
+    st.position.y = 0.28 * scale; st.rotation.z = 0.3; st.material = pbr(name + 'sm', '#4a7c2f', 0.5); st.parent = n;
+    return n;
+  }
+
+  function buildDonut(build) {
+    const node = new BABYLON.TransformNode('donut', scene); node.parent = root;
+    const cake = BABYLON.MeshBuilder.CreateTorus('dCake', { diameter: 3.2, thickness: 1.5, tessellation: 72 }, scene);
+    cake.material = pbr('dGlaze', baseHex('donut', build, '#ff8ac4'), 0.13, 0, { cc: 0.9, ccRough: 0.1, bump: 'fine' }); cake.parent = node;
+    if (!build || has(build, '🌈') || !build.toppings || !build.toppings.length) {
+      // סוכריות צבעוניות (ברירת מחדל / כשבחרה 🌈)
+      const cols = ['#fff27a', '#5fe0b0', '#5fb8ff', '#ffffff', '#ff5f86', '#a86bff'];
+      for (let i = 0; i < 34; i++) {
+        const s = BABYLON.MeshBuilder.CreateCapsule('sp' + i, { radius: 0.09, height: 0.5, tessellation: 8, capSubdivisions: 3 }, scene);
+        s.material = pbr('spm' + i, cols[i % cols.length], 0.35, 0, { cc: 0.5 });
+        const a = Math.random() * Math.PI * 2, rr = 1.62 + (Math.random() - 0.5) * 0.72;
+        s.position.set(Math.cos(a) * rr, 0.62 + Math.random() * 0.12, Math.sin(a) * rr);
+        s.rotation.set(Math.PI / 2 + (Math.random() - 0.5) * 0.7, Math.random() * 3, Math.random() * 3); s.parent = node;
+      }
+    }
+    if (has(build, '🍒')) [0.5, 2.6, 4.4].forEach((a, i) => {
+      const ch = makeCherry('dCh' + i, 1); ch.position.set(Math.cos(a) * 1.55, 0.78, Math.sin(a) * 1.55); ch.parent = node;
+    });
+    if (has(build, '⭐')) scatter(node, 6, 1.2, 1.95, 0.68, (i) => {
+      const s = BABYLON.MeshBuilder.CreateSphere('dSt' + i, { diameter: 0.26, segments: 12 }, scene);
+      s.material = pbr('dStM' + i, '#ffd24c', 0.15, 0.6, { cc: 0.8 }); return s;
+    });
+    if (has(build, '🍪')) scatter(node, 5, 1.25, 1.9, 0.66, (i) => {
+      const c = BABYLON.MeshBuilder.CreateCylinder('dCk' + i, { diameter: 0.42, height: 0.1, tessellation: 16 }, scene);
+      c.material = pbr('dCkM' + i, '#8a5a3c', 0.6, 0, { bump: 'fine' }); c.rotation.set(Math.random() * 0.6, 0, Math.random() * 0.6); return c;
+    });
+    if (has(build, '🍬')) scatter(node, 6, 1.2, 1.95, 0.66, (i) => {
+      const s = BABYLON.MeshBuilder.CreateSphere('dCd' + i, { diameter: 0.24, segments: 12 }, scene);
+      s.material = pbr('dCdM' + i, i % 2 ? '#ff5f86' : '#5fb8ff', 0.12, 0, { cc: 1 }); return s;
+    });
+    return node;
+  }
+  function buildPizza(build) {
+    const node = new BABYLON.TransformNode('pizza', scene); node.parent = root;
+    const base = BABYLON.MeshBuilder.CreateCylinder('pBase', { diameter: 3.7, height: 0.32, tessellation: 72 }, scene);
+    base.material = pbr('pDough', '#e3a862', 0.75, 0, { bump: 'coarse' }); base.parent = node;
+    const crust = BABYLON.MeshBuilder.CreateTorus('pCrust', { diameter: 3.65, thickness: 0.5, tessellation: 72 }, scene);
+    crust.position.y = 0.06; crust.material = pbr('pCrustM', '#cf9050', 0.72, 0, { bump: 'coarse' }); crust.parent = node;
+    const sauce = BABYLON.MeshBuilder.CreateCylinder('pSauce', { diameter: 3.0, height: 0.06, tessellation: 56 }, scene);
+    sauce.position.y = 0.18; sauce.material = pbr('pSauceM', '#cc2b22', 0.3, 0, { cc: 0.55, ccRough: 0.2 }); sauce.parent = node;
+    const cheese = BABYLON.MeshBuilder.CreateCylinder('pCheese', { diameter: 2.92, height: 0.05, tessellation: 56 }, scene);
+    cheese.position.y = 0.23; cheese.material = pbr('pCheeseM', '#e89b28', 0.48, 0, { bump: 'fine', trans: 0.15 }); cheese.parent = node;
+    // תוספות לפי מה שהונח באמת; בלי build — מיקס ברירת מחדל
+    const makers = {
+      '🍄': (i) => { const m = BABYLON.MeshBuilder.CreateSphere('pMu' + i, { diameter: 0.42, slice: 0.55, segments: 14 }, scene);
+        m.material = pbr('pMuM' + i, '#e8d8c0', 0.55, 0, { bump: 'fine' }); return m; },
+      '🫑': (i) => { const m = BABYLON.MeshBuilder.CreateTorus('pPe' + i, { diameter: 0.4, thickness: 0.08, tessellation: 18 }, scene);
+        m.material = pbr('pPeM' + i, '#3fa83f', 0.4, 0, { cc: 0.4 }); return m; },
+      '🫒': (i) => { const m = BABYLON.MeshBuilder.CreateTorus('pOl' + i, { diameter: 0.26, thickness: 0.1, tessellation: 14 }, scene);
+        m.material = pbr('pOlM' + i, '#3a4028', 0.25, 0, { cc: 0.7 }); return m; },
+      '🌽': (i) => { const m = BABYLON.MeshBuilder.CreateSphere('pCo' + i, { diameter: 0.16, segments: 8 }, scene);
+        m.material = pbr('pCoM' + i, '#ffd24c', 0.35, 0, { cc: 0.3 }); return m; },
+      '🍍': (i) => { const m = BABYLON.MeshBuilder.CreateBox('pPi' + i, { width: 0.36, height: 0.09, depth: 0.3 }, scene);
+        m.material = pbr('pPiM' + i, '#ffcf3c', 0.3, 0, { cc: 0.5 }); m.rotation.y = Math.random() * 3; return m; },
+      '🧅': (i) => { const m = BABYLON.MeshBuilder.CreateTorus('pOn' + i, { diameter: 0.38, thickness: 0.05, tessellation: 18 }, scene);
+        m.material = pbr('pOnM' + i, '#f2e2ee', 0.35, 0, { trans: 0.4 }); return m; }
+    };
+    const chosen = (build && build.toppings) ? build.toppings.filter(t => makers[t]) : [];
+    if (chosen.length) chosen.forEach((t, k) => scatter(node, t === '🌽' ? 12 : 6, 0.15, 1.15, 0.29, makers[t]));
+    else { const tcols = ['#b3402a', '#3fa83f', '#7a3b16'];
+      for (let i = 0; i < 14; i++) {
+        const t = BABYLON.MeshBuilder.CreateCylinder('pt' + i, { diameter: 0.34, height: 0.09, tessellation: 12 }, scene);
+        t.material = pbr('ptm' + i, tcols[i % tcols.length], 0.5);
+        const a = Math.random() * 6.283, rr = Math.random() * 1.1; t.position.set(Math.cos(a) * rr, 0.28, Math.sin(a) * rr); t.parent = node;
+      } }
+    return node;
+  }
+  function buildBurger(build) {
+    const node = new BABYLON.TransformNode('burger', scene); node.parent = root;
+    const all = !build; // בלי build — בורגר עשיר קלאסי
+    let y = -0.95;
+    const bunB = BABYLON.MeshBuilder.CreateCylinder('bBunB', { diameter: 3, height: 0.6, tessellation: 56 }, scene);
+    bunB.position.y = y; bunB.material = pbr('bBunBM', '#e6a85a', 0.5, 0, { bump: 'coarse' }); bunB.parent = node;
+    y += 0.35;
+    if (all || has(build, '🥬')) {
+      const lettuce = BABYLON.MeshBuilder.CreateTorus('bLet', { diameter: 3.05, thickness: 0.45, tessellation: 40 }, scene);
+      lettuce.position.y = y; lettuce.scaling.y = 0.5; lettuce.material = pbr('bLetM', '#67bf4a', 0.55, 0, { bump: 'fine' }); lettuce.parent = node;
+      y += 0.22;
+    }
+    const patty = BABYLON.MeshBuilder.CreateCylinder('bPatty', { diameter: 3.1, height: 0.55, tessellation: 56 }, scene);
+    patty.position.y = y + 0.14; patty.material = pbr('bPattyM', '#6b3a1e', 0.68, 0, { bump: 'coarse' }); patty.parent = node;
+    y += 0.42;
+    if (all || has(build, '🧀')) {
+      const cheese = BABYLON.MeshBuilder.CreateBox('bCheese', { width: 3.15, height: 0.1, depth: 3.15 }, scene);
+      cheese.position.y = y; cheese.rotation.y = Math.PI / 4; cheese.material = pbr('bCheeseM', '#ffc23c', 0.32, 0, { trans: 0.35 }); cheese.parent = node;
+      y += 0.12;
+    }
+    if (has(build, '🍅')) {
+      const tom = BABYLON.MeshBuilder.CreateCylinder('bTom', { diameter: 2.7, height: 0.16, tessellation: 40 }, scene);
+      tom.position.y = y + 0.06; tom.material = pbr('bTomM', '#e0402e', 0.25, 0, { cc: 0.7, ccRough: 0.15 }); tom.parent = node;
+      y += 0.18;
+    }
+    if (has(build, '🍳')) {
+      const white = BABYLON.MeshBuilder.CreateCylinder('bEgg', { diameter: 2.3, height: 0.1, tessellation: 36 }, scene);
+      white.position.y = y + 0.04; white.material = pbr('bEggM', '#fffaf2', 0.4, 0, { sheen: 0.4 }); white.parent = node;
+      const yolk = BABYLON.MeshBuilder.CreateSphere('bYolk', { diameter: 0.8, segments: 18 }, scene);
+      yolk.position.y = y + 0.12; yolk.scaling.y = 0.5; yolk.material = pbr('bYolkM', '#ffb527', 0.2, 0, { cc: 0.9, ccRough: 0.1 }); yolk.parent = node;
+      y += 0.16;
+    }
+    if (has(build, '🥒')) [0, 1, 2].forEach((i) => {
+      // חמוצים מציצים מתחת ללחמנייה — ברדיוס גדול, שיהיו גלויים
+      const a = 0.6 + i * 2.1, rr = 1.45; // מציץ מעבר לשולי הלחמנייה (רדיוס 1.5)
+      const pk = BABYLON.MeshBuilder.CreateCylinder('bPk' + i, { diameter: 0.7, height: 0.1, tessellation: 16 }, scene);
+      pk.position.set(Math.cos(a) * rr, y + 0.05, Math.sin(a) * rr);
+      pk.material = pbr('bPkM' + i, '#5f9e3a', 0.45, 0, { cc: 0.5, bump: 'fine' }); pk.parent = node;
+    });
+    if (has(build, '🧅')) [0, 1].forEach((i) => {
+      const on = BABYLON.MeshBuilder.CreateTorus('bOn' + i, { diameter: 2.1 - i * 0.5, thickness: 0.09, tessellation: 24 }, scene);
+      on.position.set(i ? 0.55 : -0.4, y + 0.08, i ? -0.4 : 0.3); on.material = pbr('bOnM' + i, '#f2e2ee', 0.35, 0, { trans: 0.4 }); on.parent = node;
+    });
+    if (has(build, '🥒') || has(build, '🧅')) y += 0.14;
+    const bunT = BABYLON.MeshBuilder.CreateSphere('bBunT', { diameter: 3, slice: 0.52, segments: 40 }, scene);
+    bunT.position.y = y + 0.1; bunT.scaling.y = 0.95; bunT.material = pbr('bBunTM', '#e8aa5c', 0.45, 0, { bump: 'coarse' }); bunT.parent = node;
+    for (let i = 0; i < 12; i++) {
+      const s = BABYLON.MeshBuilder.CreateSphere('se' + i, { diameter: 0.17, segments: 8 }, scene);
+      s.material = pbr('sem' + i, '#fff2cf', 0.5);
+      const a = Math.random() * 6.283, rr = Math.random() * 0.95; s.position.set(Math.cos(a) * rr, y + 0.27 + Math.random() * 0.5, Math.sin(a) * rr); s.parent = node;
+    }
+    return node;
+  }
+  function buildShake(build) {
+    const node = new BABYLON.TransformNode('shake', scene); node.parent = root;
+    const flavor = baseHex('shake', build, '#ff86ba');
+    const cup = BABYLON.MeshBuilder.CreateCylinder('sCup', { diameterTop: 2, diameterBottom: 1.5, height: 2.8, tessellation: 56 }, scene);
+    cup.position.y = -0.1;
+    cup.material = pbr('sGlass', '#eaf4ff', 0.06, 0, { alpha: 0.35, cc: 1, ccRough: 0.04 });
+    cup.parent = node;
+    const liquid = BABYLON.MeshBuilder.CreateCylinder('sLiq', { diameterTop: 1.84, diameterBottom: 1.42, height: 2.5, tessellation: 56 }, scene);
+    liquid.position.y = -0.25; liquid.material = pbr('sLiqM', flavor, 0.28, 0, { cc: 0.5 }); liquid.parent = node;
+    // גלידה שלוקית (סופט-סרב) — כדורים יורדים בגודל, בגוון עדין של הטעם שנבחר
+    const creamCol = build && build.base && build.base !== '🍦' ? flavor : '#fff1f7';
+    const cream = BABYLON.Color3.FromHexString(creamCol).add(BABYLON.Color3.White().scale(0.55));
+    const creamHex = '#' + [cream.r, cream.g, cream.b].map(v => ('0' + Math.round(Math.min(1, v) * 255).toString(16)).slice(-2)).join('');
+    const swirl = [[1.85, 1.25], [1.45, 1.85], [1.02, 2.35], [0.6, 2.72]];
+    swirl.forEach((sw, i) => {
+      const sc = BABYLON.MeshBuilder.CreateSphere('sw' + i, { diameter: sw[0], segments: 28 }, scene);
+      sc.position.y = sw[1]; sc.scaling.y = 0.9; sc.material = pbr('swm' + i, creamHex, 0.34, 0, { sheen: 0.55, trans: 0.3 }); sc.parent = node;
+    });
+    if (!build || has(build, '🍒')) { const ch = makeCherry('sCh', 1.1); ch.position.y = 3.02; ch.parent = node; }
+    if (has(build, '🌈')) for (let i = 0; i < 12; i++) {
+      // סוכריות על הקצפת — צמודות לקונטור הסופט-סרב (רדיוס קטן ככל שעולים)
+      const cols = ['#fff27a', '#5fe0b0', '#5fb8ff', '#ff5f86', '#a86bff'];
+      const s = BABYLON.MeshBuilder.CreateCapsule('sSp' + i, { radius: 0.055, height: 0.3, tessellation: 8, capSubdivisions: 2 }, scene);
+      s.material = pbr('sSpM' + i, cols[i % cols.length], 0.3, 0, { cc: 0.5 });
+      const yy = 1.4 + Math.random() * 1.2, rr = Math.max(0.15, 1 - (yy - 1.4) * 0.55), a = Math.random() * Math.PI * 2;
+      s.position.set(Math.cos(a) * rr, yy, Math.sin(a) * rr);
+      s.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3); s.parent = node;
+    }
+    if (has(build, '🍪')) { const ck = BABYLON.MeshBuilder.CreateCylinder('sCk', { diameter: 0.9, height: 0.12, tessellation: 20 }, scene);
+      ck.position.set(0.55, 2.5, 0.2); ck.rotation.z = 1.1; ck.material = pbr('sCkM', '#8a5a3c', 0.6, 0, { bump: 'fine' }); ck.parent = node; }
+    if (has(build, '🥥')) for (let i = 0; i < 10; i++) {
+      const f = BABYLON.MeshBuilder.CreateBox('sCo' + i, { width: 0.16, height: 0.04, depth: 0.1 }, scene);
+      f.material = pbr('sCoM' + i, '#ffffff', 0.5, 0, { sheen: 0.4 });
+      const yy = 1.5 + Math.random() * 1.1, rr = Math.max(0.15, 1 - (yy - 1.4) * 0.55), a = Math.random() * Math.PI * 2;
+      f.position.set(Math.cos(a) * rr, yy, Math.sin(a) * rr);
+      f.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3); f.parent = node;
+    }
+    if (has(build, '⭐')) { const st = BABYLON.MeshBuilder.CreateSphere('sSt', { diameter: 0.34, segments: 14 }, scene);
+      st.position.set(-0.5, 2.65, 0.15); st.material = pbr('sStM', '#ffd24c', 0.15, 0.6, { cc: 0.8 }); st.parent = node; }
+    return node;
+  }
+
+  const FOOD_BUILDERS = { donut: buildDonut, pizza: buildPizza, burger: buildBurger, shake: buildShake };
+
+  // בנייה טרייה בכל תצוגה — המנה משקפת את ה-build המדויק (צבע/תוספות).
+  // הרכיבים ישנים נזרקים; טקסטורות ה-bump משותפות ולכן לא נמחקות.
+  function setCurrent(foodKey, build) {
+    Object.keys(builders).forEach(k => {
+      try {
+        builders[k].getChildMeshes().forEach(m => { if (m.material) m.material.dispose(false, false); });
+        builders[k].dispose(false);
+      } catch (e) {}
+    });
+    builders = {};
+    const node = (FOOD_BUILDERS[foodKey] || FOOD_BUILDERS.donut)(build);
+    builders[foodKey] = node;
+    if (shadowGen) node.getChildMeshes().forEach(m => shadowGen.addShadowCaster(m));
+    current = foodKey;
+  }
+
+  function easeOutBack(t) { const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+
+  function render() {
+    const el = (performance.now() - t0) / 1000;
+    // כניסה קופצת
+    const s = el < 0.55 ? Math.max(0.001, easeOutBack(el / 0.55)) : 1;
+    root.scaling.setAll(s);
+    // סיבוב אוטומטי — מושהה בזמן שהילדה מסובבת בעצמה
+    if (!dragging && performance.now() - lastInteract > 1200) root.rotation.y += engine.getDeltaTime() / 1000 * 1.3;
+    root.position.y = Math.sin(el * 2) * 0.12;
+    // דחיפת-מצלמה קולנועית איטית + נשימה קלה בזווית
+    const push = Math.min(el / 2.2, 1);
+    cam.radius = 11.6 - (1 - Math.pow(1 - push, 3)) * 0.7; // עדין — שלא ייחתך הדובדבן של השייק (המנה הגבוהה)
+    cam.beta = Math.PI / 2.75 + Math.sin(el * 0.6) * 0.018;
+    if (pipeline && pipeline.depthOfFieldEnabled) pipeline.depthOfField.focusDistance = cam.radius * 1000;
+    // גל-הלם
+    if (el < 0.65) { ring.setEnabled(true); const k = el / 0.65; ring.scaling.setAll(0.3 + k * 3); ring.material.alpha = 1 - k; }
+    else ring.setEnabled(false);
+    scene.render();
+  }
+
+  const api = {
+    preload() { loadBabylon(); },
+    show(foodKey, ms, build) {
+      loadBabylon();
+      if (!init()) return;
+      setCurrent(foodKey || 'donut', build);
+      t0 = performance.now(); lastInteract = 0; dragging = false;
+      root.scaling.setAll(0.001); root.rotation.y = 0;
+      clearTimeout(fadeTimer);
+      canvas.style.display = 'block'; canvas.style.pointerEvents = 'auto';
+      requestAnimationFrame(() => { canvas.style.opacity = '1'; });
+      try { engine.resize(); } catch (e) {}
+      try { sparks.manualEmitCount = -1; sparks.stop(); sparks.reset(); sparks.start(); setTimeout(() => { try { sparks.stop(); } catch (e) {} }, 260); } catch (e) {}
+      try { twinkle.start(); } catch (e) {}
+      try { (current === 'burger' || current === 'pizza') ? steam.start() : steam.stop(); } catch (e) {}
+      if (!visible) { visible = true; engine.runRenderLoop(render); }
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => api.hide(), ms || 2800);
+    },
+    hide() {
+      visible = false;
+      try { twinkle.stop(); } catch (e) {}
+      try { steam.stop(); } catch (e) {}
+      if (canvas) { canvas.style.opacity = '0'; canvas.style.pointerEvents = 'none'; }
+      clearTimeout(fadeTimer);
+      // עצירת הרנדר וההסתרה רק אחרי סיום ה-fade — כדי שהדעיכה תיראה
+      fadeTimer = setTimeout(() => {
+        if (visible) return; // show() חדש קטע את היציאה
+        if (engine) try { engine.stopRenderLoop(render); } catch (e) {}
+        if (canvas) canvas.style.display = 'none';
+      }, 320);
+    },
+    isReady() { return ready; },
+    debug() { return { ready: ready, visible: visible, food: current, rot: root ? root.rotation.y : null,
+      casters: (shadowGen && shadowGen.getShadowMap() && shadowGen.getShadowMap().renderList) ? shadowGen.getShadowMap().renderList.length : -1 }; }
+  };
+  return api;
+})();
+window.Hero3D = Hero3D;

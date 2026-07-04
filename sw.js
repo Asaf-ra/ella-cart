@@ -1,5 +1,5 @@
 /* ===== Service Worker — עבודה אופליין מלאה ===== */
-const CACHE = 'ella-cart-v5';
+const CACHE = 'ella-cart-v15';
 const ART = [
   'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
   'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',
@@ -14,8 +14,10 @@ const ASSETS = [
   './manifest.json',
   './assets/icon.svg',
   './vendor/phaser.min.js',
+  './vendor/babylon.js',
   './js/audio.js',
   './js/state.js',
+  './js/hero3d.js',
   './js/world.js',
   './js/minigame.js',
   './js/game.js'

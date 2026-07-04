@@ -22,7 +22,26 @@ const Helper = {
 
   // הצללה רכה מתחת לאובייקט (תלת-ממד)
   shadowEl(scene, x, y, w, h) {
+    return Helper.softShadow(scene, x, y, w, h);
+  },
+
+  // צל רך מדורג (גרדיאנט רדיאלי) — נראה תלת-ממדי הרבה יותר מאליפסה שטוחה
+  softShadow(scene, x, y, w, h) {
+    if (scene.textures.exists('shadowSoft')) {
+      const s = scene.add.image(x, y, 'shadowSoft');
+      s.setDisplaySize(w * 1.6, h * 1.9);
+      return s;
+    }
     return scene.add.ellipse(x, y, w, h, 0x000000, 0.18);
+  },
+
+  // הילת זוהר רכה (בלום) — להוספת אור/קסם מאחורי אובייקט
+  bloom(scene, x, y, size, color, alpha) {
+    if (!scene.textures.exists('glowSoft')) return null;
+    const b = scene.add.image(x, y, 'glowSoft').setDisplaySize(size, size);
+    b.setBlendMode(Phaser.BlendModes.ADD).setTint(color == null ? 0xffffff : color);
+    if (alpha != null) b.setAlpha(alpha);
+    return b;
   },
 
   // כפתור עגול תלת-ממדי עם אמוג'י + מיץ לחיצה
@@ -62,7 +81,7 @@ const Helper = {
     t.setShadow(0, 2, 'rgba(0,0,0,0.25)', 2);
     c.add([g, t]);
     c.setSize(w, h);
-    c.setInteractive(new Phaser.Geom.Rectangle(-w/2, -h/2, w, h), Phaser.Geom.Rectangle.Contains);
+    c.setInteractive(new Phaser.Geom.Rectangle(0, 0, w, h), Phaser.Geom.Rectangle.Contains); // hit-area לקונטיינר נבדק אחרי הוספת displayOrigin (w/2,h/2) — חייב להתחיל מ-(0,0)
     c.on('pointerdown', () => {
       Sound.tap();
       scene.tweens.add({ targets: c, scale: 0.92, duration: 70, yoyo: true });
@@ -92,7 +111,25 @@ const Helper = {
     const im = scene.add.image(x, y, key);
     im.setScale(displayH / im.height);
     return im;
+  },
+
+  // אייקון מרכיב לפי אמוג'י: תמונה מצוירת אם יש, אחרת אמוג'י. מחזיר אובייקט עם _base (סקייל בסיס)
+  icon(scene, x, y, emoji, size) {
+    const key = EMOJI_ART[emoji];
+    if (key && scene.textures.exists(key)) {
+      const im = scene.add.image(x, y, key); im.setScale(size / im.width); im._base = im.scaleX; return im;
+    }
+    const t = scene.add.text(x, y, emoji, { fontSize: Math.round(size * 0.95) + 'px' }).setOrigin(0.5);
+    t._base = 1; return t;
   }
+};
+
+// מיפוי אמוג'י → טקסטורת איור מצוירת (משותף לכל הקבצים)
+const EMOJI_ART = {
+  '🍞':'ing_bun_bottom', '🍔':'ing_bun_top', '🥩':'ing_patty', '🧀':'ing_cheese', '🥬':'ing_lettuce',
+  '🍅':'ing_tomato', '🥒':'ing_cucumber', '🧅':'ing_onion',
+  '🍓':'ing_straw', '🍫':'ing_choc', '🍦':'ing_vanilla', '🫐':'ing_blue',
+  '🍒':'ing_cherry', '⭐':'star', '🍄':'ing_mushroom', '🫑':'ing_pepper', '🫒':'ing_olive', '🍍':'ing_pineapple'
 };
 
 /* ---------- סצנת טעינה: יצירת טקסטורות בקוד ---------- */
@@ -139,6 +176,13 @@ class BootScene extends Phaser.Scene {
 
     g.destroy();
 
+    // ----- מראה פרימיום: טקסטורות גרדיאנט רדיאלי (זוהר רך, צל רך, וינייטה) -----
+    this.makeRadial('glowSoft', 256, [[0,'rgba(255,255,255,1)'],[0.35,'rgba(255,255,255,0.55)'],[1,'rgba(255,255,255,0)']]);
+    this.makeRadial('shadowSoft', 256, [[0,'rgba(38,22,44,0.5)'],[0.55,'rgba(38,22,44,0.3)'],[1,'rgba(38,22,44,0)']]);
+    this.makeRadial('vignette', 512, [[0,'rgba(30,14,38,0)'],[0.62,'rgba(30,14,38,0)'],[1,'rgba(30,14,38,0.55)']]);
+    // כתם רוטב רך — נמרח חלק במקום נקודות קשות
+    this.makeRadial('sauceDab', 128, [[0,'rgba(206,42,38,0.92)'],[0.5,'rgba(216,54,40,0.62)'],[1,'rgba(216,54,40,0)']]);
+
     // טעינת אומנות וקטורית מצוירת (SVG) — דמויות, מאכלים ומרכיבים
     ['ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
      'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse']
@@ -148,6 +192,21 @@ class BootScene extends Phaser.Scene {
     ['ing_bun_top','ing_bun_bottom','ing_patty','ing_cheese','ing_lettuce','ing_tomato','ing_cucumber','ing_onion',
      'ing_straw','ing_choc','ing_vanilla','ing_blue','ing_cherry','ing_mushroom','ing_pepper','ing_olive','ing_pineapple']
       .forEach(k => this.load.svg(k, 'assets/art/' + k + '.svg', { width: 128, height: 128 }));
+  }
+
+  // יוצר טקסטורת גרדיאנט רדיאלי מתוך רשימת עצירות צבע
+  makeRadial(key, size, stops) {
+    if (this.textures.exists(key)) return;
+    const tex = this.textures.createCanvas(key, size, size);
+    if (!tex) return;
+    const ctx = (typeof tex.getContext === 'function') ? tex.getContext() : tex.context;
+    if (!ctx) return;
+    const r = size / 2;
+    const grd = ctx.createRadialGradient(r, r, 0, r, r, r);
+    stops.forEach(s => grd.addColorStop(s[0], s[1]));
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, size, size);
+    tex.refresh();
   }
 
   starTexture(g) {
@@ -171,6 +230,7 @@ class BootScene extends Phaser.Scene {
 /* ---------- הרצה ---------- */
 window.addEventListener('DOMContentLoaded', function () {
   G.applyCosmetics();
+  if (!G.soundOn) Sound.toggle();      // מסנכרן מצב סאונד שמור (ברירת מחדל: דלוק)
 
   const config = {
     type: Phaser.AUTO,
@@ -186,6 +246,9 @@ window.addEventListener('DOMContentLoaded', function () {
   };
 
   window.gameInstance = new Phaser.Game(config);
+
+  // טעינת-רקע עצלה של מנוע ה-3D — המשחק נפתח מיד; Babylon מוכן עד ההגשה הראשונה
+  setTimeout(function () { try { Hero3D.preload(); } catch (e) {} }, 1500);
 
   // ניקוי מחוות/בחירה
   document.addEventListener('contextmenu', e => e.preventDefault());
