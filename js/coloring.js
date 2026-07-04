@@ -16,6 +16,13 @@
     { c:'#b28dff', name:'סגול'  }, { c:'#a5714d', name:'חום'   },
     { c:'#9aa0ab', name:'אפור'  }, { c:'#ffffff', name:'לבן'   }
   ];
+  // צבעים שנפתחים עם השדרוג "עוד צבעים" מעגלת השדרוגים
+  const EXTRA_COLORS = [
+    { c:'#ff2d78', name:'פוקסיה' }, { c:'#00c9a7', name:'ים'     },
+    { c:'#845ec2', name:'לילך'   }, { c:'#f9f871', name:'ליים'   },
+    { c:'#ffc75f', name:'זהב'    }, { c:'#2c2c54', name:'לילה'   }
+  ];
+  if (typeof Wallet !== 'undefined' && Wallet.lvl('brushes') > 0) EXTRA_COLORS.forEach(c => COLORS.push(c));
   const INK = '#5a3d5c';          // צבע קו המתאר
   const GALLERY_KEY = 'ella-coloring-gallery';
   const MAX_GALLERY = 12;
@@ -247,6 +254,18 @@
     Voice.praise();
     const r = stage.getBoundingClientRect();
     for (let i = 0; i < 30; i++) sparkle(r.width/2 + (Math.random()-0.5)*300, r.height/2 + (Math.random()-0.5)*200, currentColor.c, 2);
+    // ציור שמור = 2 מטבעות לארנק המשותף
+    if (typeof Wallet !== 'undefined') {
+      Wallet.add(2);
+      const f = document.createElement('div');
+      f.textContent = '🪙 +2';
+      Object.assign(f.style, { position: 'fixed', left: '50%', top: '42%', transform: 'translate(-50%,-50%)',
+        font: 'bold 54px Varela Round, Heebo, sans-serif', color: '#e09b00', zIndex: 50,
+        textShadow: '0 2px 6px rgba(255,255,255,.9)', pointerEvents: 'none', transition: 'all 1s ease-out', opacity: 1 });
+      document.body.appendChild(f);
+      requestAnimationFrame(() => { f.style.top = '20%'; f.style.opacity = 0; });
+      setTimeout(() => f.remove(), 1100);
+    }
   });
 
   const gallery = document.getElementById('gallery');

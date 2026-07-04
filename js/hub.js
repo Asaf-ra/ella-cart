@@ -122,6 +122,34 @@ class HubScene extends Phaser.Scene {
         ease: 'Sine.inOut', delay: 800 + i * 300 });
     });
 
+    /* ----- ארנק: מונה מטבעות (משותף לכל המשחקים) ----- */
+    const cg = this.make.graphics({ x: 0, y: 0, add: false });
+    cg.fillStyle(0xf5b301, 1); cg.fillCircle(20, 20, 18);
+    cg.fillStyle(0xffe27a, 1); cg.fillCircle(20, 20, 12);
+    cg.generateTexture('coin', 40, 40); cg.destroy();
+    this.add.image(150, 54, 'coin').setDepth(20);
+    this.coinText = this.add.text(178, 54, '' + Wallet.coins, {
+      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '40px', color: '#e09b00', fontStyle: 'bold'
+    }).setOrigin(0, 0.5).setDepth(20);
+    this.coinText.setShadow(0, 2, 'rgba(255,255,255,0.85)', 3);
+
+    /* ----- כפתור עגלת השדרוגים — זהב, פועם ----- */
+    const shopBtn = this.add.container(W - 110, H - 100).setDepth(20);
+    const sg = this.add.graphics();
+    sg.fillStyle(0x000000, 0.2); sg.fillCircle(4, 10, 58);
+    sg.fillStyle(0xb37c00, 1); sg.fillCircle(0, 5, 58);
+    sg.fillGradientStyle(0xffd75e, 0xffd75e, 0xf5a800, 0xf5a800, 1); sg.fillCircle(0, 0, 58);
+    sg.fillStyle(0xffffff, 0.4); sg.fillEllipse(0, -24, 74, 30);
+    const si = this.add.text(0, -6, '🛒', { fontSize: '54px' }).setOrigin(0.5);
+    const sl = this.add.text(0, 38, 'שדרוגים', {
+      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '20px', color: '#7a5200', fontStyle: 'bold'
+    }).setOrigin(0.5);
+    shopBtn.add([sg, si, sl]);
+    shopBtn.setSize(120, 120);
+    shopBtn.setInteractive(new Phaser.Geom.Rectangle(0, 0, 120, 120), Phaser.Geom.Rectangle.Contains);
+    this.tweens.add({ targets: shopBtn, scale: 1.07, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    shopBtn.on('pointerdown', () => { Sound.tap(); Voice.say('עגלת השדרוגים!'); this.openShop(); });
+
     /* ----- ברכת קול במגע ראשון (audio unlock) ----- */
     this.input.once('pointerdown', () => {
       Sound.unlock();
@@ -131,6 +159,137 @@ class HubScene extends Phaser.Scene {
     // ניקוי מחוות
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('gesturestart', e => e.preventDefault());
+  }
+
+  /* ============ עגלת השדרוגים ============ */
+  openShop() {
+    if (this.shopUI) { this.shopUI.setVisible(true); this.refreshShop(); return; }
+    const W = DESIGN.w, H = DESIGN.h;
+    const ui = this.add.container(0, 0).setDepth(100);
+    this.shopUI = ui;
+
+    // עמעום מלא — חוסם לחיצות על מה שמתחת
+    const dim = this.add.rectangle(W/2, H/2, W, H, 0x241030, 0.62).setInteractive();
+    ui.add(dim);
+
+    // לוח החנות
+    const pg = this.add.graphics();
+    pg.fillStyle(0x000000, 0.25); pg.fillRoundedRect(W/2 - 490, H/2 - 264, 980, 552, 40);
+    pg.fillStyle(0xfff6fc, 1); pg.fillRoundedRect(W/2 - 490, H/2 - 272, 980, 552, 40);
+    pg.fillStyle(0xffe9f5, 1); pg.fillRoundedRect(W/2 - 490, H/2 - 272, 980, 92, { tl: 40, tr: 40, bl: 0, br: 0 });
+    ui.add(pg);
+    const title = this.add.text(W/2, H/2 - 226, '🛒 עגלת השדרוגים', {
+      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '46px', color: '#ff5ca8', fontStyle: 'bold'
+    }).setOrigin(0.5);
+    ui.add(title);
+
+    // יתרה בתוך החנות
+    ui.add(this.add.image(W/2 - 420, H/2 - 226, 'coin'));
+    this.shopCoinText = this.add.text(W/2 - 392, H/2 - 226, '' + Wallet.coins, {
+      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '38px', color: '#e09b00', fontStyle: 'bold'
+    }).setOrigin(0, 0.5);
+    ui.add(this.shopCoinText);
+
+    // כפתור סגירה
+    const close = this.add.container(W/2 + 430, H/2 - 226);
+    const cgr = this.add.graphics();
+    cgr.fillStyle(0xff5ca8, 1); cgr.fillCircle(0, 0, 34);
+    cgr.fillStyle(0xffffff, 0.35); cgr.fillEllipse(0, -12, 44, 20);
+    close.add([cgr, this.add.text(0, 0, '✖', { fontSize: '30px', color: '#fff' }).setOrigin(0.5)]);
+    close.setSize(68, 68).setInteractive(new Phaser.Geom.Rectangle(0, 0, 68, 68), Phaser.Geom.Rectangle.Contains);
+    close.on('pointerdown', () => { Sound.tap(); ui.setVisible(false); });
+    ui.add(close);
+
+    // כרטיסי שדרוג
+    this.shopCards = [];
+    const items = Wallet.ITEMS, cw = 218, gap = 18;
+    const total = items.length * cw + (items.length - 1) * gap;
+    const sx = W/2 - total/2 + cw/2;
+    items.forEach((item, i) => {
+      const card = this.buildShopCard(item, sx + i * (cw + gap), H/2 + 44, cw);
+      ui.add(card);
+      this.shopCards.push(card);
+    });
+    this.refreshShop();
+
+    // כניסה קופצנית
+    ui.setScale(0.85).setAlpha(0);
+    this.tweens.add({ targets: ui, scale: 1, alpha: 1, duration: 260, ease: 'Back.out' });
+  }
+
+  buildShopCard(item, x, y, w) {
+    const c = this.add.container(x, y);
+    const h = 380;
+    const g = this.add.graphics();
+    g.fillStyle(0x000000, 0.10); g.fillRoundedRect(-w/2 + 4, -h/2 + 10, w, h, 26);
+    g.fillStyle(0xffffff, 1); g.fillRoundedRect(-w/2, -h/2, w, h, 26);
+    g.lineStyle(4, 0xffd24c, 1); g.strokeRoundedRect(-w/2, -h/2, w, h, 26);
+    c.add(g);
+    const ico = this.add.text(0, -h/2 + 74, item.ico, { fontSize: '74px' }).setOrigin(0.5);
+    this.tweens.add({ targets: ico, angle: { from: -5, to: 5 }, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    c.add(ico);
+    c.add(this.add.text(0, -h/2 + 148, item.name, {
+      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '30px', color: '#5a3d5c', fontStyle: 'bold'
+    }).setOrigin(0.5));
+    c.add(this.add.text(0, -h/2 + 196, item.desc, {
+      fontFamily: 'Heebo, sans-serif', fontSize: '20px', color: '#9a7a9c',
+      align: 'center', wordWrap: { width: w - 30 }
+    }).setOrigin(0.5));
+    const lvlText = this.add.text(0, -h/2 + 244, '', {
+      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '26px', color: '#f5a800', fontStyle: 'bold'
+    }).setOrigin(0.5);
+    c.add(lvlText);
+
+    const buy = this.add.container(0, h/2 - 62);
+    const bg = this.add.graphics();
+    const bt = this.add.text(0, 0, '', {
+      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '28px', color: '#fff', fontStyle: 'bold'
+    }).setOrigin(0.5);
+    buy.add([bg, bt]);
+    buy.setSize(176, 62).setInteractive(new Phaser.Geom.Rectangle(0, 0, 176, 62), Phaser.Geom.Rectangle.Contains);
+    buy.on('pointerdown', () => this.tryBuy(item, c));
+    c.add(buy);
+
+    c._item = item; c._lvlText = lvlText; c._buyBg = bg; c._buyText = bt;
+    return c;
+  }
+
+  tryBuy(item, card) {
+    if (Wallet.buy(item.id)) {
+      Sound.cha_ching();
+      Voice.praise();
+      this.tweens.add({ targets: card, scale: 1.08, duration: 110, yoyo: true });
+      for (let i = 0; i < 16; i++) {
+        const s = this.add.image(card.x + Phaser.Math.Between(-90, 90), card.y + Phaser.Math.Between(-160, 160), 'spark')
+          .setDepth(110).setTint(0xffd24c).setScale(Phaser.Math.FloatBetween(0.5, 1.1));
+        this.tweens.add({ targets: s, y: '-=' + Phaser.Math.Between(50, 140), alpha: 0, duration: 700, onComplete: () => s.destroy() });
+      }
+      this.refreshShop();
+    } else {
+      Sound.sad();
+      this.tweens.add({ targets: card, x: card.x + 8, duration: 50, yoyo: true, repeat: 3 });
+    }
+  }
+
+  refreshShop() {
+    const balance = '' + Wallet.coins;
+    if (this.shopCoinText) this.shopCoinText.setText(balance);
+    if (this.coinText) this.coinText.setText(balance);
+    (this.shopCards || []).forEach(card => {
+      const item = card._item, lvl = Wallet.lvl(item.id), max = item.costs.length, cost = Wallet.nextCost(item.id);
+      card._lvlText.setText(max > 1 ? ('רמה ' + lvl + ' / ' + max) : (lvl ? '✓ פתוח!' : ''));
+      const bg = card._buyBg; bg.clear();
+      if (cost === null) {
+        bg.fillStyle(0x8fd3b6, 1); bg.fillRoundedRect(-88, -31, 176, 62, 31);
+        card._buyText.setText('✓ שלי!');
+      } else {
+        const can = Wallet.coins >= cost;
+        bg.fillStyle(0x000000, 0.18); bg.fillRoundedRect(-88, -25, 176, 62, 31);
+        bg.fillStyle(can ? 0xf5a800 : 0xc9b78a, 1); bg.fillRoundedRect(-88, -31, 176, 62, 31);
+        bg.fillStyle(0xffffff, 0.3); bg.fillRoundedRect(-78, -26, 156, 22, 11);
+        card._buyText.setText('🪙 ' + cost);
+      }
+    });
   }
 
   /* כרטיס משחק גדול: צל, גוף מעוגל עם גרדיאנט, אייקון ענק, שם */

@@ -151,6 +151,17 @@
     }
   };
 
+  /* ---------- עדכון מיידי: כשגרסה חדשה של ה-service worker משתלטת — רענון חד-פעמי ----------
+     בלי זה האייפד מציג את הגרסה הישנה מהמטמון עד הפתיחה השנייה. הרענון קורה רק אם
+     כבר היה SW פעיל (עדכון אמיתי), לא בהתקנה ראשונה — כדי לא ליפול ללולאת רענונים. */
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    var kuiReloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (kuiReloaded) return; kuiReloaded = true;
+      location.reload();
+    });
+  }
+
   /* ---------- ייצוא ---------- */
   window.KidsUI = { HomeButton: HomeButton, PageFade: PageFade, KidsAudio: KidsAudio };
 
