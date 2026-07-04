@@ -490,12 +490,18 @@ const Hero3D = (function () {
   function canvasFullscreen() {
     Object.assign(canvas.style, { left: '0', top: '0', width: '100%', height: '100%' });
   }
-  // הקנבס מכסה רק את אזור הבמה (70% העליונים של קנבס המשחק) — המגש והכפתורים שמתחת נשארים חיים
+  // הקנבס ממופה בדיוק לגבולות במת התיאטרון שמציירת סצנת ההרכבה (עיצוב 1280x800:
+  // x 150..1130, y 246..602) — התלת-ממד נחתך לבמה, והמגש/כפתורים שמתחת חיים
   function canvasStageArea() {
     const gc = document.querySelector('#game canvas');
     if (!gc) return;
     const r = gc.getBoundingClientRect();
-    Object.assign(canvas.style, { left: r.x + 'px', top: r.y + 'px', width: r.width + 'px', height: (r.height * 0.70) + 'px' });
+    Object.assign(canvas.style, {
+      left: (r.x + r.width * (150 / 1280)) + 'px',
+      top: (r.y + r.height * (246 / 800)) + 'px',
+      width: (r.width * (980 / 1280)) + 'px',
+      height: (r.height * (356 / 800)) + 'px'
+    });
   }
   // נפילה + באונס בקיפריימים ידניים — בלי easing functions (BounceEase עם
   // פרמטרים שבריים מייצרת f(1)≠1 והחלקים בורחים מתחת ליעד)
@@ -556,9 +562,15 @@ const Hero3D = (function () {
 
   function render() {
     if (buildMode) {
-      // בנייה חיה: סיבוב עצל כשלא נוגעים; בלי בובינג/דחיפת מצלמה — שהנפילות ייקראו נקי
+      // בנייה חיה: סיבוב עצל כשלא נוגעים; בלי בובינג — שהנפילות ייקראו נקי
       if (!dragging && performance.now() - lastInteract > 1500)
         root.rotation.y += engine.getDeltaTime() / 1000 * 0.45;
+      // מסגור דינמי: המצלמה מתרחקת ועולה בעדינות ככל שהבורגר גדל — תמיד ממורכז ומלא בפריים
+      const mid = (-1.75 + buildY) / 2 + 0.55;
+      cam.target.y += (mid - cam.target.y) * 0.05;
+      const want = 8.4 + Math.max(0, buildY + 0.6) * 1.0;
+      cam.radius += (want - cam.radius) * 0.05;
+      if (pipeline && pipeline.depthOfFieldEnabled) pipeline.depthOfField.focusDistance = cam.radius * 1000;
       scene.render();
       return;
     }
@@ -596,18 +608,15 @@ const Hero3D = (function () {
         current = 'burger';
         buildY = -0.95; buildParts = 0; buildMode = true;
         root.scaling.setAll(1); root.rotation.y = 0; root.position.y = 0;
-        cam.radius = 9.8; cam.beta = Math.PI / 2.75;
-        cam.setTarget(new BABYLON.Vector3(0, 0.5, 0));                    // מסגור נמוך — הבורגר לא מסתיר את כרטיס ההזמנה
-        scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);                // שקוף לגמרי — אפס תפר בקצה הקנבס
-        // צבעים רוויים על רקע בהיר: מפתח חזק יותר + חשיפה נמוכה יותר (משוחזר ב-teardown)
-        const keyL = scene.getLightByName('key'); if (keyL) keyL.intensity = 2.1;
-        scene.imageProcessingConfiguration.exposure = 0.84;
+        cam.radius = 8.4; cam.beta = Math.PI / 2.6;                       // מעט יותר מהצד — הצבעים עשירים יותר מאשר מלמעלה
+        cam.setTarget(new BABYLON.Vector3(0, -0.8, 0));                   // מתחילים ממוקדים על הצלחת; המסגור הדינמי עולה עם הערימה
+        scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);                // שקוף — הבמה הכהה מגיעה מסצנת ה-Phaser (אפס תפר)
         canvasStageArea();
         canvas.style.display = 'block';
         canvas.style.pointerEvents = 'none';                              // מגע עובר למשחק; סיבוב דרך מאזיני window
         requestAnimationFrame(() => { canvas.style.opacity = '1'; });
         try { engine.resize(); } catch (e) {}
-        try { twinkle.stop(); steam.stop(); } catch (e) {}
+        try { steam.stop(); twinkle.start(); } catch (e) {}               // אבק-פיות גם בזמן הבנייה — כמו ב-show
         clearTimeout(hideTimer);
         if (!visible) { visible = true; engine.runRenderLoop(render); }
         builderListeners(true);

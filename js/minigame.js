@@ -414,6 +414,36 @@ class MiniGameScene extends Phaser.Scene {
     this.events.once('shutdown', () => { try { Hero3D.builderEnd(); } catch (e) {} });
     let served = false;
 
+    // ----- במת תיאטרון: רקע כהה + זרקור — המנה זוהרת כמו ב-show הקולנועי -----
+    const theater = this.add.container(0, 0).setDepth(1).setAlpha(0);
+    const panel = this.add.graphics();
+    panel.fillStyle(0x14091f, 0.95); panel.fillRoundedRect(150, 246, 980, 356, 38);          // מסגרת חיצונית
+    panel.fillGradientStyle(0x32173f, 0x32173f, 0x190b26, 0x190b26, 1);
+    panel.fillRoundedRect(158, 252, 964, 344, 34);                                           // פנים הבמה
+    panel.fillStyle(0xffffff, 0.05); panel.fillRoundedRect(170, 260, 940, 60, 26);           // הבהוב עליון עדין
+    theater.add(panel);
+    // אלומת זרקור מהתקרה
+    const beam = this.add.graphics();
+    beam.fillGradientStyle(0xffe9b8, 0xffe9b8, 0xffe9b8, 0xffe9b8, 0.16, 0.16, 0.02, 0.02);
+    beam.fillTriangle(640, 250, 400, 596, 880, 596);
+    theater.add(beam);
+    // הילת ספוט חמה מאחורי המנה + כתם אור על הרצפה
+    const spot = this.add.image(640, 440, 'glowSoft').setDisplaySize(640, 430)
+      .setTint(0xffd9a0).setAlpha(0.55).setBlendMode(Phaser.BlendModes.ADD);
+    const floor = this.add.image(640, 560, 'glowSoft').setDisplaySize(560, 130)
+      .setTint(0xffc890).setAlpha(0.4).setBlendMode(Phaser.BlendModes.ADD);
+    theater.add([spot, floor]);
+    // כוכבים מנצנצים על הבמה
+    for (let i = 0; i < 14; i++) {
+      const s = this.add.image(Phaser.Math.Between(210, 1070), Phaser.Math.Between(275, 575), 'spark')
+        .setTint(0xfff0c8).setScale(Phaser.Math.FloatBetween(0.2, 0.55)).setAlpha(0.3);
+      this.tweens.add({ targets: s, alpha: { from: 0.12, to: 0.85 }, scale: '+=0.15',
+        duration: Phaser.Math.Between(700, 1600), yoyo: true, repeat: -1, delay: Math.random() * 1200 });
+      theater.add(s);
+    }
+    this.tweens.add({ targets: theater, alpha: 1, duration: 450, ease: 'Quad.out' });
+    this.tweens.add({ targets: spot, alpha: { from: 0.4, to: 0.62 }, duration: 2000, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+
     const serve = this.serveButton(() => {
       if (served) return; served = true;
       serve.enable(false);
