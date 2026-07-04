@@ -509,7 +509,7 @@ class MiniGameScene extends Phaser.Scene {
     this.hintText.setText('מרחו רוטב על כל הפיצה — כמה שבא לכם! 🍅');
     const cx = DESIGN.w / 2, cy = 422, R = 180;
 
-    Helper.shadowEl(this, cx, cy + R * 0.86, R * 2.1, R * 0.5);
+    const shad = Helper.shadowEl(this, cx, cy + R * 0.86, R * 2.1, R * 0.5);
     const dough = this.add.graphics();
     dough.fillStyle(0xa86a30, 1); dough.fillCircle(cx, cy + 8, R);                                   // צל תחתון של הקרום (נפח)
     dough.fillStyle(0xcf9050, 1); dough.fillCircle(cx, cy, R);                                       // קרום
@@ -589,19 +589,113 @@ class MiniGameScene extends Phaser.Scene {
     };
 
     const goCheese = () => { stepName='cheese'; this.hintText.setText('פזרו גבינה — כמה שבא לכם! 🧀'); stepBtn.setLabel('🍅 עכשיו תוספות').enable(false).onTap(goToppings); };
-    const goToppings = () => { stepName='toppings'; this.hintText.setText('בחרו תוספת והניחו על הפיצה 🍕'); buildTray(); stepBtn.setLabel('🔥 לאפות!').enable(true).onTap(bake); };
-    const bake = () => { if (baked) return; baked = true; stepName='done'; Sound.ding();
-      this.hintText.setText('אופה... 🔥'); stepBtn.setVisible(false);
-      const melt = this.add.graphics().setDepth(2); melt.fillStyle(0xffcf6b, 0.26); melt.fillCircle(cx, cy, R - 16); // גבינה נמסה
-      const heat = this.add.particles(cx, cy, 'spark', { tint:0xffa030, lifespan:900, speed:{min:20,max:90}, scale:{start:0.6,end:0}, quantity:2, frequency:60 });
-      this.tweens.add({ targets: dough, alpha: 0.9, duration: 700, yoyo: true });
-      this.tweens.add({ targets: eyes, y: cy - 38, duration: 420, yoyo: true, repeat: 1, ease: 'Sine.inOut' });
-      this.time.delayedCall(1500, () => { heat.stop(); this.hintText.setText('מוכן! הגישו 😋');
-        const smile = this.add.graphics().setDepth(6); smile.lineStyle(8, 0x5a3d5c, 1);
-        smile.beginPath(); smile.arc(cx, cy + 4, 36, 0.15*Math.PI, 0.85*Math.PI, false); smile.strokePath();
-        this.tweens.add({ targets: eyes, scale: 1.12, duration: 200, yoyo: true });
-        serve.setVisible(true).enable(true); Sound.happy(); }); };
+    const goToppings = () => { stepName='toppings'; this.hintText.setText('בחרו תוספת והניחו על הפיצה 🍕'); buildTray(); stepBtn.setLabel('🔥 לתנור!').enable(true).onTap(bake); };
+
+    /* ----- אפייה אמיתית: תנור לבנים נכנס, הפיצה נוסעת פנימה, נאפית וחוזרת שחומה ----- */
+    const bake = () => {
+      if (baked) return; baked = true; stepName = 'done';
+      Sound.ding(); Voice.say('לתנור!');
+      this.hintText.setText('לתנור! 🔥'); stepBtn.setVisible(false);
+      trayItems.forEach(o => o.setVisible(false));
+
+      // קיבוץ הפיצה לאובייקט אחד סביב מרכזה — כדי להסיע ולהקטין יחד (כולל הצל)
+      const grp = this.add.container(cx, cy).setDepth(4);
+      [shad, dough, rt, cheeseLayer, topLayer, eyes].forEach(o => { o.x -= cx; o.y -= cy; grp.add(o); });
+
+      // תנור מחליק פנימה משמאל
+      const oven = this.buildPizzaOven(-430, 428);
+      this.tweens.add({ targets: oven, x: 262, duration: 650, ease: 'Back.out' });
+
+      this.time.delayedCall(750, () => {
+        // אש נדלקת בפה התנור
+        const fire = this.add.particles(262, 520, 'spark', {
+          tint: [0xffd24c, 0xffa030, 0xff5a20], speedY: { min: -110, max: -50 }, speedX: { min: -30, max: 30 },
+          scale: { start: 1.0, end: 0 }, alpha: { start: 0.9, end: 0 },
+          lifespan: 550, quantity: 2, frequency: 45, blendMode: 'ADD'
+        }).setDepth(9);
+
+        // הפיצה נוסעת אל פה התנור, מתכווצת ונבלעת
+        Sound.bubble();
+        this.tweens.add({ targets: grp, x: 262, y: 470, scale: 0.5, duration: 850, ease: 'Quad.in',
+          onComplete: () => {
+            this.tweens.add({ targets: grp, alpha: 0, duration: 160 });
+            this.hintText.setText('אופה... 🔥🔥');
+            // התנור עובד: הזוהר פועם, ניצוצות, רעד קטן
+            this.tweens.add({ targets: oven._glow, alpha: { from: 0.55, to: 1 }, displayWidth: { from: 210, to: 260 },
+              duration: 260, yoyo: true, repeat: 7 });
+            this.cameras.main.shake(2100, 0.0016);
+            const crackle = this.time.addEvent({ delay: 380, repeat: 4, callback: () => Sound.chop() });
+
+            this.time.delayedCall(2300, () => {
+              // הפיצה יוצאת — שחומה, מהבילה ומחייכת
+              crackle.remove(); fire.stop();
+              const brownFx = this.add.graphics();
+              brownFx.fillStyle(0x9c5a18, 0.30);
+              for (let i = 0; i < 16; i++) { const a = Math.random() * 6.283, rr = Math.random() * (R - 60);
+                brownFx.fillCircle(Math.cos(a) * rr, Math.sin(a) * rr, 12 + Math.random() * 22); }
+              brownFx.lineStyle(16, 0x9c5a18, 0.4); brownFx.strokeCircle(0, 0, R - 12);   // קראסט שחום
+              brownFx.setAlpha(0);
+              grp.addAt(brownFx, grp.getIndex(eyes));                       // שחימה מתחת לעיניים ולחיוך
+              Sound.happy(); Voice.say('מוכן!');
+              this.tweens.add({ targets: grp, x: cx, y: cy, scale: 1, alpha: 1, duration: 800, ease: 'Back.out' });
+              this.tweens.add({ targets: brownFx, alpha: 1, duration: 900, delay: 300 });
+              this.tweens.add({ targets: oven, x: -430, duration: 600, delay: 500, ease: 'Quad.in',
+                onComplete: () => oven.destroy() });
+
+              this.time.delayedCall(900, () => {
+                // אדים חמים מהפיצה
+                const steam = this.add.particles(cx, cy - 60, 'spark', {
+                  tint: 0xffffff, alpha: { start: 0.4, end: 0 }, speedY: { min: -60, max: -25 },
+                  speedX: { min: -12, max: 12 }, scale: { start: 0.7, end: 1.5 }, lifespan: 1000, quantity: 1, frequency: 110
+                }).setDepth(7);
+                this.time.delayedCall(2600, () => steam.stop());
+                this.hintText.setText('מוכן! הגישו 😋');
+                const smile = this.add.graphics(); smile.lineStyle(8, 0x5a3d5c, 1);
+                smile.beginPath(); smile.arc(0, 34, 36, 0.15 * Math.PI, 0.85 * Math.PI, false); smile.strokePath();
+                grp.add(smile);
+                this.tweens.add({ targets: eyes, scale: 1.12, duration: 200, yoyo: true });
+                serve.setVisible(true).enable(true);
+              });
+            });
+          } });
+      });
+    };
     stepBtn.onTap(goCheese);
+  }
+
+  /* תנור פיצה מלבנים: כיפה, פה לוהט, זוהר אש */
+  buildPizzaOven(x, y) {
+    const c = this.add.container(x, y).setDepth(8);
+    const g = this.add.graphics();
+    // גוף הכיפה
+    g.fillStyle(0x6e4028, 1); g.fillEllipse(6, 34, 384, 300);                      // צל
+    g.fillStyle(0x9c6242, 1); g.fillEllipse(0, 22, 372, 292);
+    g.fillGradientStyle(0xc98a5e, 0xc98a5e, 0xa06844, 0xa06844, 1); g.fillEllipse(-10, 10, 344, 266);
+    g.fillStyle(0xffffff, 0.10); g.fillEllipse(-70, -58, 150, 70);                 // ברק עליון
+    // שורות לבנים (קשתות)
+    g.lineStyle(4, 0x6e4028, 0.5);
+    for (let r = 66; r <= 168; r += 34) { g.beginPath(); g.arc(0, 96, r, Math.PI * 1.05, Math.PI * 1.95, false); g.strokePath(); }
+    // בסיס אבן
+    g.fillStyle(0x59402e, 1); g.fillRoundedRect(-214, 126, 428, 42, 12);
+    g.fillGradientStyle(0x8a6046, 0x8a6046, 0x6e4c36, 0x6e4c36, 1); g.fillRoundedRect(-214, 118, 428, 40, 12);
+    // פה שחור מקושת
+    g.fillStyle(0x180c06, 1);
+    g.beginPath(); g.arc(0, 108, 112, Math.PI, 0, false); g.fillPath();
+    g.fillRect(-112, 104, 224, 14);
+    c.add(g);
+    // זוהר אש בפנים — שתי שכבות
+    const glow = this.add.image(0, 84, 'glowSoft').setDisplaySize(230, 160)
+      .setTint(0xff7a20).setAlpha(0.8).setBlendMode(Phaser.BlendModes.ADD);
+    const glowIn = this.add.image(0, 96, 'glowSoft').setDisplaySize(130, 90)
+      .setTint(0xffd24c).setAlpha(0.9).setBlendMode(Phaser.BlendModes.ADD);
+    c.add([glow, glowIn]);
+    // ארובה קטנה
+    const ch = this.add.graphics();
+    ch.fillStyle(0x8a563c, 1); ch.fillRoundedRect(66, -156, 44, 60, 8);
+    ch.fillStyle(0x59402e, 1); ch.fillRoundedRect(60, -168, 56, 18, 6);
+    c.add(ch);
+    c._glow = glow;
+    return c;
   }
 
   /* ============ דונאט ============ */

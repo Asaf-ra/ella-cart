@@ -71,6 +71,96 @@ const Hero3D = (function () {
     return bumpFine;
   }
 
+  // ---- טקסטורות אוכל פרוצדורליות — אטלס לגליל: כיפה משמאל (u 0..0.5), דופן מימין (u 0.57..1) ----
+  // אלה מה שהופך "צבע שטוח" לאוכל אמיתי: קלייה, חריכה, גרעינים, עסיסיות.
+  let foodTexes = {};
+  function foodAtlasURL(kind) {
+    const W = 512, H = 256, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    const cx = 128, cy = 128, R = 126;
+    const capClip = () => { x.save(); x.beginPath(); x.arc(cx, cy, R, 0, 6.284); x.clip(); };
+    const spots = (n, col, a0, a1, r0, r1) => { for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.284, rr = Math.sqrt(Math.random()) * (R - 8);
+      x.globalAlpha = a0 + Math.random() * (a1 - a0); x.fillStyle = col;
+      x.beginPath(); x.arc(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, r0 + Math.random() * (r1 - r0), 0, 6.284); x.fill();
+    } x.globalAlpha = 1; };
+    const side = (draw) => { x.save(); x.translate(292, 0); draw(220, 256); x.restore(); };
+
+    if (kind === 'bun') {
+      capClip();
+      const g = x.createRadialGradient(cx - 20, cy - 20, 10, cx, cy, R);
+      g.addColorStop(0, '#f6c26e'); g.addColorStop(0.62, '#e09a3e'); g.addColorStop(1, '#b26a1c');
+      x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+      spots(46, '#a35f18', 0.05, 0.13, 4, 16);            // כתמי אפייה
+      spots(30, '#ffe2a8', 0.06, 0.12, 2, 7);             // הבהובי קמח
+      x.restore();
+      side((w, h) => { const sg = x.createLinearGradient(0, 0, 0, h);
+        sg.addColorStop(0, '#dd9838'); sg.addColorStop(0.55, '#eaaf55'); sg.addColorStop(1, '#f6dfa8');   // תחתית בהירה — צד הלחם
+        x.fillStyle = sg; x.fillRect(0, 0, w, h); });
+    } else if (kind === 'patty') {
+      capClip();
+      const g = x.createRadialGradient(cx, cy, 10, cx, cy, R);
+      g.addColorStop(0, '#5c3016'); g.addColorStop(1, '#3c1e0c');
+      x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+      spots(120, '#6f3d1c', 0.15, 0.3, 2, 6);             // מרקם בשר
+      spots(26, '#2a1206', 0.25, 0.45, 3, 8);             // חריכה
+      x.strokeStyle = 'rgba(20,8,2,0.55)'; x.lineWidth = 10; x.lineCap = 'round';
+      for (let i = -2; i <= 2; i++) { x.beginPath(); x.moveTo(cx - 90, cy + i * 38); x.lineTo(cx + 90, cy + i * 38); x.stroke(); }   // פסי גריל
+      spots(16, '#ffb36a', 0.10, 0.22, 1.5, 3.5);         // נצנוץ עסיסי
+      x.restore();
+      side((w, h) => { const sg = x.createLinearGradient(0, 0, 0, h);
+        sg.addColorStop(0, '#4a2610'); sg.addColorStop(1, '#331708');
+        x.fillStyle = sg; x.fillRect(0, 0, w, h);
+        for (let i = 0; i < 60; i++) { x.globalAlpha = 0.2; x.fillStyle = Math.random() < 0.5 ? '#63351a' : '#2a1206';
+          x.fillRect(Math.random() * w, Math.random() * h, 3 + Math.random() * 7, 2 + Math.random() * 4); }
+        x.globalAlpha = 1; });
+    } else if (kind === 'tomato') {
+      capClip();
+      x.fillStyle = '#e23b2e'; x.fillRect(0, 0, 256, 256);                       // בשר העגבנייה
+      const g = x.createRadialGradient(cx, cy, 6, cx, cy, R);
+      g.addColorStop(0, '#ff6f52'); g.addColorStop(0.42, '#ef4b38'); g.addColorStop(1, '#d02a1e');
+      x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+      for (let s = 0; s < 5; s++) {                                              // 5 מגורות גרעינים
+        const a = s * 1.257 - 0.5;
+        x.save(); x.translate(cx + Math.cos(a) * 62, cy + Math.sin(a) * 62); x.rotate(a);
+        x.fillStyle = 'rgba(255,140,115,0.9)';
+        x.beginPath(); x.ellipse(0, 0, 34, 20, 0, 0, 6.284); x.fill();
+        x.fillStyle = '#ffdfb0';
+        for (let k = 0; k < 6; k++) { x.save(); x.translate((Math.random() - 0.5) * 44, (Math.random() - 0.5) * 22);
+          x.rotate(Math.random() * 3); x.beginPath(); x.ellipse(0, 0, 6, 3.6, 0, 0, 6.284); x.fill(); x.restore(); }
+        x.restore();
+      }
+      x.fillStyle = 'rgba(255,190,170,0.85)'; x.beginPath(); x.arc(cx, cy, 17, 0, 6.284); x.fill();  // ליבה
+      x.lineWidth = 9; x.strokeStyle = '#c21f14'; x.beginPath(); x.arc(cx, cy, R - 5, 0, 6.284); x.stroke();  // קליפה
+      x.restore();
+      side((w, h) => { x.fillStyle = '#d5281c'; x.fillRect(0, 0, w, h);
+        const sg = x.createLinearGradient(0, 0, 0, h); sg.addColorStop(0, 'rgba(255,255,255,0.25)'); sg.addColorStop(0.4, 'rgba(255,255,255,0)');
+        x.fillStyle = sg; x.fillRect(0, 0, w, h); });
+    } else if (kind === 'cheese') {
+      const g = x.createLinearGradient(0, 0, W, H);
+      g.addColorStop(0, '#ffd558'); g.addColorStop(0.5, '#f8b62e'); g.addColorStop(1, '#e89e18');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      for (let i = 0; i < 14; i++) {                                              // חורים קטנים של גבינה
+        const px = 20 + Math.random() * (W - 40), py = 20 + Math.random() * (H - 40), pr = 4 + Math.random() * 9;
+        x.fillStyle = 'rgba(200,125,10,0.5)'; x.beginPath(); x.arc(px, py + 2, pr, 0, 6.284); x.fill();
+        x.fillStyle = 'rgba(255,220,120,0.9)'; x.beginPath(); x.arc(px, py, pr, 0, 6.284); x.fill();
+      }
+    } else if (kind === 'bunTop') {                                               // גרדיאנט אנכי לספרה (equirect)
+      const g = x.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#b96f1e'); g.addColorStop(0.35, '#d68f36'); g.addColorStop(0.75, '#efb968'); g.addColorStop(1, '#f8d9a0');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      for (let i = 0; i < 90; i++) { x.globalAlpha = 0.05 + Math.random() * 0.08;
+        x.fillStyle = Math.random() < 0.6 ? '#a35f18' : '#ffe2a8';
+        x.beginPath(); x.arc(Math.random() * W, Math.random() * H * 0.8, 3 + Math.random() * 10, 0, 6.284); x.fill(); }
+      x.globalAlpha = 1;
+    }
+    return c.toDataURL();
+  }
+  function foodTex(kind) {
+    if (!foodTexes[kind]) foodTexes[kind] = new BABYLON.Texture(foodAtlasURL(kind), scene);
+    return foodTexes[kind];
+  }
+
   // חומר PBR מלא — o: cc (לכה רטובה) / sheen (קטיפת קצפת) / trans (אור חודר) / bump / alpha
   function pbr(name, hex, rough, metal, o) {
     o = o || {};
@@ -337,30 +427,52 @@ const Hero3D = (function () {
     const id = 'bp' + (partSeq++);
     const n = new BABYLON.TransformNode(id, scene); n.parent = parent;
     let adv = 0;
+    // מיפוי אטלס לגלילים: כיפות = חצי שמאלי של הטקסטורה, דופן = רצועה ימנית
+    const CAP_UV = new BABYLON.Vector4(0.02, 0.02, 0.48, 0.98);
+    const SIDE_UV = new BABYLON.Vector4(0.58, 0.04, 0.99, 0.96);
     switch (key) {
       case 'bunB': {
-        const m = BABYLON.MeshBuilder.CreateCylinder(id + 'm', { diameter: 3, height: 0.6, tessellation: 56 }, scene);
-        m.material = pbr(id + 'mat', '#e6a85a', 0.5, 0, { bump: 'coarse' }); m.parent = n;
+        const m = BABYLON.MeshBuilder.CreateCylinder(id + 'm',
+          { diameter: 3, height: 0.62, tessellation: 64, faceUV: [CAP_UV, SIDE_UV, CAP_UV] }, scene);
+        const mat = pbr(id + 'mat', '#ffffff', 0.58, 0, { bump: 'coarse' });
+        mat.albedoTexture = foodTex('bun');
+        m.material = mat; m.parent = n;
         adv = 0.35; break;
       }
       case '🥬': {
-        const m = BABYLON.MeshBuilder.CreateTorus(id + 'm', { diameter: 3.05, thickness: 0.45, tessellation: 40 }, scene);
-        m.scaling.y = 0.5; m.material = pbr(id + 'mat', '#67bf4a', 0.55, 0, { bump: 'fine' }); m.parent = n;
-        adv = 0.22; break;
+        // עלי חסה מסולסלים — טבעת של "גלים" במקום בייגלה ירוק
+        const mat = pbr(id + 'mat', '#5cb83c', 0.5, 0, { bump: 'fine', trans: 0.35 });
+        for (let i = 0; i < 11; i++) {
+          const a = (i / 11) * Math.PI * 2;
+          const s = BABYLON.MeshBuilder.CreateSphere(id + 'l' + i, { diameter: 1.1, segments: 12 }, scene);
+          s.position.set(Math.cos(a) * 1.32, 0.03, Math.sin(a) * 1.32);
+          s.scaling.set(1, 0.3, 0.6);
+          s.rotation.y = -a; s.rotation.x = (i % 2 ? 0.22 : -0.14);
+          s.material = mat; s.parent = n;
+        }
+        adv = 0.18; break;
       }
       case 'patty': {
-        const m = BABYLON.MeshBuilder.CreateCylinder(id + 'm', { diameter: 3.1, height: 0.55, tessellation: 56 }, scene);
-        m.position.y = 0.14; m.material = pbr(id + 'mat', '#6b3a1e', 0.68, 0, { bump: 'coarse' }); m.parent = n;
+        const m = BABYLON.MeshBuilder.CreateCylinder(id + 'm',
+          { diameter: 3.1, height: 0.55, tessellation: 64, faceUV: [CAP_UV, SIDE_UV, CAP_UV] }, scene);
+        const mat = pbr(id + 'mat', '#ffffff', 0.62, 0, { bump: 'coarse', cc: 0.22, ccRough: 0.35 });   // לכה קלה — עסיסי
+        mat.albedoTexture = foodTex('patty');
+        m.position.y = 0.14; m.material = mat; m.parent = n;
         adv = 0.42; break;
       }
       case '🧀': {
         const m = BABYLON.MeshBuilder.CreateBox(id + 'm', { width: 3.15, height: 0.1, depth: 3.15 }, scene);
-        m.rotation.y = Math.PI / 4; m.material = pbr(id + 'mat', '#ffc23c', 0.32, 0, { trans: 0.35 }); m.parent = n;
+        const mat = pbr(id + 'mat', '#ffffff', 0.3, 0, { trans: 0.35 });
+        mat.albedoTexture = foodTex('cheese');
+        m.rotation.y = Math.PI / 4; m.material = mat; m.parent = n;
         adv = 0.12; break;
       }
       case '🍅': {
-        const m = BABYLON.MeshBuilder.CreateCylinder(id + 'm', { diameter: 2.7, height: 0.16, tessellation: 40 }, scene);
-        m.position.y = 0.06; m.material = pbr(id + 'mat', '#e0402e', 0.25, 0, { cc: 0.7, ccRough: 0.15 }); m.parent = n;
+        const m = BABYLON.MeshBuilder.CreateCylinder(id + 'm',
+          { diameter: 2.75, height: 0.18, tessellation: 48, faceUV: [CAP_UV, SIDE_UV, CAP_UV] }, scene);
+        const mat = pbr(id + 'mat', '#ffffff', 0.24, 0, { cc: 0.65, ccRough: 0.14 });
+        mat.albedoTexture = foodTex('tomato');
+        m.position.y = 0.06; m.material = mat; m.parent = n;
         adv = 0.18; break;
       }
       case '🍳': {
@@ -389,12 +501,17 @@ const Hero3D = (function () {
       }
       case 'bunT': {
         const m = BABYLON.MeshBuilder.CreateSphere(id + 'm', { diameter: 3, slice: 0.52, segments: 40 }, scene);
-        m.position.y = 0.1; m.scaling.y = 0.95; m.material = pbr(id + 'mat', '#e8aa5c', 0.45, 0, { bump: 'coarse' }); m.parent = n;
-        for (let i = 0; i < 12; i++) {
+        const mat = pbr(id + 'mat', '#ffffff', 0.5, 0, { bump: 'coarse' });
+        mat.albedoTexture = foodTex('bunTop');                            // קלייה: כהה למעלה, בהיר בשוליים
+        m.position.y = 0.1; m.scaling.y = 0.95; m.material = mat; m.parent = n;
+        const seedMat = pbr(id + 'sm', '#fff6dd', 0.45, 0, { sheen: 0.3 });
+        for (let i = 0; i < 14; i++) {
           const s = BABYLON.MeshBuilder.CreateSphere(id + 's' + i, { diameter: 0.17, segments: 8 }, scene);
-          s.material = pbr(id + 'sm' + i, '#fff2cf', 0.5);
+          s.material = seedMat;
           const a = Math.random() * 6.283, rr = Math.random() * 0.95;
-          s.position.set(Math.cos(a) * rr, 0.27 + Math.random() * 0.5, Math.sin(a) * rr); s.parent = n;
+          s.position.set(Math.cos(a) * rr, 0.27 + Math.random() * 0.5, Math.sin(a) * rr);
+          s.scaling.set(1, 0.6, 0.75); s.rotation.y = Math.random() * 3;
+          s.parent = n;
         }
         adv = 0; break;
       }
