@@ -7,8 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#ff7eb9" />
-<meta name="apple-mobile-web-app-title" content="העולם של אלה" />
-<title>העולם של אלה</title>
+<title>בלונים — העולם של אלה</title>
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="assets/icon.svg" />
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
@@ -16,10 +15,8 @@
 </head>
 <body>
 
-<!-- מכל המשחק (Phaser מצייר לכאן; הרקע מגיע מגרדיאנט ה-CSS) -->
 <div id="game"></div>
 
-<!-- בקשת סיבוב מסך לרוחב -->
 <div id="rotate" class="rotate-msg">
   <div class="rot-ico">🔄</div>
   <div>סובבו את האייפד לרוחב 😊</div>
@@ -28,8 +25,9 @@
 <script src="vendor/phaser.min.js"></script>
 <script src="js/audio.js"></script>
 <script src="shared/kids-ui.js"></script>
-<script src="js/hub.js"></script>
+<script src="js/balloons.js"></script>
 <script>
+  window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').catch(function(){});

@@ -1,5 +1,5 @@
 /* ===== Service Worker — עבודה אופליין מלאה ===== */
-const CACHE = 'ella-cart-v15';
+const CACHE = 'ella-cart-v16';
 const ART = [
   'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
   'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',
@@ -10,17 +10,24 @@ const ART = [
 const ASSETS = [
   './',
   './index.html',
+  './cart.html',
+  './coloring.html',
+  './balloons.html',
   './style.css',
   './manifest.json',
   './assets/icon.svg',
   './vendor/phaser.min.js',
   './vendor/babylon.js',
+  './shared/kids-ui.js',
   './js/audio.js',
   './js/state.js',
   './js/hero3d.js',
   './js/world.js',
   './js/minigame.js',
-  './js/game.js'
+  './js/game.js',
+  './js/hub.js',
+  './js/coloring.js',
+  './js/balloons.js'
 ].concat(ART);
 
 self.addEventListener('install', function (e) {
