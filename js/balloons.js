@@ -25,7 +25,9 @@ function upgrades() {
   return {
     sizeMul: 1 + 0.16 * W.lvl('bigBalloons'),   // בלוני ענק
     speedMul: 1 + 0.28 * W.lvl('turbo'),        // טורבו
-    magic: W.lvl('magic') > 0                    // בלוני קסם
+    magic: W.lvl('magic') > 0,                   // בלוני קסם
+    bubbles: W.lvl('bubbles') > 0,               // מכונת בועות
+    sky: W.lvl('sky') > 0                        // שמיים קסומים
   };
 }
 
@@ -114,10 +116,26 @@ class BalloonScene extends Phaser.Scene {
     cg.fillStyle(0xffe27a, 1); cg.fillCircle(20, 20, 12);
     cg.generateTexture('coin', 40, 40); cg.destroy();
 
+    // שמיים קסומים (שדרוג): שקיעה סגולה, ירח זוהר וכוכבים
+    if (this.upg.sky) {
+      document.body.style.background = 'linear-gradient(180deg, #2c1a5e 0%, #7b3fa0 48%, #ff9a6a 88%, #ffd9a0 100%)';
+      const moonGlow = this.add.circle(W - 170, 120, 62, 0xfff6d8, 0.25).setDepth(0);
+      const moon = this.add.circle(W - 170, 120, 42, 0xfff2c8).setDepth(0);
+      this.add.circle(W - 182, 112, 9, 0xe8d8a8, 0.6).setDepth(0);
+      this.add.circle(W - 156, 132, 6, 0xe8d8a8, 0.5).setDepth(0);
+      this.tweens.add({ targets: moonGlow, scale: 1.18, duration: 2400, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      for (let i = 0; i < 22; i++) {
+        const st = this.add.image(Phaser.Math.Between(30, W - 30), Phaser.Math.Between(30, 330), 'spark')
+          .setTint(0xfff6d8).setScale(Phaser.Math.FloatBetween(0.25, 0.6)).setAlpha(0.5).setDepth(0);
+        this.tweens.add({ targets: st, alpha: { from: 0.2, to: 0.95 },
+          duration: Phaser.Math.Between(600, 1500), yoyo: true, repeat: -1, delay: Math.random() * 1200 });
+      }
+    }
+
     // עננים רכים ברקע
     for (let i = 0; i < 3; i++) {
       const c = this.add.image(Phaser.Math.Between(0, W), 90 + i * 85, 'cloud')
-        .setAlpha(0.7).setScale(0.8 + i * 0.3).setDepth(0);
+        .setAlpha(this.upg.sky ? 0.25 : 0.7).setScale(0.8 + i * 0.3).setDepth(0);
       this.tweens.add({ targets: c, x: '+=' + (W + 300), duration: Phaser.Math.Between(50000, 80000),
         repeat: -1, onRepeat: () => { c.x = -220; } });
     }
@@ -179,8 +197,9 @@ class BalloonScene extends Phaser.Scene {
   }
 
   spawnNext() {
-    if (this.items.length < 14) {
-      (Math.random() < 0.28) ? this.spawnBubble() : this.spawnBalloon();
+    if (this.items.length < (this.upg.bubbles ? 17 : 14)) {
+      const bubbleChance = this.upg.bubbles ? 0.52 : 0.28;   // מכונת בועות — המון בועות
+      (Math.random() < bubbleChance) ? this.spawnBubble() : this.spawnBalloon();
     }
     this.time.delayedCall(this.spawnDelay(), () => this.spawnNext());
   }

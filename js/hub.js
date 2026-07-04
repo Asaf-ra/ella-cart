@@ -87,6 +87,38 @@ class HubScene extends Phaser.Scene {
       });
     }
 
+    // קשת בענן רכה מאחורי הכרטיסים
+    const rainbow = this.add.graphics().setDepth(0);
+    [0xff5ca8, 0xff8a4c, 0xffd24c, 0x6fd06a, 0x7ec8ff, 0xb28dff].forEach((col, i) => {
+      rainbow.lineStyle(18, col, 0.30);
+      rainbow.beginPath();
+      rainbow.arc(W/2 + 70, H + 330, 650 - i * 18, Math.PI * 1.14, Math.PI * 1.86, false);
+      rainbow.strokePath();
+    });
+
+    // פרפרים מרחפים
+    const fly = (delay) => {
+      const b = this.add.text(-60, Phaser.Math.Between(170, 400), '🦋', { fontSize: '40px' }).setDepth(3);
+      this.tweens.add({ targets: b, angle: { from: -16, to: 16 }, duration: 240, yoyo: true, repeat: -1 });
+      this.tweens.add({ targets: b, x: W + 80, duration: Phaser.Math.Between(15000, 22000), delay,
+        onUpdate: (tw) => { b.y += Math.sin(tw.progress * 22) * 1.3; },
+        onComplete: () => { b.destroy(); fly(Phaser.Math.Between(3000, 9000)); } });
+    };
+    fly(1200); fly(7000);
+
+    // כוכב נופל מדי פעם — נגיעת קסם
+    this.time.addEvent({ delay: 9000, loop: true, callback: () => {
+      const x0 = Phaser.Math.Between(260, W - 80);
+      const star = this.add.image(x0, 50, 'spark').setTint(0xfff2a8).setScale(1.4).setDepth(1);
+      for (let i = 0; i < 5; i++) {
+        const tr = this.add.image(x0, 50, 'spark').setTint(0xfff2a8).setScale(0.7 - i * 0.12).setDepth(1);
+        this.tweens.add({ targets: tr, x: x0 - 200 - i * 14, y: 190 + i * 12, alpha: 0,
+          duration: 800, delay: i * 45, ease: 'Quad.in', onComplete: () => tr.destroy() });
+      }
+      this.tweens.add({ targets: star, x: x0 - 260, y: 230, alpha: 0, duration: 850, ease: 'Quad.in',
+        onComplete: () => star.destroy() });
+    }});
+
     /* ----- כותרת ----- */
     const title = this.add.text(W/2, 92, 'העולם של אלה', {
       fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '76px',
@@ -200,13 +232,13 @@ class HubScene extends Phaser.Scene {
     close.on('pointerdown', () => { Sound.tap(); ui.setVisible(false); });
     ui.add(close);
 
-    // כרטיסי שדרוג
+    // כרטיסי שדרוג — רשת 3×2
     this.shopCards = [];
-    const items = Wallet.ITEMS, cw = 218, gap = 18;
-    const total = items.length * cw + (items.length - 1) * gap;
-    const sx = W/2 - total/2 + cw/2;
+    const items = Wallet.ITEMS, cw = 296, ch = 212, gapX = 20, gapY = 22;
+    const sx = W/2 - (3 * cw + 2 * gapX) / 2 + cw/2;
     items.forEach((item, i) => {
-      const card = this.buildShopCard(item, sx + i * (cw + gap), H/2 + 44, cw);
+      const col = i % 3, row = (i / 3) | 0;
+      const card = this.buildShopCard(item, sx + col * (cw + gapX), H/2 - 66 + row * (ch + gapY), cw, ch);
       ui.add(card);
       this.shopCards.push(card);
     });
@@ -217,36 +249,35 @@ class HubScene extends Phaser.Scene {
     this.tweens.add({ targets: ui, scale: 1, alpha: 1, duration: 260, ease: 'Back.out' });
   }
 
-  buildShopCard(item, x, y, w) {
+  buildShopCard(item, x, y, w, h) {
     const c = this.add.container(x, y);
-    const h = 380;
     const g = this.add.graphics();
-    g.fillStyle(0x000000, 0.10); g.fillRoundedRect(-w/2 + 4, -h/2 + 10, w, h, 26);
-    g.fillStyle(0xffffff, 1); g.fillRoundedRect(-w/2, -h/2, w, h, 26);
-    g.lineStyle(4, 0xffd24c, 1); g.strokeRoundedRect(-w/2, -h/2, w, h, 26);
+    g.fillStyle(0x000000, 0.10); g.fillRoundedRect(-w/2 + 4, -h/2 + 8, w, h, 22);
+    g.fillStyle(0xffffff, 1); g.fillRoundedRect(-w/2, -h/2, w, h, 22);
+    g.lineStyle(4, 0xffd24c, 1); g.strokeRoundedRect(-w/2, -h/2, w, h, 22);
     c.add(g);
-    const ico = this.add.text(0, -h/2 + 74, item.ico, { fontSize: '74px' }).setOrigin(0.5);
+    const ico = this.add.text(0, -h/2 + 44, item.ico, { fontSize: '52px' }).setOrigin(0.5);
     this.tweens.add({ targets: ico, angle: { from: -5, to: 5 }, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     c.add(ico);
-    c.add(this.add.text(0, -h/2 + 148, item.name, {
-      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '30px', color: '#5a3d5c', fontStyle: 'bold'
+    c.add(this.add.text(0, -h/2 + 92, item.name, {
+      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '25px', color: '#5a3d5c', fontStyle: 'bold'
     }).setOrigin(0.5));
-    c.add(this.add.text(0, -h/2 + 196, item.desc, {
-      fontFamily: 'Heebo, sans-serif', fontSize: '20px', color: '#9a7a9c',
-      align: 'center', wordWrap: { width: w - 30 }
+    c.add(this.add.text(0, -h/2 + 122, item.desc, {
+      fontFamily: 'Heebo, sans-serif', fontSize: '16px', color: '#9a7a9c',
+      align: 'center', wordWrap: { width: w - 26 }
     }).setOrigin(0.5));
-    const lvlText = this.add.text(0, -h/2 + 244, '', {
-      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '26px', color: '#f5a800', fontStyle: 'bold'
+    const lvlText = this.add.text(-w/2 + 52, h/2 - 38, '', {
+      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '19px', color: '#f5a800', fontStyle: 'bold'
     }).setOrigin(0.5);
     c.add(lvlText);
 
-    const buy = this.add.container(0, h/2 - 62);
+    const buy = this.add.container(w/2 - 88, h/2 - 40);
     const bg = this.add.graphics();
     const bt = this.add.text(0, 0, '', {
-      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '28px', color: '#fff', fontStyle: 'bold'
+      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '24px', color: '#fff', fontStyle: 'bold'
     }).setOrigin(0.5);
     buy.add([bg, bt]);
-    buy.setSize(176, 62).setInteractive(new Phaser.Geom.Rectangle(0, 0, 176, 62), Phaser.Geom.Rectangle.Contains);
+    buy.setSize(150, 52).setInteractive(new Phaser.Geom.Rectangle(0, 0, 150, 52), Phaser.Geom.Rectangle.Contains);
     buy.on('pointerdown', () => this.tryBuy(item, c));
     c.add(buy);
 
@@ -280,13 +311,13 @@ class HubScene extends Phaser.Scene {
       card._lvlText.setText(max > 1 ? ('רמה ' + lvl + ' / ' + max) : (lvl ? '✓ פתוח!' : ''));
       const bg = card._buyBg; bg.clear();
       if (cost === null) {
-        bg.fillStyle(0x8fd3b6, 1); bg.fillRoundedRect(-88, -31, 176, 62, 31);
+        bg.fillStyle(0x8fd3b6, 1); bg.fillRoundedRect(-75, -26, 150, 52, 26);
         card._buyText.setText('✓ שלי!');
       } else {
         const can = Wallet.coins >= cost;
-        bg.fillStyle(0x000000, 0.18); bg.fillRoundedRect(-88, -25, 176, 62, 31);
-        bg.fillStyle(can ? 0xf5a800 : 0xc9b78a, 1); bg.fillRoundedRect(-88, -31, 176, 62, 31);
-        bg.fillStyle(0xffffff, 0.3); bg.fillRoundedRect(-78, -26, 156, 22, 11);
+        bg.fillStyle(0x000000, 0.18); bg.fillRoundedRect(-75, -21, 150, 52, 26);
+        bg.fillStyle(can ? 0xf5a800 : 0xc9b78a, 1); bg.fillRoundedRect(-75, -26, 150, 52, 26);
+        bg.fillStyle(0xffffff, 0.3); bg.fillRoundedRect(-66, -22, 132, 18, 9);
         card._buyText.setText('🪙 ' + cost);
       }
     });

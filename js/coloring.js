@@ -7,7 +7,8 @@
   'use strict';
 
   /* ---------- הגדרות ---------- */
-  const CHARS = ['ella','cust_bunny','cust_bear','cust_cat','cust_panda','cust_penguin','cust_dog','cust_fox'];
+  const CHARS = ['ella','cust_bunny','cust_bear','cust_cat','cust_panda','cust_penguin','cust_dog','cust_fox',
+                 'food_burger','food_pizza','food_donut','food_shake'];
   const COLORS = [
     { c:'#ff5ca8', name:'ורוד'  }, { c:'#ff4c4c', name:'אדום'  },
     { c:'#ff8a4c', name:'כתום'  }, { c:'#ffd24c', name:'צהוב'  },

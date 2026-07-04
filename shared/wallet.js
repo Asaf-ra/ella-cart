@@ -14,10 +14,12 @@ const Wallet = (function () {
   return {
     /* פריטי עגלת השדרוגים — מוגדרים כאן כדי שהחנות והמשחקים יקראו מאותו מקום */
     ITEMS: [
-      { id: 'bigBalloons', ico: '🎈', name: 'בלוני ענק',   costs: [40, 90],  desc: 'בלונים גדולים יותר' },
-      { id: 'turbo',       ico: '🚀', name: 'טורבו',        costs: [60, 130], desc: 'הבלונים טסים מהר!' },
-      { id: 'magic',       ico: '🦄', name: 'בלוני קסם',   costs: [80],      desc: 'חדי-קרן, כוכבים ולבבות' },
-      { id: 'brushes',     ico: '🖌️', name: 'עוד צבעים',   costs: [50],      desc: 'שישה צבעים חדשים לצביעה' }
+      { id: 'bigBalloons', ico: '🎈', name: 'בלוני ענק',    costs: [40, 90],  desc: 'בלונים גדולים יותר' },
+      { id: 'turbo',       ico: '🚀', name: 'טורבו',         costs: [60, 130], desc: 'הבלונים טסים מהר!' },
+      { id: 'magic',       ico: '🦄', name: 'בלוני קסם',    costs: [80],      desc: 'חדי-קרן, כוכבים ולבבות' },
+      { id: 'bubbles',     ico: '🫧', name: 'מכונת בועות',  costs: [45],      desc: 'המון המון בועות!' },
+      { id: 'sky',         ico: '🌙', name: 'שמיים קסומים', costs: [70],      desc: 'שקיעה, ירח וכוכבים' },
+      { id: 'brushes',     ico: '🖌️', name: 'עוד צבעים',    costs: [50],      desc: 'שישה צבעים חדשים לצביעה' }
     ],
 
     get coins() { const c = cart(); return c.coins || 0; },

@@ -478,8 +478,50 @@ class MiniGameScene extends Phaser.Scene {
     const gloss = this.add.graphics(); gloss.fillStyle(0xffffff, 0.35); gloss.fillRoundedRect(cx - cupW/2 + 16, cyTop + 18, 24, cupH - 80, 12);
     const rim = this.add.graphics(); rim.lineStyle(10, 0xffffff, 1); rim.strokeRoundedRect(cx - cupW/2, cyTop, cupW, cupH, { tl:24, tr:24, bl:48, br:48 });
 
-    const tops = []; let level = 0;
-    const serve = this.serveButton();
+    const tops = []; let level = 0, frozen = false;
+
+    /* ----- הגשה דרך המקפיא הקסום: ארון קרח יורד, שלג, והשייק יוצא קפוא ומהביל ----- */
+    const serve = this.serveButton(() => {
+      if (frozen) return; frozen = true;
+      serve.enable(false);
+      Sound.ding(); Voice.say('למקפיא!');
+      this.hintText.setText('למקפיא הקסום! ❄️');
+
+      // ארון המקפיא צונח מלמעלה ומכסה את הכוס
+      const fr = this.buildFreezer(cx, -420);
+      this.tweens.add({ targets: fr, y: 425, duration: 550, ease: 'Bounce.out',
+        onComplete: () => {
+          Sound.bubble();
+          // רעד הקפאה + שלג
+          this.tweens.add({ targets: fr, angle: { from: -1.2, to: 1.2 }, duration: 90, yoyo: true, repeat: 16 });
+          const snow = this.add.particles(cx, 240, 'spark', {
+            tint: [0xffffff, 0xbfe8ff], speedY: { min: 60, max: 130 }, speedX: { min: -50, max: 50 },
+            scale: { start: 0.7, end: 0.1 }, alpha: { start: 0.9, end: 0 },
+            lifespan: 1300, quantity: 2, frequency: 40, emitZone: { type: 'random', source: new Phaser.Geom.Rectangle(-240, -40, 480, 40) }
+          }).setDepth(22);
+          const brr = this.time.addEvent({ delay: 420, repeat: 3, callback: () => Sound.sparkle() });
+
+          this.time.delayedCall(1900, () => {
+            brr.remove(); snow.stop();
+            // הארון מתרומם — השייק קפוא, נוצץ ומהביל אדים קרים
+            this.tweens.add({ targets: fr, y: -420, duration: 500, ease: 'Quad.in', onComplete: () => fr.destroy() });
+            const frost = this.add.graphics().setDepth(6);
+            frost.fillStyle(0xdff4ff, 0.30); frost.fillRoundedRect(cx - cupW/2 + 6, cyTop + 6, cupW - 12, cupH - 12, { tl:20, tr:20, bl:44, br:44 });
+            frost.lineStyle(5, 0xffffff, 0.75); frost.strokeRoundedRect(cx - cupW/2 + 2, cyTop + 2, cupW - 4, cupH - 4, { tl:22, tr:22, bl:46, br:46 });
+            ['❄️','❄️','✨'].forEach((e, i) => {
+              const f = this.add.text(cx - 60 + i * 60, cyTop + 60 + (i % 2) * 90, e, { fontSize: '30px' }).setOrigin(0.5).setDepth(7).setAlpha(0);
+              this.tweens.add({ targets: f, alpha: 1, scale: { from: 0.4, to: 1 }, duration: 320, delay: 220 + i * 130, ease: 'Back.out' });
+            });
+            const mist = this.add.particles(cx, cyTop - 10, 'spark', {
+              tint: 0xdff4ff, alpha: { start: 0.4, end: 0 }, speedY: { min: -45, max: -20 }, speedX: { min: -18, max: 18 },
+              scale: { start: 0.8, end: 1.7 }, lifespan: 1100, quantity: 1, frequency: 90
+            }).setDepth(7);
+            Sound.happy(); Voice.say('קר וטעים!');
+            face.pop();
+            this.time.delayedCall(1200, () => { mist.stop(); this.finish(true); });
+          });
+        } });
+    });
 
     // פרצוף חמוד על הכוס — עוקב אחרי האצבע ושמח בכל בחירה
     const face = this.googlyEyes(cx, cyTop + 92, 36, 18);
@@ -488,6 +530,7 @@ class MiniGameScene extends Phaser.Scene {
     const bases = G.availBases('shake');
     const bx0 = cx - 100 - (bases.length - 1) * 88 / 2;   // מוזז שמאלה — שלא יתנגש בשורת התוספות
     bases.forEach((f, i) => this.tapItem(bx0 + i * 88, DESIGN.h - 158, f.id, () => {
+      if (frozen) return;
       this.build.base = f.id; level = Math.max(level, 70);
       fill.setFillStyle(f.color); this.tweens.add({ targets: fill, height: (cupH - 30) * (level/100), duration: 250 });
       Sound.bubble(); serve.enable(true); face.pop();
@@ -497,11 +540,33 @@ class MiniGameScene extends Phaser.Scene {
     const tlist = G.availToppings('shake');
     const tx = cx + 220;
     tlist.forEach((t, i) => this.tapItem(tx + i * 76, DESIGN.h - 158, t.id, () => {
+      if (frozen) return;
       if (!this.build.base) { Sound.tap(); return; }
       const o = this.imgOrText(cx - 60 + tops.length * 30, cyTop - 6, t.id, 46);
       const b = o._base || 1; o.setScale(b*0.4); this.tweens.add({ targets:o, scale:b, duration:200, ease:'Back.out' });
       tops.push(o); this.addTop(t.id); Sound.sparkle(); face.pop();
     }));
+  }
+
+  /* מקפיא קסום: ארון קרח תכלכל עם דלת, ידית, פתית שלג וזוהר קר */
+  buildFreezer(x, y) {
+    const c = this.add.container(x, y).setDepth(20);
+    const glow = this.add.image(0, 10, 'glowSoft').setDisplaySize(460, 540)
+      .setTint(0x9fdcff).setAlpha(0.45).setBlendMode(Phaser.BlendModes.ADD);
+    c.add(glow);
+    const g = this.add.graphics();
+    g.fillStyle(0x4a7fa8, 1); g.fillRoundedRect(-184, -224, 380, 470, 30);                  // צל גוף
+    g.fillGradientStyle(0xcfeafa, 0xcfeafa, 0x8ec4e0, 0x8ec4e0, 1);
+    g.fillRoundedRect(-190, -232, 380, 470, 30);                                             // גוף
+    g.lineStyle(6, 0x6ea8c8, 1); g.strokeRoundedRect(-160, -198, 324, 402, 22);              // דלת
+    g.fillStyle(0xffffff, 0.35); g.fillRoundedRect(-144, -184, 84, 372, 16);                 // ברק
+    g.fillStyle(0x5a8cb0, 1); g.fillRoundedRect(128, -64, 24, 132, 12);                      // ידית
+    g.fillStyle(0x86b8d8, 1); g.fillRoundedRect(132, -58, 12, 120, 8);
+    c.add(g);
+    const flake = this.add.text(-8, -50, '❄️', { fontSize: '84px' }).setOrigin(0.5);
+    this.tweens.add({ targets: flake, angle: 360, duration: 9000, repeat: -1 });
+    c.add(flake);
+    return c;
   }
 
   /* ============ פיצה ============ */
