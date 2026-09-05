@@ -317,7 +317,20 @@ const Hero3D = (function () {
       });
       window.addEventListener('pointerup', () => { dragging = false; });
 
-      window.addEventListener('resize', () => { try { engine.resize(); } catch (e) {} });
+      // סיבוב/שינוי גודל: מרעננים את מנוע הרינדור, ואם יש בנייה חיה פעילה גם ממפים
+      // מחדש את הקנבס לבמת ה-Phaser — אחרת סיבוב באמצע הרכבה משאיר את התלת-ממד
+      // ממופה לגבולות הישנים והבורגר "בורח" מהמגש.
+      // הערה קריטית: Phaser משנה את גודל קנבס-המשחק שלו באופן א-סינכרוני בתגובה
+      // לאותו אירוע resize — אם נמפה מיד נקבל מלבן-ביניים ישן שלא יתוקן יותר
+      // (בדקנו בפועל: קריאה מיידית תפסה רוחב/גובה ישנים לצמיתות). לכן ממתינים
+      // שני requestAnimationFrame כדי שקנבס המשחק כבר יהיה בגודלו הסופי.
+      function refreshStageMapping() {
+        requestAnimationFrame(() => requestAnimationFrame(() => { try { if (buildMode) canvasStageArea(); } catch (e) {} }));
+      }
+      window.addEventListener('resize', () => { try { engine.resize(); refreshStageMapping(); } catch (e) {} });
+      window.addEventListener('orientationchange', () => {
+        setTimeout(() => { try { engine.resize(); refreshStageMapping(); } catch (e) {} }, 300);
+      });
       ready = true;
     } catch (e) { console.warn('Hero3D init failed', e); ready = false; }
     return ready;
@@ -578,7 +591,43 @@ const Hero3D = (function () {
     return node;
   }
 
-  const FOOD_BUILDERS = { donut: buildDonut, pizza: buildPizza, burger: buildBurger, shake: buildShake };
+  function buildPancake(build) {
+    const node = new BABYLON.TransformNode('pancake', scene); node.parent = root;
+    const syrup = baseHex('pancake', build, '#cf8a2c');
+    // מגדל שלושה פנקייקים תפוחים
+    const ys = [-1.05, -0.58, -0.11], dia = [3.5, 3.3, 3.08];
+    ys.forEach((yy, i) => {
+      const pk = BABYLON.MeshBuilder.CreateCylinder('pk' + i, { diameter: dia[i], height: 0.44, tessellation: 56 }, scene);
+      pk.position.y = yy; pk.material = pbr('pkm' + i, i === 2 ? '#e6a94e' : '#dd9f47', 0.6, 0, { bump: 'fine' }); pk.parent = node;
+    });
+    // בריכת סירופ מבריקה על הפסגה + נטיפות שנוזלות בצדדים
+    const syrMat = pbr('pkSyrM', syrup, 0.16, 0, { cc: 0.95, ccRough: 0.07 });
+    const pool = BABYLON.MeshBuilder.CreateCylinder('pkSyr', { diameter: 2.95, height: 0.14, tessellation: 48 }, scene);
+    pool.position.y = 0.16; pool.material = syrMat; pool.parent = node;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + Math.random() * 0.35;
+      const d = BABYLON.MeshBuilder.CreateSphere('pkD' + i, { diameter: 0.42, segments: 12 }, scene);
+      d.scaling.y = 1.6 + Math.random(); d.position.set(Math.cos(a) * 1.48, -0.05 - Math.random() * 0.7, Math.sin(a) * 1.48);
+      d.material = syrMat; d.parent = node;
+    }
+    // חתיכת חמאה נמסה על הפסגה
+    const butter = BABYLON.MeshBuilder.CreateBox('pkBut', { width: 0.75, height: 0.3, depth: 0.75 }, scene);
+    butter.position.y = 0.34; butter.rotation.y = 0.4;
+    butter.material = pbr('pkButM', '#ffdb63', 0.35, 0, { sheen: 0.5, cc: 0.4, ccRough: 0.2 }); butter.parent = node;
+    // פירות לפי ההרכבה
+    const straw = (i) => { const m = BABYLON.MeshBuilder.CreateSphere('pkS' + i, { diameter: 0.5, segments: 14 }, scene); m.scaling.y = 1.3; m.material = pbr('pkSM' + i, '#e83a4e', 0.28, 0, { cc: 0.5 }); return m; };
+    const blue  = (i) => { const m = BABYLON.MeshBuilder.CreateSphere('pkB' + i, { diameter: 0.34, segments: 12 }, scene); m.material = pbr('pkBM' + i, '#5566cc', 0.3, 0, { cc: 0.6 }); return m; };
+    const bana  = (i) => { const m = BABYLON.MeshBuilder.CreateCylinder('pkN' + i, { diameter: 0.44, height: 0.13, tessellation: 16 }, scene); m.material = pbr('pkNM' + i, '#ffe08a', 0.4, 0, {}); m.rotation.y = Math.random() * 3; return m; };
+    if (has(build, '🍓')) scatter(node, 5, 0.3, 1.1, 0.42, straw);
+    if (has(build, '🫐')) scatter(node, 8, 0.3, 1.15, 0.34, blue);
+    if (has(build, '🍌')) scatter(node, 6, 0.3, 1.1, 0.3, bana);
+    if (has(build, '🍒')) { const ch = makeCherry('pkCh', 1); ch.position.set(0, 0.5, 0); ch.parent = node; }
+    if (has(build, '⭐')) scatter(node, 5, 0.3, 1.1, 0.44, (i) => { const s = BABYLON.MeshBuilder.CreateSphere('pkSt' + i, { diameter: 0.3, segments: 12 }, scene); s.material = pbr('pkStM' + i, '#ffd24c', 0.15, 0.6, { cc: 0.8 }); return s; });
+    if (!build || !build.toppings || !build.toppings.length) { scatter(node, 6, 0.3, 1.1, 0.34, blue); scatter(node, 3, 0.3, 0.9, 0.42, straw); }
+    return node;
+  }
+
+  const FOOD_BUILDERS = { donut: buildDonut, pizza: buildPizza, burger: buildBurger, shake: buildShake, pancake: buildPancake };
 
   // בנייה טרייה בכל תצוגה — המנה משקפת את ה-build המדויק (צבע/תוספות).
   // הרכיבים ישנים נזרקים; טקסטורות ה-bump משותפות ולכן לא נמחקות.
@@ -787,7 +836,7 @@ const Hero3D = (function () {
       try { engine.resize(); } catch (e) {}
       try { sparks.manualEmitCount = -1; sparks.stop(); sparks.reset(); sparks.start(); setTimeout(() => { try { sparks.stop(); } catch (e) {} }, 260); } catch (e) {}
       try { twinkle.start(); } catch (e) {}
-      try { (current === 'burger' || current === 'pizza') ? steam.start() : steam.stop(); } catch (e) {}
+      try { (current === 'burger' || current === 'pizza' || current === 'pancake') ? steam.start() : steam.stop(); } catch (e) {}
       if (!visible) { visible = true; engine.runRenderLoop(render); }
       clearTimeout(hideTimer);
       hideTimer = setTimeout(() => api.hide(), ms || 2800);

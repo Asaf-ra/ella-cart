@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- מגדל שלושה פנקייקים -->
+  <ellipse cx="60" cy="88" rx="45" ry="15" fill="#c8813a"/>
+  <ellipse cx="60" cy="85" rx="45" ry="14" fill="#e6a94e"/>
+  <ellipse cx="60" cy="71" rx="43" ry="14" fill="#c8813a"/>
+  <ellipse cx="60" cy="68" rx="43" ry="13" fill="#eab258"/>
+  <ellipse cx="60" cy="55" rx="41" ry="13" fill="#c8813a"/>
+  <ellipse cx="60" cy="52" rx="41" ry="12" fill="#edbb66"/>
+  <!-- סירופ מייפל שנוזל מהראש -->
+  <path d="M22 51 q5 -12 17 -12 q10 -8 21 -2 q11 -6 22 2 q10 0 12 12
+           q-2 8 -8 6 q-2 11 -10 6 q-3 12 -12 4 q-4 11 -12 3 q-6 9 -12 0 q-9 3 -8 -9 Z"
+        fill="#c9781f"/>
+  <path d="M25 49 q5 -11 16 -11 q10 -7 20 -2 q11 -6 21 2 q9 0 11 10
+           q-2 6 -7 5 q-2 9 -9 5 q-3 10 -11 3 q-4 9 -11 2 q-6 7 -11 0 q-8 2 -7 -8 Z"
+        fill="#e0912e"/>
+  <!-- חתיכת חמאה נמסה -->
+  <rect x="49" y="35" width="22" height="15" rx="4" fill="#ffe06a"/>
+  <rect x="49" y="35" width="22" height="7" rx="3" fill="#fff2ac"/>
+  <!-- אוכמניות -->
+  <circle cx="40" cy="45" r="5.5" fill="#5566cc"/>
+  <circle cx="38.5" cy="43.2" r="1.8" fill="#aab6ff"/>
+  <circle cx="80" cy="47" r="5.5" fill="#5566cc"/>
+  <circle cx="78.5" cy="45.2" r="1.8" fill="#aab6ff"/>
+</svg>

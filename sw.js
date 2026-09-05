@@ -1,9 +1,9 @@
 /* ===== Service Worker — עבודה אופליין מלאה ===== */
-const CACHE = 'ella-cart-v22';
+const CACHE = 'ella-cart-v29';
 const ART = [
   'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
   'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',
-  'food_shake','food_burger','food_pizza','food_donut',
+  'food_shake','food_burger','food_pizza','food_donut','food_pancake',
   'ing_bun_top','ing_bun_bottom','ing_patty','ing_cheese','ing_lettuce','ing_tomato','ing_cucumber','ing_onion',
   'ing_straw','ing_choc','ing_vanilla','ing_blue','ing_cherry','ing_mushroom','ing_pepper','ing_olive','ing_pineapple'
 ].map(function (k) { return './assets/art/' + k + '.svg'; });
@@ -11,6 +11,7 @@ const ASSETS = [
   './',
   './index.html',
   './cart.html',
+  './learning.html',
   './coloring.html',
   './balloons.html',
   './style.css',

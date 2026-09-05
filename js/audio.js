@@ -2,6 +2,9 @@
 const Sound = (function () {
   let ctx = null;
   let on = true;
+  let bus = null;          // מגביל-עוצמה משותף — מונע סדקים כשמקישים/מפוצצים מהר מדי
+  let activeTones = 0;
+  const MAX_ACTIVE = 12;
 
   function ensure() {
     if (!ctx) {
@@ -11,11 +14,31 @@ const Sound = (function () {
     if (ctx && ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
+  // כל הצלילים עוברים דרך compressor אחד לפני הרמקול — כך הקשות מהירות (בלונים, מיני-משחק)
+  // לא חותכות/מסדקות את הפלט כשכמה צלילים מתנגשים באותו רגע.
+  function outBus() {
+    if (!ctx) return null;
+    if (!bus) {
+      bus = ctx.createDynamicsCompressor();
+      try {
+        bus.threshold.setValueAtTime(-18, ctx.currentTime);
+        bus.knee.setValueAtTime(22, ctx.currentTime);
+        bus.ratio.setValueAtTime(9, ctx.currentTime);
+        bus.attack.setValueAtTime(0.003, ctx.currentTime);
+        bus.release.setValueAtTime(0.16, ctx.currentTime);
+      } catch (e) {}
+      bus.connect(ctx.destination);
+    }
+    return bus;
+  }
 
   // צליל בסיסי: תדר, משך, סוג גל, עוצמה
   function tone(freq, dur, type, vol, slideTo) {
     if (!on) return;
     const c = ensure(); if (!c) return;
+    if (activeTones >= MAX_ACTIVE) return;   // הגנה מפני ריבוי קולות בו-זמנית בהקשות מהירות
+    const out = outBus() || c.destination;
+    activeTones++;
     const o = c.createOscillator();
     const g = c.createGain();
     o.type = type || 'sine';
@@ -24,8 +47,9 @@ const Sound = (function () {
     g.gain.setValueAtTime(0.0001, c.currentTime);
     g.gain.exponentialRampToValueAtTime(vol || 0.2, c.currentTime + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
-    o.connect(g); g.connect(c.destination);
+    o.connect(g); g.connect(out);
     o.start(); o.stop(c.currentTime + dur + 0.02);
+    o.onended = () => { activeTones = Math.max(0, activeTones - 1); };
   }
 
   function chord(freqs, dur, type, vol) {
@@ -35,6 +59,7 @@ const Sound = (function () {
   return {
     isOn: () => on,
     getCtx: ensure,
+    getBus: outBus,
     toggle() { on = !on; if (on) { ensure(); this.tap(); } return on; },
     unlock() { ensure(); },
 
@@ -100,7 +125,7 @@ const Music = (function () {
       master = ctx.createGain();
       master.gain.setValueAtTime(0.0001, ctx.currentTime);
       master.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 1.2);
-      master.connect(ctx.destination);
+      master.connect(Sound.getBus() || ctx.destination);
       playBar();
       timer = setInterval(playBar, 1700);
     },

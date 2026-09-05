@@ -4,10 +4,11 @@ const G = (function () {
 
   // הגדרת המאכלים
   const FOODS = {
-    shake:  { id:'shake',  name:'גלידה',    emoji:'🍦', base:10 },
-    donut:  { id:'donut',  name:'דונאט',    emoji:'🍩', base:12 },
-    burger: { id:'burger', name:'המבורגר',  emoji:'🍔', base:15 },
-    pizza:  { id:'pizza',  name:'פיצה',      emoji:'🍕', base:20 }
+    shake:   { id:'shake',   name:'גלידה',    emoji:'🍦', base:10 },
+    donut:   { id:'donut',   name:'דונאט',    emoji:'🍩', base:12 },
+    pancake: { id:'pancake', name:'פנקייק',   emoji:'🥞', base:14 },
+    burger:  { id:'burger',  name:'המבורגר',  emoji:'🍔', base:15 },
+    pizza:   { id:'pizza',   name:'פיצה',      emoji:'🍕', base:20 }
   };
 
   // תפריט: בסיס (טעם/ציפוי — בוחרים אחד) + תוספות (מוסיפים את המבוקשות).
@@ -22,6 +23,11 @@ const G = (function () {
       bases: [ {id:'🩷', color:0xff8ac4, lvl:0}, {id:'🤎', color:0x8a5a3c, lvl:0},
                {id:'🤍', color:0xfff3da, lvl:1}, {id:'💙', color:0x7ec8ff, lvl:2}, {id:'💜', color:0xb98aff, lvl:3} ],
       toppings: [ {id:'🌈', lvl:0}, {id:'🍒', lvl:1}, {id:'🍪', lvl:2}, {id:'⭐', lvl:2}, {id:'🍬', lvl:3} ]
+    },
+    pancake: {
+      bases: [ {id:'🍯', color:0xcf8a2c, lvl:0}, {id:'🍫', color:0x6a3f22, lvl:0},
+               {id:'🩷', color:0xff8ac4, lvl:1}, {id:'💙', color:0x6aa8ff, lvl:2} ],
+      toppings: [ {id:'🍓', lvl:0}, {id:'🫐', lvl:0}, {id:'🍌', lvl:1}, {id:'🍒', lvl:2}, {id:'⭐', lvl:3} ]
     },
     burger: {
       bases: null,

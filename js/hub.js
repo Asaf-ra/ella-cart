@@ -13,6 +13,7 @@ const HubPalette = {
 /* הגדרת שלושת המשחקים */
 const HUB_GAMES = [
   { key:'cart',     url:'./cart.html',     name:'העגלה של אלה',  say:'העגלה של אלה!', emoji:'🛒', art:'food_burger', color:0xff7eb9 },
+  { key:'learning', url:'./learning.html', name:'איזור למידה',    say:'איזור למידה!',   emoji:'📚', art:null,          color:0x7cc7ff },
   { key:'coloring', url:'./coloring.html', name:'ציור קסם',      say:'ציור קסם!',     emoji:'🎨', art:null,          color:0xb28dff },
   { key:'balloons', url:'./balloons.html', name:'בלונים',        say:'בלונים!',       emoji:'🎈', art:null,          color:0x7ee8c0 }
 ];

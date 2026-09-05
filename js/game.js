@@ -187,7 +187,7 @@ class BootScene extends Phaser.Scene {
     ['ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
      'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse']
       .forEach(k => this.load.svg(k, 'assets/art/' + k + '.svg', { width: 240, height: 264 }));
-    ['food_shake','food_burger','food_pizza','food_donut']
+    ['food_shake','food_burger','food_pizza','food_donut','food_pancake']
       .forEach(k => this.load.svg(k, 'assets/art/' + k + '.svg', { width: 150, height: 150 }));
     ['ing_bun_top','ing_bun_bottom','ing_patty','ing_cheese','ing_lettuce','ing_tomato','ing_cucumber','ing_onion',
      'ing_straw','ing_choc','ing_vanilla','ing_blue','ing_cherry','ing_mushroom','ing_pepper','ing_olive','ing_pineapple']

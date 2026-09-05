@@ -2,7 +2,7 @@
 
 // שמות טעמים/צבעים להקראה — הילדה לא קוראת, הקול מאשר לה מה בחרה
 const FLAVOR_NAMES = { '🍦':'וניל', '🍓':'תות', '🍫':'שוקולד', '🫐':'אוכמניות', '🍋':'לימון',
-  '🩷':'ורוד', '🤎':'שוקולד', '🤍':'וניל', '💙':'כחול', '💜':'סגול' };
+  '🩷':'ורוד', '🤎':'שוקולד', '🤍':'וניל', '💙':'כחול', '💜':'סגול', '🍯':'מייפל' };
 
 // שמות מרכיבים להקראה בזמן ההרכבה
 const INGREDIENT_NAMES = { '🧀':'גבינה', '🥬':'חסה', '🍅':'עגבנייה', '🥒':'מלפפון', '🍳':'ביצה', '🧅':'בצל' };
@@ -34,6 +34,7 @@ class MiniGameScene extends Phaser.Scene {
     else if (this.food === 'shake') this.startShake();
     else if (this.food === 'pizza') this.startPizza();
     else if (this.food === 'donut') this.startDonut();
+    else if (this.food === 'pancake') this.startPancake();
 
     this.time.delayedCall(350, () => Voice.say('מכינים ' + G.FOODS[this.food].name + '!'));   // מספרים לילדה מה מכינים
   }
@@ -810,6 +811,185 @@ class MiniGameScene extends Phaser.Scene {
       const b = o._base || 1; o.setScale(b*0.4); this.tweens.add({ targets:o, scale:b, duration:180, ease:'Back.out' });
       topLayer.add(o); this.addTop(t.id); Sound.sparkle();
     }));
+  }
+
+  /* ============ פנקייקים ============ */
+  // מנגנון ייחודי: מוזגים בלילה במחבת, מהפכים בהחלקת אצבע (הפנקייק מסתובב באוויר!),
+  // בונים מגדל של 3, ואז יוצקים סירופ ומוסיפים פירות.
+  startPancake() {
+    const cx = DESIGN.w / 2;
+    this.hintText.setText('מוזגים בלילה — ומהפכים! ⬆️');
+    const NEED = 3;
+    let stacked = 0, ready = false, flipping = false, panCake = null, lastCakeY = 0;
+    this._pkDbg = () => ({ stacked, ready, flipping, stage: stacked >= NEED ? 'toppings' : 'flip' });
+
+    // ----- צלחת + מגדל הפנקייקים -----
+    const plateY = 596;
+    Helper.shadowEl(this, cx, plateY + 16, 400, 48);
+    const plate = this.add.graphics();
+    plate.fillStyle(0xcdc7da, 1); plate.fillEllipse(cx, plateY + 6, 372, 66);
+    plate.fillStyle(0xffffff, 1);  plate.fillEllipse(cx, plateY, 352, 56);
+    plate.fillStyle(0xe8e2f2, 0.8); plate.fillEllipse(cx, plateY + 2, 276, 38);
+    plate.fillStyle(0xffffff, 0.7); plate.fillEllipse(cx - 78, plateY - 12, 116, 16);
+    const stack = this.add.container(0, 0).setDepth(4);
+    let topY = plateY - 6;                       // גובה היעד לפנקייק הבא (עולה עם הערימה)
+
+    // ----- מחבת בישול -----
+    const pan = this.buildPan(cx, 322);
+
+    // כפתור הפיכה פועם (אמין לגיל 3 — וגם החלקה למעלה מהפכת)
+    const flipBtn = this.actionBtn(cx, DESIGN.h - 58, '🔄 הפכו!', 0xff9f43);
+    let pulse = null;
+    const startPulse = () => { stopPulse(); pulse = this.tweens.add({ targets: flipBtn, scale: 1.08, duration: 420, yoyo: true, repeat: -1, ease: 'Sine.inOut' }); };
+    const stopPulse  = () => { if (pulse) { pulse.stop(); pulse = null; } flipBtn.setScale(1); };
+
+    const serve = this.serveButton(); serve.setVisible(false);
+
+    // פנקייק במחבת — נצבע מבצק חיוור (0) לזהוב (1) לשחום-הפוך (2)
+    const makePanCake = () => {
+      const c = this.add.container(cx, 312).setDepth(3);
+      const g = this.add.graphics(); c.add(g);
+      c.paint = (lvl) => {
+        g.clear();
+        const top  = lvl >= 2 ? 0xcf8636 : lvl >= 1 ? 0xe6a84e : 0xf0daa0;
+        const edge = lvl >= 2 ? 0xa8641f : lvl >= 1 ? 0xc9832f : 0xdcc07a;
+        g.fillStyle(edge, 1); g.fillEllipse(0, 5, 152, 52);
+        g.fillStyle(top, 1);  g.fillEllipse(0, 0, 152, 48);
+        g.fillStyle(0xffffff, 0.18); g.fillEllipse(-22, -6, 74, 16);
+      };
+      c.paint(0);
+      return c;
+    };
+
+    const pourPancake = () => {
+      ready = false;
+      this.hintText.setText('אופים... 🔥');
+      panCake = makePanCake();
+      panCake.setScale(0.2, 0.2);
+      Sound.bubble();
+      this.tweens.add({ targets: panCake, scaleX: 1, scaleY: 1, duration: 380, ease: 'Back.out' });
+      this.time.delayedCall(560, () => {
+        if (!panCake) return;
+        panCake.paint(1);
+        this.panSizzle(cx, 312);
+        ready = true;
+        flipBtn.enable(true); startPulse();
+        Voice.say('להפוך!');
+        this.hintText.setText('החליקו למעלה כדי להפוך! ⬆️');
+      });
+    };
+
+    const land = (p) => {
+      this.tweens.add({ targets: p, scaleY: 0.68, duration: 70, yoyo: true, ease: 'Quad.out' });
+      this.cutFx(cx + Phaser.Math.Between(-70, 70), p.y, 0xe0b060);
+      Sound.pop(); this.cameras.main.shake(70, 0.002);
+      stack.add(p);
+      lastCakeY = topY; topY -= 30;
+      stacked++;
+      flipping = false;
+      if (stacked < NEED) this.time.delayedCall(240, pourPancake);
+      else this.time.delayedCall(360, toppingStage);
+    };
+
+    const flip = () => {
+      if (!ready || flipping || !panCake) return;
+      flipping = true; ready = false;
+      flipBtn.enable(false); stopPulse();
+      Sound.pop(); Sound.sparkle(); Voice.say('הופ!');
+      const p = panCake; panCake = null;
+      const dur = 560, apexY = 150;
+      p._base = 1;
+      // סיבוב מלא: scaleY 1→‏-1→1 (הפנקייק "עומד על הקצה" באמצע)
+      this.tweens.add({ targets: p, scaleY: -1, duration: dur / 2, ease: 'Sine.inOut', yoyo: true });
+      this.tweens.add({ targets: p, angle: Phaser.Math.Between(-14, 14), duration: dur, ease: 'Sine.inOut' });
+      this.time.delayedCall(dur / 2, () => p.paint(2));   // הצד השני שחום — נצלה
+      this.tweens.add({ targets: p, y: apexY, duration: dur / 2, ease: 'Quad.out',
+        onComplete: () => this.tweens.add({ targets: p, y: topY, duration: dur / 2, ease: 'Quad.in', onComplete: () => land(p) }) });
+    };
+
+    flipBtn.onTap(flip);
+    // החלקה למעלה בכל מקום = הפיכה (בנוסף לכפתור)
+    this.input.on('pointerdown', (pt) => { this._panSwipe = pt.y; });
+    this.input.on('pointerup',   (pt) => { if (this._panSwipe != null && this._panSwipe - pt.y > 55) flip(); this._panSwipe = null; });
+
+    // ----- שלב הסירופ והפירות (אחרי שהמגדל מוכן) -----
+    const toppingStage = () => {
+      this.hintText.setText('בחרו סירופ, והוסיפו את הפירות שביקשו! 🍯');
+      this.tweens.add({ targets: pan, x: -420, angle: -18, duration: 600, ease: 'Back.in', onComplete: () => pan.destroy() });
+      flipBtn.destroy(); stopPulse();
+
+      const face = this.googlyEyes(cx, lastCakeY - 2, 30, 13); face.eyes.setDepth(20); face.pop();
+      this.input.on('pointermove', (pt) => face.lookAt(pt.x, pt.y));
+
+      const syrupC = this.add.container(cx, lastCakeY - 8).setDepth(5);
+      const syrupG = this.add.graphics(); syrupC.add(syrupG);
+      const drawSyrup = (color) => {
+        syrupG.clear();
+        const light = Phaser.Display.Color.IntegerToColor(color).lighten(16).color;
+        syrupG.fillStyle(color, 1);
+        syrupG.fillEllipse(0, 0, 150, 46);
+        [[-58, 40], [-22, 58], [16, 52], [50, 44], [70, 32]].forEach(d => {
+          syrupG.fillRoundedRect(d[0] - 7, -4, 14, d[1], 7); syrupG.fillCircle(d[0], d[1] - 4, 8);
+        });
+        syrupG.fillStyle(light, 0.55); syrupG.fillEllipse(-18, -6, 74, 16);
+        syrupC.setScale(1, 0.12);
+        this.tweens.add({ targets: syrupC, scaleY: 1, duration: 340, ease: 'Back.out' });
+      };
+
+      const topLayer = this.add.container(0, 0).setDepth(6);
+      serve.setVisible(true);
+
+      const bases = G.availBases('pancake');
+      const bx0 = cx - 120 - (bases.length - 1) * 84 / 2;
+      bases.forEach((f, i) => this.tapItem(bx0 + i * 84, DESIGN.h - 158, f.id, () => {
+        this.build.base = f.id; drawSyrup(f.color); Sound.bubble(); serve.enable(true); face.pop();
+        Voice.say(FLAVOR_NAMES[f.id] || 'טעים');
+      }));
+
+      const tlist = G.availToppings('pancake');
+      const tx = cx + 210;
+      tlist.forEach((t, i) => this.tapItem(tx + i * 74, DESIGN.h - 158, t.id, () => {
+        if (!this.build.base) { Sound.tap(); return; }
+        const ang = Math.random() * 6.283, rr = Math.random() * 56;
+        const o = this.imgOrText(cx + Math.cos(ang) * rr, lastCakeY - 8 + Math.sin(ang) * rr * 0.42, t.id, 42);
+        const b = o._base || 1; o.setScale(b * 0.4); this.tweens.add({ targets: o, scale: b, duration: 180, ease: 'Back.out' });
+        topLayer.add(o); this.addTop(t.id); Sound.sparkle(); face.pop();
+      }));
+    };
+
+    pourPancake();
+  }
+
+  // מחבת ברזל יצוק (מבט מלמעלה) עם ידית — משמשת את שלב הבישול של הפנקייק
+  buildPan(x, y) {
+    const c = this.add.container(x, y).setDepth(2);
+    Helper.shadowEl(this, x, y + 40, 300, 44).setDepth(1);
+    const g = this.add.graphics();
+    g.fillStyle(0x2a2a30, 1); g.fillRoundedRect(148, -14, 168, 30, 15);         // ידית — צל
+    g.fillGradientStyle(0x55555f, 0x55555f, 0x333339, 0x333339, 1); g.fillRoundedRect(148, -18, 168, 26, 13);
+    g.fillStyle(0x7a7a86, 0.6); g.fillRoundedRect(160, -14, 130, 6, 3);
+    g.fillStyle(0x141418, 1); g.fillEllipse(0, 12, 322, 122);                    // שפת המחבת (צל)
+    g.fillGradientStyle(0x3a3a42, 0x3a3a42, 0x24242a, 0x24242a, 1); g.fillEllipse(0, 0, 322, 116);
+    g.fillStyle(0x141418, 1); g.fillEllipse(0, 3, 278, 98);                      // משטח הבישול
+    g.fillStyle(0x2c2c34, 1); g.fillEllipse(-6, -4, 208, 62);
+    g.fillStyle(0xffffff, 0.07); g.fillEllipse(-42, -22, 120, 28);              // הבהק
+    c.add(g);
+    return c;
+  }
+
+  // אדי בישול + בועות שמתפקעות על הפנקייק — חיווי ש"מתבשל" ואפשר להפוך
+  panSizzle(x, y) {
+    const p = this.add.particles(x, y - 8, 'spark', { tint: [0xfff0c0, 0xffffff],
+      lifespan: 520, speed: { min: 30, max: 90 }, angle: { min: 200, max: 340 },
+      scale: { start: 0.5, end: 0 }, alpha: { start: 0.7, end: 0 }, quantity: 2, frequency: 60 }).setDepth(4);
+    this.time.delayedCall(650, () => p.stop());
+    this.time.delayedCall(1400, () => p.destroy());
+    for (let i = 0; i < 4; i++) {
+      const bx = x + Phaser.Math.Between(-56, 56), by = y - 6 + Phaser.Math.Between(-6, 6);
+      const b = this.add.circle(bx, by, 4, 0xfff3d0, 0.9).setDepth(4).setScale(0);
+      this.tweens.add({ targets: b, scale: 1, duration: 200, delay: i * 100, yoyo: true, hold: 110, ease: 'Quad.out', onComplete: () => b.destroy() });
+    }
+    Sound.bubble();
   }
 }
 
