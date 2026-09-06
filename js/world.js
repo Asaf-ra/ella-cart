@@ -259,6 +259,7 @@ class WorldScene extends Phaser.Scene {
     if (G.soundOn) Music.start();          // מוזיקת רקע (אחרי מחוות-משתמש = ניגון תקין)
     buildEnvironment(this);
     this.cart = buildCart(this, DESIGN.w / 2, 560);
+    Hero3D.showCart(3400); // רגע קולנועי חד-פעמי: העגלה ב-3D דועכת לתוך העגלה החיה שכבר פועלת מתחתיה
 
     this.customers = [];
     this.busyCustomer = null;

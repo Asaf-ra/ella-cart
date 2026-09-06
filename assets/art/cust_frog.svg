@@ -1,7 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
-  <path d="M44 220 Q44 158 100 158 Q156 158 156 220 Z" fill="#ffd24c"/>
+  <defs>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe69d"/><stop offset="100%" stop-color="#ffd24c"/>
+    </linearGradient>
+    <radialGradient id="headGrad" cx="38%" cy="30%" r="72%">
+      <stop offset="0%" stop-color="#b0e5a3"/><stop offset="100%" stop-color="#6fcf57"/>
+    </radialGradient>
+  </defs>
+  <path d="M44 220 Q44 158 100 158 Q156 158 156 220 Z" fill="url(#bodyGrad)"/>
   <!-- ראש -->
-  <circle cx="100" cy="108" r="56" fill="#6fcf57"/>
+  <circle cx="100" cy="108" r="56" fill="url(#headGrad)"/>
+  <ellipse cx="80" cy="86" rx="16" ry="11" fill="#ffffff" opacity="0.25"/>
   <!-- עיניים בולטות -->
   <circle cx="68" cy="62" r="24" fill="#6fcf57"/>
   <circle cx="132" cy="62" r="24" fill="#6fcf57"/>

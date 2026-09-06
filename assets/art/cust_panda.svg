@@ -1,10 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
-  <path d="M44 220 Q44 156 100 156 Q156 156 156 220 Z" fill="#a6e3a1"/>
+  <defs>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#cef0cb"/><stop offset="100%" stop-color="#a6e3a1"/>
+    </linearGradient>
+    <radialGradient id="headGrad" cx="38%" cy="32%" r="72%">
+      <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#eaf7ea"/>
+    </radialGradient>
+  </defs>
+  <path d="M44 220 Q44 156 100 156 Q156 156 156 220 Z" fill="url(#bodyGrad)"/>
   <!-- אוזניים -->
   <circle cx="58" cy="62" r="22" fill="#3a3a3a"/>
   <circle cx="142" cy="62" r="22" fill="#3a3a3a"/>
   <!-- ראש -->
-  <circle cx="100" cy="104" r="56" fill="#ffffff"/>
+  <circle cx="100" cy="104" r="56" fill="url(#headGrad)"/>
   <!-- כתמי עיניים -->
   <ellipse cx="78" cy="100" rx="16" ry="20" fill="#3a3a3a" transform="rotate(-12 78 100)"/>
   <ellipse cx="122" cy="100" rx="16" ry="20" fill="#3a3a3a" transform="rotate(12 122 100)"/>

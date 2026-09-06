@@ -7,6 +7,7 @@ const Hero3D = (function () {
   let babylonLoading = false;
   let bumpFine = null, bumpCoarse = null;
   let dragging = false, dragX = 0, lastInteract = 0;
+  let cartRoot = null, cartMode = false;   // חשיפת העגלה: נבנית פעם אחת, קבועה — לא נהרסת/נבנית כמו מאכל
 
   // ---- טעינת Babylon דינמית ברקע (המשחק נפתח מיד) ----
   function loadBabylon() {
@@ -365,6 +366,19 @@ const Hero3D = (function () {
     st.position.y = 0.28 * scale; st.rotation.z = 0.3; st.material = pbr(name + 'sm', '#4a7c2f', 0.5); st.parent = n;
     return n;
   }
+  // גוף מעוגל: 2 קופסאות חוצות + 4 גלילי-פינה — "קופסה מעוגלת" בלי extrude/earcut
+  // (CreatePolygon/ExtrudePolygon תלויים ב-earcut הגלובלי שלא נטען בפרויקט — יזרקו שגיאה)
+  function roundedSlab(id, w, h, d, r, mat, tess) {
+    const n = new BABYLON.TransformNode(id, scene);
+    const boxX = BABYLON.MeshBuilder.CreateBox(id + 'bx', { width: w, height: h, depth: Math.max(0.01, d - 2 * r) }, scene);
+    const boxZ = BABYLON.MeshBuilder.CreateBox(id + 'bz', { width: Math.max(0.01, w - 2 * r), height: h, depth: d }, scene);
+    boxX.material = boxZ.material = mat; boxX.parent = n; boxZ.parent = n;
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach((sgn, i) => {
+      const c = BABYLON.MeshBuilder.CreateCylinder(id + 'c' + i, { diameter: r * 2, height: h, tessellation: tess || 24 }, scene);
+      c.position.set(sgn[0] * (w / 2 - r), 0, sgn[1] * (d / 2 - r)); c.material = mat; c.parent = n;
+    });
+    return n;
+  }
 
   function buildDonut(build) {
     const node = new BABYLON.TransformNode('donut', scene); node.parent = root;
@@ -627,6 +641,70 @@ const Hero3D = (function () {
     return node;
   }
 
+  // ---- העגלה עצמה: "רגע קולנועי" חד-פעמי בכניסה לעולם (Hero3D.showCart), לא מוצג ליד המאכלים.
+  // בכוונה לא ברשימת FOOD_BUILDERS למטה — אינה "מנה" ולא עוברת דרך setCurrent/disposeBuilders.
+  // בכוונה לא כוללת בסבב הזה: לוח תפריט, צנצנות, דמות אלה בחלון, דגלוני קישוט —
+  // זהו צילום-רוחב של כמה שניות, לא תקריב על פרטים קטנים.
+  function buildCartHero() {
+    const node = new BABYLON.TransformNode('cartHero', scene); node.parent = root;
+    const bodyMat = pbr('cartBody', '#f0b350', 0.45, 0, { sheen: 0.3 });
+    const skirtMat = pbr('cartSkirtM', '#c8860c', 0.5, 0, {});
+
+    const skirt = roundedSlab('cartSkirt', 6.4, 0.7, 2.4, 0.35, skirtMat, 20);
+    skirt.position.y = -1.3; skirt.parent = node;
+    const body = roundedSlab('cartBodyN', 6.4, 2.6, 2.4, 0.4, bodyMat, 20);
+    body.position.y = 0.35; body.parent = node;
+
+    const counter = BABYLON.MeshBuilder.CreateBox('cartCounter', { width: 3.0, height: 0.26, depth: 0.55 }, scene);
+    counter.position.set(0.3, -0.7, 1.45);
+    counter.material = pbr('cartCounterM', '#fff3d6', 0.4, 0, { cc: 0.25 });
+    counter.parent = node;
+
+    const frame = BABYLON.MeshBuilder.CreateBox('cartFrame', { width: 2.1, height: 0.95, depth: 0.1 }, scene);
+    frame.position.set(-1.5, 0.55, 1.15);
+    frame.material = pbr('cartFrameM', '#ff5ca8', 0.4, 0, { sheen: 0.25 });
+    frame.parent = node;
+    const glass = BABYLON.MeshBuilder.CreateBox('cartGlass', { width: 1.9, height: 0.75, depth: 0.08 }, scene);
+    glass.position.set(-1.5, 0.55, 1.22);
+    glass.material = pbr('cartGlassM', '#8fd6ea', 0.06, 0, { alpha: 0.6, cc: 1, ccRough: 0.04 });
+    glass.parent = node;
+    const glow = BABYLON.MeshBuilder.CreatePlane('cartGlow', { width: 1.75, height: 0.68 }, scene);
+    glow.position.set(-1.5, 0.55, 1.08);
+    const glowMat = new BABYLON.StandardMaterial('cartGlowM', scene);
+    glowMat.emissiveColor = new BABYLON.Color3(1, 0.86, 0.55); glowMat.disableLighting = true;
+    glow.material = glowMat; glow.parent = node;
+
+    const awningColors = ['#ff5ca8', '#ffffff'];
+    for (let i = 0; i < 8; i++) {
+      const x = -3.0 + i * 0.75 + 0.375;
+      const seg = BABYLON.MeshBuilder.CreateBox('cartAwn' + i, { width: 0.85, height: 0.5, depth: 0.85 }, scene);
+      seg.position.set(x, 1.95, 1.5); seg.rotation.x = -0.4;
+      seg.material = pbr('cartAwnM' + i, awningColors[i % 2], 0.4, 0, {});
+      seg.parent = node;
+      const scallop = BABYLON.MeshBuilder.CreateSphere('cartScal' + i, { diameter: 0.82, slice: 0.5, segments: 14 }, scene);
+      scallop.rotation.x = Math.PI; scallop.position.set(x, 1.55, 1.9);
+      scallop.material = pbr('cartScalM' + i, awningColors[i % 2], 0.4, 0, {});
+      scallop.parent = node;
+    }
+    const trim = BABYLON.MeshBuilder.CreateBox('cartTrim', { width: 6.3, height: 0.14, depth: 0.5 }, scene);
+    trim.position.set(0, 2.2, 1.1);
+    trim.material = pbr('cartTrimM', '#ffd24c', 0.3, 0, { cc: 0.3 });
+    trim.parent = node;
+
+    [-1.9, 1.9].forEach((x, i) => {
+      const tire = BABYLON.MeshBuilder.CreateCylinder('cartTire' + i, { diameter: 1.0, height: 0.34, tessellation: 28 }, scene);
+      tire.rotation.z = Math.PI / 2; tire.position.set(x, -1.7, 0);
+      tire.material = pbr('cartTireM' + i, '#4a3552', 0.6, 0, {}); tire.parent = node;
+      const hub = BABYLON.MeshBuilder.CreateCylinder('cartHub' + i, { diameter: 0.42, height: 0.36, tessellation: 20 }, scene);
+      hub.rotation.z = Math.PI / 2; hub.position.set(x, -1.7, 0);
+      hub.material = pbr('cartHubM' + i, '#d9d9e8', 0.3, 0, { cc: 0.4 }); hub.parent = node;
+    });
+
+    node.getChildMeshes().forEach(m => { m.receiveShadows = true; });
+    if (shadowGen) node.getChildMeshes().forEach(m => shadowGen.addShadowCaster(m));
+    return node;
+  }
+
   const FOOD_BUILDERS = { donut: buildDonut, pizza: buildPizza, burger: buildBurger, shake: buildShake, pancake: buildPancake };
 
   // בנייה טרייה בכל תצוגה — המנה משקפת את ה-build המדויק (צבע/תוספות).
@@ -725,6 +803,15 @@ const Hero3D = (function () {
     try { cam.setTarget(BABYLON.Vector3.Zero()); } catch (e) {}
     try { engine.resize(); } catch (e) {}
   }
+  // סגירה שקטה של מצב "חשיפת העגלה" — נקרא מראש בכניסה ל-show/builderStart, לא מתוך hide()
+  // (כדי לא להיתלות בתזמון ה-fade האסינכרוני של hide(); האיפוס קורה כשהחשיפה הבאה מתחילה).
+  function cartTeardown() {
+    if (!cartMode) return;
+    cartMode = false;
+    if (cartRoot) cartRoot.setEnabled(false);
+    if (plate) plate.setEnabled(true);
+    cam.alpha = Math.PI / 2; cam.fov = 0.55;
+  }
 
   function render() {
     if (buildMode) {
@@ -744,16 +831,22 @@ const Hero3D = (function () {
     // כניסה קופצת
     const s = el < 0.55 ? Math.max(0.001, easeOutBack(el / 0.55)) : 1;
     root.scaling.setAll(s);
-    // סיבוב אוטומטי — מושהה בזמן שהילדה מסובבת בעצמה
-    if (!dragging && performance.now() - lastInteract > 1200) root.rotation.y += engine.getDeltaTime() / 1000 * 1.3;
-    root.position.y = Math.sin(el * 2) * 0.12;
-    // דחיפת-מצלמה קולנועית איטית + נשימה קלה בזווית
+    // סיבוב אוטומטי — מושהה בזמן שהילדה מסובבת בעצמה (בעגלה: הרבה יותר עדין, זו לא צלחת מסתובבת)
+    if (!dragging && performance.now() - lastInteract > 1200) root.rotation.y += engine.getDeltaTime() / 1000 * (cartMode ? 0.25 : 1.3);
+    root.position.y = cartMode ? 0 : Math.sin(el * 2) * 0.12; // עגלה לא צריכה "לצוף" כמו מנה
     const push = Math.min(el / 2.2, 1);
-    cam.radius = 11.6 - (1 - Math.pow(1 - push, 3)) * 0.7; // עדין — שלא ייחתך הדובדבן של השייק (המנה הגבוהה)
-    cam.beta = Math.PI / 2.75 + Math.sin(el * 0.6) * 0.018;
+    if (cartMode) {
+      // צילום-נוף רחב יותר: דולי-כניסה גדול יותר, זווית 3/4, גובה-עיניים
+      cam.radius = 15 - (1 - Math.pow(1 - push, 3)) * 3;
+      cam.beta = Math.PI / 2.55 + Math.sin(el * 0.6) * 0.012;
+    } else {
+      // דחיפת-מצלמה קולנועית איטית + נשימה קלה בזווית
+      cam.radius = 11.6 - (1 - Math.pow(1 - push, 3)) * 0.7; // עדין — שלא ייחתך הדובדבן של השייק (המנה הגבוהה)
+      cam.beta = Math.PI / 2.75 + Math.sin(el * 0.6) * 0.018;
+    }
     if (pipeline && pipeline.depthOfFieldEnabled) pipeline.depthOfField.focusDistance = cam.radius * 1000;
-    // גל-הלם
-    if (el < 0.65) { ring.setEnabled(true); const k = el / 0.65; ring.scaling.setAll(0.3 + k * 3); ring.material.alpha = 1 - k; }
+    // גל-הלם — רק למאכל; לעגלה זה פחות מתאים (לא "נוחתת" כמו מנה)
+    if (!cartMode && el < 0.65) { ring.setEnabled(true); const k = el / 0.65; ring.scaling.setAll(0.3 + k * 3); ring.material.alpha = 1 - k; }
     else ring.setEnabled(false);
     scene.render();
   }
@@ -767,6 +860,7 @@ const Hero3D = (function () {
       if (!init() || foodKey !== 'burger') return false;
       try {
         builderTeardown();
+        cartTeardown();
         disposeBuilders();
         buildNode = new BABYLON.TransformNode('liveBuild', scene);
         buildNode.parent = root;
@@ -776,6 +870,8 @@ const Hero3D = (function () {
         root.scaling.setAll(1); root.rotation.y = 0; root.position.y = 0;
         cam.radius = 8.4; cam.beta = Math.PI / 2.6;                       // מעט יותר מהצד — הצבעים עשירים יותר מאשר מלמעלה
         cam.setTarget(new BABYLON.Vector3(0, -0.8, 0));                   // מתחילים ממוקדים על הצלחת; המסגור הדינמי עולה עם הערימה
+        cam.alpha = Math.PI / 2;                                          // setTarget מחשב alpha מהמיקום הישן של המצלמה (יכול "לזכור" זווית עגלה) — קובעים אותו מפורשות אחרון
+        cam.fov = 0.55;
         scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);                // שקוף — הבמה הכהה מגיעה מסצנת ה-Phaser (אפס תפר)
         canvasStageArea();
         canvas.style.display = 'block';
@@ -823,10 +919,36 @@ const Hero3D = (function () {
       api.hide();
     },
 
+    /* ---- חשיפת עגלה: "רגע קולנועי" חד-פעמי בכניסה לעולם, לא רצף מתמיד ---- */
+    showCart(ms) {
+      loadBabylon();
+      if (!init()) return;
+      builderTeardown();
+      disposeBuilders();                                                  // מכבים מאכל שהוצג קודם — לא רלוונטי לעגלה
+      if (!cartRoot) cartRoot = buildCartHero();
+      cartRoot.setEnabled(true);
+      cartMode = true; current = null;
+      if (plate) plate.setEnabled(false);                                 // אין הגיון לצלחת קרמיקה מתחת לעגלה
+      cam.alpha = Math.PI / 2 - 0.5; cam.fov = 0.65;
+      t0 = performance.now(); lastInteract = 0; dragging = false;
+      root.scaling.setAll(0.001); root.rotation.y = 0;
+      clearTimeout(fadeTimer);
+      canvas.style.display = 'block'; canvas.style.pointerEvents = 'none'; // חשיפה סביבתית — לא צעצוע לגרירה כמו המאכל
+      requestAnimationFrame(() => { canvas.style.opacity = '1'; });
+      try { engine.resize(); } catch (e) {}
+      try { sparks.manualEmitCount = -1; sparks.stop(); sparks.reset(); sparks.start(); setTimeout(() => { try { sparks.stop(); } catch (e) {} }, 260); } catch (e) {}
+      try { twinkle.start(); } catch (e) {}
+      try { steam.stop(); } catch (e) {}
+      if (!visible) { visible = true; engine.runRenderLoop(render); }
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => api.hide(), ms || 3400);
+    },
+
     show(foodKey, ms, build) {
       loadBabylon();
       if (!init()) return;
       builderTeardown();                                                  // אם באנו מבנייה חיה — show לוקח פיקוד חלק
+      cartTeardown();                                                     // אם באנו מחשיפת עגלה — show לוקח פיקוד חלק
       setCurrent(foodKey || 'donut', build);
       t0 = performance.now(); lastInteract = 0; dragging = false;
       root.scaling.setAll(0.001); root.rotation.y = 0;

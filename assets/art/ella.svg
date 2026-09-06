@@ -1,6 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
+  <defs>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffbfdf"/><stop offset="100%" stop-color="#ff8ac4"/>
+    </linearGradient>
+    <radialGradient id="headGrad" cx="38%" cy="32%" r="72%">
+      <stop offset="0%" stop-color="#ffead5"/><stop offset="100%" stop-color="#ffd9b3"/>
+    </radialGradient>
+  </defs>
   <!-- גוף / סינר -->
-  <path d="M40 220 Q40 150 100 150 Q160 150 160 220 Z" fill="#ff8ac4"/>
+  <path d="M40 220 Q40 150 100 150 Q160 150 160 220 Z" fill="url(#bodyGrad)"/>
   <path d="M78 152 H122 V200 Q100 210 78 200 Z" fill="#fff5fb"/>
   <circle cx="100" cy="170" r="5" fill="#ff5ca8"/>
   <circle cx="100" cy="188" r="5" fill="#ff5ca8"/>
@@ -10,11 +18,12 @@
   <path d="M44 96 Q40 175 70 178 L70 120 Z" fill="#ffcf5a"/>
   <path d="M156 96 Q160 175 130 178 L130 120 Z" fill="#ffcf5a"/>
   <!-- ראש -->
-  <circle cx="100" cy="92" r="52" fill="#ffd9b3"/>
+  <circle cx="100" cy="92" r="52" fill="url(#headGrad)"/>
   <!-- שיער קדמי + פוני -->
   <path d="M52 86 Q50 40 100 40 Q150 40 148 86 Q140 64 100 62 Q60 64 52 86 Z" fill="#ffcf5a"/>
   <circle cx="58" cy="92" r="12" fill="#ffcf5a"/>
   <circle cx="142" cy="92" r="12" fill="#ffcf5a"/>
+  <ellipse cx="80" cy="80" rx="14" ry="9" fill="#ffffff" opacity="0.3"/>
   <!-- כובע טבחים -->
   <ellipse cx="100" cy="34" rx="42" ry="20" fill="#ffffff"/>
   <circle cx="70" cy="30" r="18" fill="#ffffff"/>

@@ -1,10 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
-  <path d="M40 220 Q40 150 100 150 Q160 150 160 220 Z" fill="#ff9f43"/>
+  <defs>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffca98"/><stop offset="100%" stop-color="#ff9f43"/>
+    </linearGradient>
+    <radialGradient id="headGrad" cx="38%" cy="32%" r="72%">
+      <stop offset="0%" stop-color="#f8dcbf"/><stop offset="100%" stop-color="#f3c08a"/>
+    </radialGradient>
+  </defs>
+  <path d="M40 220 Q40 150 100 150 Q160 150 160 220 Z" fill="url(#bodyGrad)"/>
   <path d="M82 150 H118 L110 170 H90 Z" fill="#fff4e6"/>
   <rect x="90" y="128" width="20" height="24" rx="9" fill="#e8a673"/>
-  <circle cx="100" cy="92" r="52" fill="#f3c08a"/>
+  <circle cx="100" cy="92" r="52" fill="url(#headGrad)"/>
   <!-- שיער קצר -->
   <path d="M48 84 Q44 34 100 34 Q156 34 152 84 Q150 58 100 56 Q50 58 48 84 Z" fill="#4a3a2a"/>
+  <ellipse cx="80" cy="80" rx="14" ry="9" fill="#ffffff" opacity="0.28"/>
   <circle cx="80" cy="92" r="8" fill="#3a2a2a"/>
   <circle cx="120" cy="92" r="8" fill="#3a2a2a"/>
   <circle cx="83" cy="89" r="3" fill="#fff"/>
