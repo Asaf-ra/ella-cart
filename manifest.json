@@ -1,16 +1,22 @@
 {
-  "name": "העולם של אלה",
+  "id": "./",
+  "name": "העולם של אלה — גיבורת-העל",
   "short_name": "אלה",
-  "description": "עולם משחקים כיפי וצבעוני לילדים — עגלת אוכל, ציור קסם ובלונים",
+  "description": "אלה גיבורת-העל: אקדמיית למידה עם תחפושות וכוחות, עגלת אוכל, ציור קסם ובלונים. בלי פרסומות.",
   "lang": "he",
   "dir": "rtl",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
   "orientation": "landscape",
-  "background_color": "#aee4ff",
-  "theme_color": "#ff7eb9",
+  "background_color": "#1d0b4a",
+  "theme_color": "#1d0b4a",
+  "categories": ["education", "games", "kids"],
   "icons": [
-    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }

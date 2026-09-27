@@ -1,5 +1,5 @@
 /* ===== Service Worker — עבודה אופליין מלאה ===== */
-const CACHE = 'ella-cart-v32';
+const CACHE = 'ella-cart-v33';
 const ART = [
   'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
   'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',
@@ -21,6 +21,15 @@ const ASSETS = [
   './vendor/babylon.js',
   './shared/kids-ui.js',
   './shared/wallet.js',
+  './shared/theme.css',
+  './shared/hero-avatar.js',
+  './shared/hero-rewards.js',
+  './js/academy-modules.js',
+  './assets/fonts/rubik-hebrew-wght-normal.woff2',
+  './assets/fonts/rubik-latin-wght-normal.woff2',
+  './assets/icons/icon-180.png',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
   './js/audio.js',
   './js/state.js',
   './js/hero3d.js',

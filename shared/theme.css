@@ -1,0 +1,226 @@
+/* =====================================================================
+   shared/theme.css — מערכת העיצוב "גיבורים 2026" של העולם של אלה
+   ---------------------------------------------------------------------
+   פרק 1 — גופנים מקומיים (Rubik, עובד אופליין)
+   פרק 2 — טוקנים: צבעים, צללים, רדיוסים, תנועה
+   פרק 3 — רקע "עיר בלילה" קולנועי (הילות, רסטר קומיקס, קווי מהירות)
+   פרק 4 — רכיבים: פאנל קומיקס, כפתור גיבורים, תג רמה, מד אנרגיה
+   פרק 5 — אפקטי פרס: פיצוץ "POW!", כוכבים עפים, חלון עליית רמה
+   פרק 6 — נגישות ותנועה מופחתת
+   כלל ביצועים: אין backdrop-filter (כבד מאוד ב-Safari של האייפד).
+   ===================================================================== */
+
+/* ---------- פרק 1 — גופנים מקומיים ---------- */
+/* Rubik משתנה (100–900): עברית + לטינית. נטען מהתיקייה assets/fonts, בלי אינטרנט */
+@font-face {
+  font-family: "Rubik";
+  src: url("../assets/fonts/rubik-hebrew-wght-normal.woff2") format("woff2");
+  font-weight: 300 900;
+  font-display: swap;
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+@font-face {
+  font-family: "Rubik";
+  src: url("../assets/fonts/rubik-latin-wght-normal.woff2") format("woff2");
+  font-weight: 300 900;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------- פרק 2 — טוקנים ---------- */
+:root {
+  /* צבעי היקום של אלה */
+  --h-night: #140a33;        /* שמיים של לילה */
+  --h-night-2: #2a1260;      /* סגול עמוק */
+  --h-ink: #1b1036;          /* דיו קומיקס — קווי מתאר */
+  --h-magenta: #ff2e93;      /* הצבע של אלה */
+  --h-pink: #ff7ec2;
+  --h-gold: #ffc93c;         /* זהב גיבורים */
+  --h-gold-2: #ff9f1c;
+  --h-cyan: #29e0ff;         /* אנרגיה */
+  --h-violet: #8b5cff;
+  --h-mint: #3ff2b0;
+  --h-paper: #fffaf0;        /* נייר קומיקס */
+  --h-text: #1b1036;
+  --h-text-soft: #5b4d7a;
+
+  /* צללים "קומיקס" — היסט קשיח בצבע דיו + הילה רכה */
+  --h-shadow-comic: 6px 7px 0 var(--h-ink);
+  --h-shadow-soft: 0 18px 40px rgba(10, 4, 30, .45);
+  --h-glow-pink: 0 0 0 3px rgba(255,46,147,.35), 0 0 28px rgba(255,46,147,.55);
+  --h-glow-cyan: 0 0 0 3px rgba(41,224,255,.35), 0 0 28px rgba(41,224,255,.55);
+
+  --h-radius: 26px;
+  --h-radius-lg: 36px;
+  --h-spring: cubic-bezier(.2, 1.35, .35, 1);   /* קפיצי */
+  --h-ease: cubic-bezier(.2, .85, .25, 1);
+
+  --h-font: "Rubik", "Varela Round", "Heebo", system-ui, -apple-system, sans-serif;
+}
+
+/* ---------- פרק 3 — רקע "עיר בלילה" ---------- */
+/* .hero-sky: שכבת רקע מלאה — גרדיאנט לילה + שתי הילות צבע + רסטר נקודות קומיקס */
+.hero-sky {
+  position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none;
+  background:
+    radial-gradient(60% 55% at 78% 18%, rgba(255,46,147,.45) 0, transparent 70%),
+    radial-gradient(55% 60% at 12% 85%, rgba(41,224,255,.30) 0, transparent 70%),
+    linear-gradient(170deg, #1d0b4a 0%, #3a1177 45%, #6a1b8f 78%, #ff5d8f 130%);
+}
+/* רסטר נקודות — טקסטורת קומיקס עדינה (gradient זול, בלי תמונה) */
+.hero-sky::before {
+  content: ""; position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,.10) 1.4px, transparent 1.6px);
+  background-size: 14px 14px;
+  mask-image: linear-gradient(180deg, transparent 0, #000 40%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 40%, transparent 100%);
+}
+/* קווי מהירות קורנים מהמרכז — מסתובבים לאט מאוד */
+.hero-sky::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 220vmax; height: 220vmax;
+  margin: -110vmax 0 0 -110vmax;
+  background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.055) 0 2deg, transparent 2deg 9deg);
+  animation: h-spin 120s linear infinite;
+}
+@keyframes h-spin { to { transform: rotate(360deg); } }
+
+/* כוכבים מנצנצים — נוצרים ב-JS עם המחלקה .h-star */
+.h-star {
+  position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 8px #fff; animation: h-twinkle 2.6s ease-in-out infinite;
+}
+@keyframes h-twinkle { 0%,100% { opacity: .25; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.2); } }
+
+/* קו רקיע של עיר — SVG מוטמע בתחתית המסך */
+.h-skyline {
+  position: fixed; left: 0; right: 0; bottom: 0; height: 30vh; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(20,10,51,.85));
+}
+.h-skyline svg { position: absolute; bottom: 0; width: 100%; height: 100%; }
+
+/* ---------- פרק 4 — רכיבים ---------- */
+/* פאנל קומיקס: נייר בהיר, מסגרת דיו עבה, צל היסט קשיח */
+.h-panel {
+  background: var(--h-paper); color: var(--h-text);
+  border: 4px solid var(--h-ink); border-radius: var(--h-radius);
+  box-shadow: var(--h-shadow-comic), var(--h-shadow-soft);
+}
+
+/* כפתור גיבורים: גרדיאנט, מסגרת דיו, הברקה עליונה, כיווץ קפיצי בלחיצה */
+.h-btn {
+  --btn-a: var(--h-magenta); --btn-b: #c2187a;
+  position: relative; border: 4px solid var(--h-ink); border-radius: 22px;
+  padding: 12px 22px; min-height: 60px; cursor: pointer;
+  font: 900 clamp(18px, 2vw, 24px)/1 var(--h-font); color: #fff; letter-spacing: .3px;
+  background: linear-gradient(180deg, var(--btn-a), var(--btn-b));
+  box-shadow: 0 6px 0 var(--h-ink), 0 14px 24px rgba(10,4,30,.35);
+  text-shadow: 0 2px 0 rgba(27,16,54,.45);
+  transition: transform .14s var(--h-spring), box-shadow .14s ease;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.h-btn::before { /* הברקה */
+  content: ""; position: absolute; left: 10px; right: 10px; top: 5px; height: 38%;
+  border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0));
+  pointer-events: none;
+}
+.h-btn:active { transform: translateY(4px) scale(.97); box-shadow: 0 2px 0 var(--h-ink), 0 6px 12px rgba(10,4,30,.3); }
+.h-btn.gold { --btn-a: #ffd95a; --btn-b: #ff9f1c; color: var(--h-ink); text-shadow: 0 1px 0 rgba(255,255,255,.6); }
+.h-btn.cyan { --btn-a: #5cf0ff; --btn-b: #1a9fd6; }
+.h-btn.violet { --btn-a: #a98bff; --btn-b: #6b3fe0; }
+
+/* תג רמה עגול עם כוכב */
+.h-level {
+  display: grid; place-items: center; width: 62px; height: 62px; flex: 0 0 62px;
+  border: 4px solid var(--h-ink); border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3b0, var(--h-gold) 55%, var(--h-gold-2));
+  box-shadow: 0 4px 0 var(--h-ink);
+  font: 900 26px/1 var(--h-font); color: var(--h-ink);
+}
+
+/* HUD גיבורה: תג רמה + מד אנרגיה + מטבעות (נבנה ב-hero-rewards.js) */
+.h-hud {
+  display: flex; align-items: center; gap: 12px; padding: 8px 16px 8px 10px;
+  border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper);
+  box-shadow: 0 5px 0 var(--h-ink), var(--h-shadow-soft); font-family: var(--h-font);
+  color: var(--h-text); direction: rtl;
+}
+.h-hud-mid { display: grid; gap: 4px; min-width: 150px; flex: 1; }
+.h-hud-title { font-weight: 900; font-size: 16px; white-space: nowrap; }
+.h-meter {
+  position: relative; height: 16px; border-radius: 999px; overflow: hidden;
+  border: 3px solid var(--h-ink); background: #2a1a4f;
+}
+.h-meter-fill {
+  height: 100%; width: 0; border-radius: inherit;
+  background: linear-gradient(90deg, var(--h-cyan), var(--h-mint), var(--h-gold));
+  box-shadow: 0 0 12px rgba(41,224,255,.8) inset;
+  transition: width .6s var(--h-ease);
+}
+.h-meter-fill::after { /* ברק רץ על המד */
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%);
+  background-size: 220% 100%; animation: h-shine 2.4s linear infinite;
+}
+@keyframes h-shine { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+.h-coins { font-weight: 900; font-size: 22px; color: #c47a00; white-space: nowrap; }
+
+/* ---------- פרק 5 — אפקטי פרס ---------- */
+/* פיצוץ קומיקס: כוכב משונן צבעוני עם מילה ("POW!", "יש!") */
+.h-pow {
+  position: fixed; z-index: 9500; pointer-events: none; width: 190px; height: 150px;
+  margin: -75px 0 0 -95px; display: grid; place-items: center;
+  animation: h-pow 900ms var(--h-spring) forwards;
+}
+.h-pow svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.h-pow span {
+  position: relative; font: 900 38px/1 var(--h-font); color: #fff; letter-spacing: 1px;
+  -webkit-text-stroke: 3px var(--h-ink); paint-order: stroke fill;
+  text-shadow: 3px 4px 0 var(--h-ink); transform: rotate(-8deg);
+}
+@keyframes h-pow {
+  0% { transform: scale(.2) rotate(-20deg); opacity: 0; }
+  35% { transform: scale(1.12) rotate(4deg); opacity: 1; }
+  70% { transform: scale(1) rotate(0); opacity: 1; }
+  100% { transform: scale(1.05) translateY(-30px); opacity: 0; }
+}
+/* כוכב אנרגיה שעף אל ה-HUD */
+.h-fly {
+  position: fixed; z-index: 9400; pointer-events: none; font-size: 30px; line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(255,201,60,.9));
+}
+
+/* חלון עליית רמה / תחפושת חדשה */
+.h-modal {
+  position: fixed; inset: 0; z-index: 9800; display: none; place-items: center; padding: 24px;
+  background: radial-gradient(circle at 50% 45%, rgba(58,17,119,.78), rgba(10,4,30,.92));
+}
+.h-modal.show { display: grid; animation: h-fade .25s ease both; }
+@keyframes h-fade { from { opacity: 0; } to { opacity: 1; } }
+.h-modal::before { /* קווי מהירות מאחורי החלון */
+  content: ""; position: absolute; left: 50%; top: 45%; width: 200vmax; height: 200vmax; margin: -100vmax 0 0 -100vmax;
+  background: repeating-conic-gradient(rgba(255,201,60,.14) 0 3deg, transparent 3deg 10deg);
+  animation: h-spin 40s linear infinite; pointer-events: none;
+}
+.h-modal-card {
+  position: relative; width: min(92vw, 560px); padding: 26px 30px 24px; text-align: center;
+  animation: h-card-in .55s var(--h-spring) both; font-family: var(--h-font);
+}
+@keyframes h-card-in { from { transform: scale(.4) rotate(-6deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.h-modal-kicker {
+  display: inline-block; padding: 6px 18px; border: 4px solid var(--h-ink); border-radius: 999px;
+  background: var(--h-magenta); color: #fff; font-weight: 900; font-size: 20px;
+  transform: rotate(-3deg); box-shadow: 0 4px 0 var(--h-ink);
+}
+.h-modal-card h2 { margin: 14px 0 4px; font-size: clamp(30px, 4.6vw, 46px); font-weight: 900; line-height: 1.05; }
+.h-modal-card p { margin: 0 0 8px; color: var(--h-text-soft); font-weight: 700; font-size: clamp(16px, 2.2vw, 21px); }
+.h-modal-hero { width: min(52vw, 220px); margin: 4px auto 10px; animation: h-float 2.4s ease-in-out infinite alternate; }
+.h-modal-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+@keyframes h-float { from { transform: translateY(-6px) rotate(-1.5deg); } to { transform: translateY(8px) rotate(1.5deg); } }
+
+/* קונפטי */
+.h-confetti { position: fixed; z-index: 9900; top: -20px; width: 12px; height: 18px; border: 2px solid var(--h-ink); border-radius: 3px; pointer-events: none; }
+
+/* ---------- פרק 6 — נגישות ותנועה מופחתת ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .hero-sky::after, .h-modal::before, .h-meter-fill::after, .h-star { animation: none !important; }
+}

@@ -6,36 +6,230 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="mobile-web-app-capable" content="yes" />
-<meta name="theme-color" content="#ff7eb9" />
+<meta name="theme-color" content="#1d0b4a" />
 <meta name="apple-mobile-web-app-title" content="העולם של אלה" />
-<title>העולם של אלה</title>
+<title>העולם של אלה — גיבורת-העל</title>
 <link rel="manifest" href="manifest.json" />
-<link rel="apple-touch-icon" href="assets/icon.svg" />
-<link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
-<link rel="stylesheet" href="style.css" />
+<!-- אייקון PNG ל-iPad (Safari לא תומך ב-SVG כאייקון מסך הבית) -->
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<!-- מסכי פתיחה לאייפד לרוחב (מוצגים בזמן פתיחת האפליקציה מהמסך הבית) -->
+<link rel="apple-touch-startup-image" media="(device-width: 1024px) and (device-height: 1366px) and (orientation: landscape)" href="assets/splash/splash-2732x2048.png" />
+<link rel="apple-touch-startup-image" media="(device-width: 834px) and (device-height: 1194px) and (orientation: landscape)" href="assets/splash/splash-2388x1668.png" />
+<link rel="apple-touch-startup-image" media="(device-width: 820px) and (device-height: 1180px) and (orientation: landscape)" href="assets/splash/splash-2360x1640.png" />
+<link rel="apple-touch-startup-image" media="(device-width: 744px) and (device-height: 1133px) and (orientation: landscape)" href="assets/splash/splash-2266x1488.png" />
+<link rel="apple-touch-startup-image" media="(device-width: 810px) and (device-height: 1080px) and (orientation: landscape)" href="assets/splash/splash-2160x1620.png" />
+<link rel="apple-touch-startup-image" media="(device-width: 768px) and (device-height: 1024px) and (orientation: landscape)" href="assets/splash/splash-2048x1536.png" />
+<link rel="stylesheet" href="shared/theme.css" />
+<style>
+  /* ===== מטה הגיבורים — מסך הבית =====
+     פרק א — בסיס ופריסה | פרק ב — סרגל עליון | פרק ג — הגיבורה
+     פרק ד — כרטיסי משימה | פרק ה — פתיח קולנועי | פרק ו — חנות | פרק ז — סיבוב מסך */
+
+  /* --- פרק א: בסיס --- */
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  html { background: var(--h-night); }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  /* body שקוף — אחרת הוא מסתיר את שכבות הרקע (z-index שלילי) */
+  body { background: transparent; }
+  body { font-family: var(--h-font); color: #fff; touch-action: manipulation; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+  button { font-family: inherit; }
+  .hq {
+    position: relative; height: 100dvh; display: grid;
+    grid-template-rows: auto 1fr; gap: 1.5vh;
+    padding: max(14px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+  }
+
+  /* --- פרק ב: סרגל עליון --- */
+  .topbar { display: flex; align-items: center; gap: 14px; }
+  .topbar .h-hud { min-width: min(420px, 40vw); }
+  .topbar .spacer { flex: 1; }
+  .icon-btn { min-width: 64px; padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px; }
+  .icon-btn .ico { font-size: 28px; line-height: 1; }
+
+  /* --- פרק ג: הגיבורה + לוגו --- */
+  .stage { display: grid; grid-template-columns: 1.35fr 1fr; gap: 2.5vw; align-items: center; min-height: 0; }
+  .hero-col { position: relative; display: grid; place-items: center; height: 100%; min-height: 0; }
+  .spot { /* זרקור מאחורי הגיבורה */
+    position: absolute; width: min(38vw, 58vh); aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,201,60,.55), rgba(255,46,147,.25) 45%, transparent 70%);
+    animation: pulse 3.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { transform: scale(.94); opacity: .85; } 50% { transform: scale(1.06); opacity: 1; } }
+  .hero-wrap { position: relative; width: min(30vw, 50vh); cursor: pointer; animation: h-float 2.6s ease-in-out infinite alternate; }
+  .hero-wrap svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 18px 24px rgba(0,0,0,.45)); }
+  .hero-wrap.zap { animation: zap .6s var(--h-spring); }
+  @keyframes zap { 30% { transform: scale(1.12) rotate(-4deg); } 60% { transform: scale(.96) rotate(3deg); } }
+  .nameplate {
+    position: relative; margin-top: -1vh; padding: 8px 22px; border: 4px solid var(--h-ink); border-radius: 16px;
+    background: var(--h-gold); color: var(--h-ink); font-weight: 900; font-size: clamp(18px, 2.2vw, 26px);
+    transform: rotate(-2deg); box-shadow: 0 5px 0 var(--h-ink);
+  }
+  .logo { text-align: center; margin-bottom: 2vh; }
+  .logo h1 {
+    font-size: clamp(40px, 6.4vw, 84px); font-weight: 900; line-height: .95; letter-spacing: 1px;
+    color: #fff; -webkit-text-stroke: 5px var(--h-ink); paint-order: stroke fill;
+    text-shadow: 5px 6px 0 var(--h-ink), 0 0 30px rgba(255,46,147,.7);
+    transform: rotate(-2deg);
+  }
+  .logo h1 em { font-style: normal; color: var(--h-gold); }
+  .logo p { margin-top: 1vh; font-weight: 800; font-size: clamp(16px, 2vw, 24px); color: #ffd9f0; }
+
+  /* --- פרק ד: כרטיסי משימה --- */
+  .missions { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(12px, 1.6vw, 22px); }
+  .mission {
+    --c1: #ff4fa3; --c2: #8b1a8f;
+    position: relative; overflow: hidden; min-height: clamp(120px, 21vh, 190px);
+    border: 5px solid var(--h-ink); border-radius: 28px; padding: 14px 16px; cursor: pointer; text-align: right;
+    background: linear-gradient(150deg, var(--c1), var(--c2)); color: #fff;
+    box-shadow: 0 8px 0 var(--h-ink), 0 18px 30px rgba(0,0,0,.35);
+    transition: transform .16s var(--h-spring);
+    display: grid; grid-template-columns: 1fr auto; align-items: end;
+    animation: card-in .6s var(--h-spring) both;
+  }
+  .mission:nth-child(2) { animation-delay: .08s; } .mission:nth-child(3) { animation-delay: .16s; } .mission:nth-child(4) { animation-delay: .24s; }
+  @keyframes card-in { from { transform: translateY(40px) scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
+  .mission:active { transform: translateY(5px) scale(.97); box-shadow: 0 3px 0 var(--h-ink), 0 8px 14px rgba(0,0,0,.3); }
+  .mission::before { /* קווי מהירות בתוך הכרטיס */
+    content: ""; position: absolute; inset: -40%;
+    background: repeating-conic-gradient(from 10deg at 85% 25%, rgba(255,255,255,.10) 0 4deg, transparent 4deg 12deg);
+  }
+  .mission::after { /* ברק עליון */
+    content: ""; position: absolute; left: 12px; right: 12px; top: 8px; height: 34%; border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,.35), transparent);
+  }
+  .mission .m-text { position: relative; z-index: 1; }
+  .mission .m-tag { display: inline-block; padding: 3px 12px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff; color: var(--h-ink); font-weight: 900; font-size: 14px; margin-bottom: 6px; }
+  .mission h2 { font-size: clamp(22px, 2.8vw, 34px); font-weight: 900; line-height: 1; -webkit-text-stroke: 2px var(--h-ink); paint-order: stroke fill; text-shadow: 2px 3px 0 var(--h-ink); }
+  .mission p { margin-top: 5px; font-weight: 700; font-size: clamp(13px, 1.4vw, 17px); opacity: .95; }
+  .mission .m-ico { position: relative; z-index: 1; font-size: clamp(54px, 7vw, 92px); line-height: 1; filter: drop-shadow(3px 5px 0 rgba(27,16,54,.6)); animation: bob 2.4s ease-in-out infinite alternate; }
+  @keyframes bob { from { transform: translateY(-4px) rotate(-5deg); } to { transform: translateY(5px) rotate(5deg); } }
+  .mission.main { grid-column: 1 / -1; --c1: #ffd95a; --c2: #ff7a1c; color: var(--h-ink); min-height: clamp(130px, 24vh, 210px); }
+  .mission.main h2 { color: #fff; }
+  .mission.main .m-tag { background: var(--h-magenta); color: #fff; }
+  .mission.cart { --c1: #ff5fb0; --c2: #b3126b; }
+  .mission.color { --c1: #a98bff; --c2: #4b1fb8; }
+  .mission.balloons { --c1: #3fd8ff; --c2: #1459b8; }
+
+  /* --- פרק ה: פתיח קולנועי ("ההשתנות") --- */
+  .intro { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; cursor: pointer; background: #0b0420; overflow: hidden; }
+  .intro.gone { animation: intro-out .5s ease forwards; pointer-events: none; }
+  @keyframes intro-out { to { opacity: 0; transform: scale(1.1); } }
+  .intro::before { content: ""; position: absolute; left: 50%; top: 50%; width: 220vmax; height: 220vmax; margin: -110vmax 0 0 -110vmax;
+    background: repeating-conic-gradient(rgba(255,46,147,.22) 0 3deg, transparent 3deg 9deg); animation: h-spin 30s linear infinite; }
+  .intro-inner { position: relative; text-align: center; }
+  .intro-hero { width: min(34vw, 46vh); margin: 0 auto; opacity: 0; animation: hero-in 1s .35s var(--h-spring) forwards; }
+  @keyframes hero-in { from { opacity: 0; transform: scale(.3) translateY(80px); } to { opacity: 1; transform: none; } }
+  .intro h1 { margin-top: 2vh; font-size: clamp(38px, 6vw, 80px); font-weight: 900; color: #fff; -webkit-text-stroke: 5px var(--h-ink); paint-order: stroke fill; text-shadow: 5px 6px 0 var(--h-magenta); opacity: 0; animation: hero-in .8s .9s var(--h-spring) forwards; }
+  .intro .tap { margin-top: 3vh; display: inline-block; opacity: 0; animation: hero-in .6s 1.5s ease forwards, tap 1.4s 2.1s ease-in-out infinite; }
+  @keyframes tap { 50% { transform: scale(1.08); } }
+  .flash { position: fixed; inset: 0; z-index: 9100; background: #fff; pointer-events: none; animation: flash .7s ease forwards; }
+  @keyframes flash { from { opacity: 1; } to { opacity: 0; } }
+
+  /* --- פרק ו: חנות השדרוגים --- */
+  .shop-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+  .shop-item { display: grid; justify-items: center; gap: 4px; padding: 12px 10px; border: 4px solid var(--h-ink); border-radius: 22px; background: #fff; box-shadow: 0 4px 0 var(--h-ink); }
+  .shop-item .ico { font-size: 44px; line-height: 1; }
+  .shop-item b { font-size: 19px; }
+  .shop-item small { font-size: 14px; color: var(--h-text-soft); font-weight: 700; min-height: 34px; text-align: center; }
+  .shop-item .h-btn { min-height: 48px; padding: 8px 16px; font-size: 18px; }
+  .shop-item .owned { font-weight: 900; color: #139b6c; font-size: 18px; padding: 10px; }
+  .shop-card { width: min(96vw, 900px) !important; }
+  .shop-close { position: absolute; top: 12px; left: 12px; width: 52px; height: 52px; border: 4px solid var(--h-ink); border-radius: 50%; background: var(--h-magenta); color: #fff; font: 900 22px/1 var(--h-font); box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; }
+
+  /* --- פרק ז: סיבוב מסך + מסכים קטנים --- */
+  .rotate { display: none; }
+  @media (orientation: portrait) {
+    .hq { display: none; }
+    .rotate { position: fixed; inset: 0; display: grid; place-content: center; gap: 16px; text-align: center; font-weight: 900; font-size: 26px; }
+    .rotate .i { font-size: 80px; animation: rot 2s ease-in-out infinite; }
+    @keyframes rot { 50% { transform: rotate(-90deg); } }
+  }
+  @media (max-height: 560px) {
+    .logo { display: none; }
+    .mission { min-height: 96px; }
+    .mission.main { min-height: 110px; }
+  }
+</style>
 </head>
 <body>
+  <!-- רקע: שמיים של לילה + קו רקיע של עיר -->
+  <div class="hero-sky" id="sky"></div>
+  <div class="h-skyline" aria-hidden="true">
+    <svg viewBox="0 0 1200 240" preserveAspectRatio="none">
+      <path fill="#12072e" d="M0 240V150h60v-40h40v60h50V90h70v80h40v-50h60v-60h30v-30h20v30h30v110h50v-70h80v90h40V70h60v100h50v-40h70v60h40v-90h60v-40h30v40h40v120h60v-60h70v80h50V100h60v140z"/>
+      <g fill="#ffd95a" opacity=".55">
+        <rect x="165" y="110" width="10" height="12"/><rect x="185" y="140" width="10" height="12"/><rect x="330" y="80" width="8" height="10"/>
+        <rect x="560" y="100" width="10" height="12"/><rect x="580" y="130" width="10" height="12"/><rect x="820" y="90" width="8" height="10"/>
+        <rect x="1080" y="120" width="10" height="12"/><rect x="1110" y="150" width="10" height="12"/><rect x="700" y="160" width="10" height="12"/>
+      </g>
+    </svg>
+  </div>
 
-<!-- מכל המשחק (Phaser מצייר לכאן; הרקע מגיע מגרדיאנט ה-CSS) -->
-<div id="game"></div>
+  <main class="hq" id="hq">
+    <!-- סרגל עליון: HUD (רמה/אנרגיה/מטבעות) + ארון + חנות + צליל -->
+    <header class="topbar">
+      <div id="hudSlot"></div>
+      <div class="spacer"></div>
+      <button type="button" class="h-btn violet icon-btn" id="wardrobeBtn"><span class="ico">🦸‍♀️</span><span>ארון התחפושות</span></button>
+      <button type="button" class="h-btn gold icon-btn" id="shopBtn"><span class="ico">🛒</span><span>שדרוגים</span></button>
+      <button type="button" class="h-btn cyan icon-btn" id="soundBtn" aria-label="צליל"><span class="ico">🔊</span></button>
+    </header>
 
-<!-- בקשת סיבוב מסך לרוחב -->
-<div id="rotate" class="rotate-msg">
-  <div class="rot-ico">🔄</div>
-  <div>סובבו את האייפד לרוחב 😊</div>
-</div>
+    <section class="stage">
+      <!-- משימות (בצד ימין ב-RTL) -->
+      <div>
+        <div class="logo"><h1>העולם של <em>אלה</em></h1><p>גיבורת-העל שלומדת, יוצרת ומשחקת ⚡</p></div>
+        <nav class="missions" id="missions">
+          <button type="button" class="mission main" data-go="./learning.html" data-say="אקדמיית הגיבורים!">
+            <span class="m-text"><span class="m-tag">משימה ראשית ⭐</span><h2>אקדמיית הגיבורים</h2><p>לומדים, צוברים אנרגיה ופותחים תחפושות וכוחות!</p></span>
+            <span class="m-ico">📚</span>
+          </button>
+          <button type="button" class="mission cart" data-go="./cart.html" data-say="העגלה של אלה!">
+            <span class="m-text"><h2>העגלה</h2><p>מכינים אוכל ללקוחות</p></span><span class="m-ico">🍔</span>
+          </button>
+          <button type="button" class="mission color" data-go="./coloring.html" data-say="ציור קסם!">
+            <span class="m-text"><h2>ציור קסם</h2><p>צובעים דמויות</p></span><span class="m-ico">🎨</span>
+          </button>
+          <button type="button" class="mission balloons" data-go="./balloons.html" data-say="בלונים!" style="grid-column:1 / -1">
+            <span class="m-text"><h2>בלונים</h2><p>מפוצצים בלונים וצוברים מטבעות</p></span><span class="m-ico">🎈</span>
+          </button>
+        </nav>
+      </div>
+      <!-- הגיבורה (בצד שמאל ב-RTL) -->
+      <div class="hero-col">
+        <div class="spot"></div>
+        <div>
+          <div class="hero-wrap" id="hero"></div>
+          <div style="text-align:center"><span class="nameplate">אלה · גיבורת-העל</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-<script src="vendor/phaser.min.js"></script>
-<script src="js/audio.js"></script>
-<script src="shared/kids-ui.js"></script>
-<script src="shared/wallet.js"></script>
-<script src="js/hub.js"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function(){});
-    });
-  }
-</script>
+  <!-- פתיח קולנועי — פעם אחת בכל פתיחה של האפליקציה; הלחיצה גם פותחת את השמע ב-iOS -->
+  <div class="intro" id="intro">
+    <div class="intro-inner">
+      <div class="intro-hero" id="introHero"></div>
+      <h1>אלה גיבורת-העל</h1>
+      <div><span class="tap h-btn gold">לחצו כדי להתחיל! ⚡</span></div>
+    </div>
+  </div>
+
+  <div class="rotate"><div class="i">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
+
+  <script src="js/audio.js"></script>
+  <script src="shared/kids-ui.js"></script>
+  <script src="shared/wallet.js"></script>
+  <script src="shared/hero-avatar.js"></script>
+  <script src="shared/hero-rewards.js"></script>
+  <script src="js/hub.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function(){});
+      });
+    }
+  </script>
 </body>
 </html>
