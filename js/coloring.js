@@ -7,7 +7,14 @@
   'use strict';
 
   /* ---------- הגדרות ---------- */
-  const CHARS = ['ella','cust_bunny','cust_bear','cust_cat','cust_panda','cust_penguin','cust_dog','cust_fox',
+  /* דפי צביעה של גיבורות: נוצרים מ-HeroAvatar (מפתח שמתחיל ב-hero:) */
+  const HERO_PAGES = {
+    'hero:1': { cape: 'cape_pink', suit: 'suit_magenta', mask: 'mask_classic', emblem: 'emb_heart', aura: 'aura_none', acc: 'acc_crown' },
+    'hero:2': { cape: 'cape_hearts', suit: 'suit_sun', mask: 'mask_cat', emblem: 'emb_star', aura: 'aura_wings', acc: 'acc_none' },
+    'hero:3': { cape: 'cape_sky', suit: 'suit_cyan', mask: 'mask_butterfly', emblem: 'emb_flower', aura: 'aura_bubbles', acc: 'acc_bow' }
+  };
+  function heroSVG(key) { return window.HeroAvatar ? HeroAvatar.svg(HERO_PAGES[key]) : ''; }
+  const CHARS = ['hero:1','hero:2','hero:3','ella','cust_bunny','cust_bear','cust_cat','cust_panda','cust_penguin','cust_dog','cust_fox',
                  'food_burger','food_pizza','food_donut','food_shake'];
   const COLORS = [
     { c:'#ff5ca8', name:'ורוד'  }, { c:'#ff4c4c', name:'אדום'  },
@@ -114,6 +121,13 @@
       if (!svg) return;
       svg.querySelectorAll('path,circle,ellipse,rect,polygon').forEach(el => {
         const fill = el.getAttribute('fill');
+        /* ידיים של הגיבורה מצוירות כקו עבה צבעוני — הופכים אותן ללבן וצובעים את הקו עצמו */
+        const sw = parseFloat(el.getAttribute('stroke-width') || '0'), st = el.getAttribute('stroke');
+        if (fill === 'none' && sw >= 12 && st && st !== INK && st !== '#1b1036') {
+          el.setAttribute('stroke', '#ffffff'); el.classList.add('colorable');
+          el.addEventListener('pointerdown', (e) => { e.stopPropagation(); undoColor.push({ el, fill: el.getAttribute('stroke'), stroke: true }); el.setAttribute('stroke', currentColor.c); const p = stagePos(e); sparkle(p.x, p.y, currentColor.c, 12); Sound.bubble(); });
+          return;
+        }
         if (fill === 'none') return;                       // קו — נשאר כמו שהוא
         const lum = luminance(fill || '#000000');
         if (lum >= 0 && lum < 90) return;                  // פרטים כהים (עיניים) — נשארים
@@ -132,6 +146,7 @@
         });
       });
     };
+    if (key.indexOf('hero:') === 0) { apply(heroSVG(key)); return; }
     if (svgCache[key]) { apply(svgCache[key]); return; }
     fetch('assets/art/' + key + '.svg')
       .then(res => res.text())
@@ -209,7 +224,7 @@
     if (drawMode) { strokes.pop(); redrawStrokes(); }
     else {
       const u = undoColor.pop();
-      if (u) u.el.setAttribute('fill', u.fill);
+      if (u) u.el.setAttribute(u.stroke ? 'stroke' : 'fill', u.fill);
     }
   });
 
@@ -221,7 +236,7 @@
       const r = stage.getBoundingClientRect();
       for (let i = 0; i < 24; i++) sparkle(Math.random()*r.width, Math.random()*r.height, '#fff', 2);
     } else {
-      holder.querySelectorAll('.colorable').forEach(el => el.setAttribute('fill', '#ffffff'));
+      holder.querySelectorAll('.colorable').forEach(el => el.setAttribute(el.getAttribute('fill') === 'none' ? 'stroke' : 'fill', '#ffffff'));
       undoColor.length = 0;
     }
   });
@@ -313,7 +328,7 @@
     const b = document.createElement('button');
     b.className = 'char-thumb' + (i === 0 ? ' active' : '');
     const im = document.createElement('img');
-    im.src = 'assets/art/' + key + '.svg';
+    im.src = key.indexOf('hero:') === 0 ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(heroSVG(key)) : 'assets/art/' + key + '.svg';
     b.appendChild(im);
     b.addEventListener('pointerdown', () => {
       chars.querySelectorAll('.char-thumb').forEach(s => s.classList.remove('active'));

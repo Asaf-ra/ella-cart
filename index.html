@@ -44,7 +44,7 @@
   .topbar { display: flex; align-items: center; gap: 14px; }
   .topbar .h-hud { min-width: min(420px, 40vw); }
   .topbar .spacer { flex: 1; }
-  .icon-btn { min-width: 64px; padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px; }
+  .icon-btn { min-width: 64px; padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
   .icon-btn .ico { font-size: 28px; line-height: 1; }
   .gift-btn { animation: gift 1.2s ease-in-out infinite; }
   @keyframes gift { 0%,100% { transform: rotate(-4deg) scale(1); } 50% { transform: rotate(4deg) scale(1.08); } }
@@ -174,7 +174,7 @@
       <div id="hudSlot"></div>
       <div class="spacer"></div>
       <button type="button" class="h-btn gold icon-btn gift-btn" id="giftBtn" hidden><span class="ico">🎁</span><span>הפתעה!</span></button>
-      <button type="button" class="h-btn violet icon-btn" id="wardrobeBtn"><span class="ico">🦸‍♀️</span><span>ארון התחפושות</span></button>
+      <button type="button" class="h-btn violet icon-btn" id="wardrobeBtn"><span class="ico">🦸‍♀️</span><span>תחפושות</span></button>
       <button type="button" class="h-btn gold icon-btn" id="shopBtn"><span class="ico">🛒</span><span>שדרוגים</span></button>
       <button type="button" class="h-btn cyan icon-btn" id="soundBtn" aria-label="צליל"><span class="ico">🔊</span></button>
     </header>
