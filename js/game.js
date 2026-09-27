@@ -48,11 +48,12 @@ const Helper = {
   circleBtn(scene, x, y, emoji, r, onTap) {
     const c = scene.add.container(x, y);
     const g = scene.add.graphics();
-    g.fillStyle(0x000000, 0.18); g.fillEllipse(0, r * 0.5, r * 2, r * 0.7);   // צל
-    g.fillStyle(0xe8e0ef, 1); g.fillCircle(0, 0, r);                          // בסיס
-    g.fillGradientStyle(0xffffff, 0xffffff, 0xece4f2, 0xece4f2, 1);
-    g.fillCircle(0, -1, r - 3);                                               // פני הכפתור
-    g.fillStyle(0xffffff, 0.55); g.fillEllipse(0, -r * 0.42, r * 1.1, r * 0.6); // ברק עליון
+    /* סגנון "גיבורים 2026": נייר בהיר, מסגרת דיו עבה וצל קומיקס קשיח */
+    g.fillStyle(0x1b1036, 1); g.fillCircle(0, 5, r + 3);                      // צל קומיקס קשיח
+    g.fillStyle(0x1b1036, 1); g.fillCircle(0, 0, r + 3);                      // מסגרת דיו
+    g.fillGradientStyle(0xfffaf0, 0xfffaf0, 0xffe9c7, 0xffe9c7, 1);
+    g.fillCircle(0, 0, r - 2);                                                // פני הכפתור
+    g.fillStyle(0xffffff, 0.7); g.fillEllipse(0, -r * 0.45, r * 1.1, r * 0.5); // ברק עליון
     const t = scene.add.text(0, 0, emoji, { fontSize: (r * 1.05) + 'px' }).setOrigin(0.5);
     c.add([g, t]);
     c.setSize(r * 2, r * 2);
@@ -72,13 +73,14 @@ const Helper = {
     const dark = Phaser.Display.Color.IntegerToColor(color).darken(22).color;
     const light = Phaser.Display.Color.IntegerToColor(color).lighten(18).color;
     const g = scene.add.graphics();
-    g.fillStyle(0x000000, 0.22); g.fillRoundedRect(-w/2, -h/2 + 10, w, h, h/2);     // צל
-    g.fillStyle(dark, 1); g.fillRoundedRect(-w/2, -h/2 + 5, w, h, h/2);             // שוליים תחתונים
-    g.fillGradientStyle(light, light, color, color, 1); g.fillRoundedRect(-w/2, -h/2, w, h, h/2); // פנים
-    g.fillStyle(0xffffff, 0.30); g.fillRoundedRect(-w/2 + 10, -h/2 + 8, w - 20, h * 0.4, h * 0.2); // ברק
-    const t = scene.add.text(0, 0, label, { fontFamily:'Varela Round, Heebo, sans-serif',
-      fontSize:'42px', color:'#ffffff', fontStyle:'bold' }).setOrigin(0.5);
-    t.setShadow(0, 2, 'rgba(0,0,0,0.25)', 2);
+    g.fillStyle(0x1b1036, 1); g.fillRoundedRect(-w/2 - 5, -h/2 + 3, w + 10, h + 10, (h + 10)/2); // צל קומיקס קשיח
+    g.fillStyle(0x1b1036, 1); g.fillRoundedRect(-w/2 - 5, -h/2 - 5, w + 10, h + 10, (h + 10)/2); // מסגרת דיו
+    g.fillStyle(dark, 1); g.fillRoundedRect(-w/2, -h/2 + 4, w, h - 4, h/2);        // שוליים תחתונים
+    g.fillGradientStyle(light, light, color, color, 1); g.fillRoundedRect(-w/2, -h/2, w, h - 6, h/2); // פנים
+    g.fillStyle(0xffffff, 0.35); g.fillRoundedRect(-w/2 + 14, -h/2 + 7, w - 28, h * 0.34, h * 0.17); // ברק
+    const t = scene.add.text(0, 0, label, { fontFamily:'Rubik, Varela Round, Heebo, sans-serif',
+      fontSize:'42px', color:'#ffffff', fontStyle:'900' }).setOrigin(0.5);
+    t.setStroke('#1b1036', 7); t.setShadow(2, 3, '#1b1036', 0, true, true);
     c.add([g, t]);
     c.setSize(w, h);
     c.setInteractive(new Phaser.Geom.Rectangle(0, 0, w, h), Phaser.Geom.Rectangle.Contains); // hit-area לקונטיינר נבדק אחרי הוספת displayOrigin (w/2,h/2) — חייב להתחיל מ-(0,0)
@@ -92,8 +94,8 @@ const Helper = {
   },
 
   txt(scene, x, y, s, size, color) {
-    return scene.add.text(x, y, s, { fontFamily:'Varela Round, Heebo, sans-serif',
-      fontSize: size + 'px', color: color || '#5a3d5c', fontStyle:'bold' }).setOrigin(0.5);
+    return scene.add.text(x, y, s, { fontFamily:'Rubik, Varela Round, Heebo, sans-serif',
+      fontSize: size + 'px', color: color || '#1b1036', fontStyle:'900' }).setOrigin(0.5);
   },
 
   // אייקון מאכל: תמונה מצוירת אם קיימת, אחרת אמוג'י (נפילה חכמה)
@@ -224,7 +226,25 @@ class BootScene extends Phaser.Scene {
     g.generateTexture('star', 64, 64);
   }
 
-  create() { this.scene.start('Title'); }
+  /* create — לפני המשחק: יוצרים טקסטורה של אלה גיבורת-העל מהתחפושת השמורה (HeroAvatar),
+     ורק אז עוברים למסך הפתיחה. אם משהו נכשל — ממשיכים עם אלה הרגילה אחרי זמן קצוב. */
+  create() {
+    let started = false;
+    const go = () => { if (!started) { started = true; this.scene.start('Title'); } };
+    try {
+      if (window.HeroAvatar) {
+        const outfit = window.HeroRewards ? HeroRewards.outfit : null;
+        const svg = HeroAvatar.svg(outfit).replace('<svg ', '<svg width="360" height="450" ');
+        const img = new Image();
+        img.onload = () => { if (!this.textures.exists('ella_hero')) this.textures.addImage('ella_hero', img); go(); };
+        img.onerror = go;
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        setTimeout(go, 1500);
+        return;
+      }
+    } catch (e) {}
+    go();
+  }
 }
 
 /* ---------- הרצה ---------- */

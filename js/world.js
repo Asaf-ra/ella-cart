@@ -4,13 +4,33 @@
 function buildEnvironment(scene) {
   const W = DESIGN.w, H = DESIGN.h;
 
+  // ----- עיר הגיבורים בשקיעה: כוכבים, קו רקיע עם חלונות מוארים (מאחורי הגבעות) -----
+  const stars = scene.add.graphics().setDepth(0);
+  for (let i = 0; i < 46; i++) {
+    stars.fillStyle(0xffffff, 0.35 + Math.random() * 0.6);
+    stars.fillCircle(Math.random() * W, Math.random() * 230, Math.random() < 0.2 ? 2.6 : 1.5);
+  }
+  scene.tweens.add({ targets: stars, alpha: 0.55, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+  const city = scene.add.graphics().setDepth(0);
+  const bld = [[0,150,90],[80,210,70],[140,120,60],[190,260,80],[260,170,70],[320,300,60],[370,190,90],[450,240,60],[500,140,80],
+               [570,280,70],[630,200,90],[710,320,60],[760,160,80],[830,250,70],[890,190,90],[970,290,60],[1020,150,80],[1090,230,70],[1150,180,70],[1210,260,70]];
+  bld.forEach(([x, h, w], i) => {
+    city.fillStyle(i % 2 ? 0x3b1a6e : 0x2a1260, 1);
+    city.fillRect(x, H - 150 - h, w, h + 40);
+    city.fillStyle(0xffd95a, 0.75);
+    for (let wy = H - 140 - h; wy < H - 170; wy += 26) for (let wx = x + 10; wx < x + w - 12; wx += 20) if (Math.random() < 0.35) city.fillRect(wx, wy, 8, 11);
+  });
+  city.fillStyle(0xff2e93, 1); city.fillRect(338, H - 470, 4, 20);             // אנטנה עם אור מהבהב
+  const beacon = scene.add.circle(340, H - 474, 6, 0xff2e93).setDepth(0);
+  scene.tweens.add({ targets: beacon, alpha: 0.2, duration: 700, yoyo: true, repeat: -1 });
+
   // ----- זוהר-אופק חמים ועדין (תחושת עומק, בלי להלבין את הסצנה) -----
   const haze = scene.add.graphics().setDepth(0);
   haze.fillGradientStyle(0xfff6e8, 0xfff6e8, 0xfff6e8, 0xfff6e8, 0, 0, 0.3, 0.3);
   haze.fillRect(0, H - 220, W, 110);
 
   // ----- שמש עם בלום רך, הילה וקרניים -----
-  const sun = scene.add.container(165, 150).setDepth(0);
+  const sun = scene.add.container(1090, 250).setDepth(0);   // שמש שוקעת מאחורי העיר
   const bloom = Helper.bloom(scene, 0, 0, 360, 0xfff0b0, 0.5);
   if (bloom) { sun.add(bloom); scene.tweens.add({ targets: bloom, scale: 1.12, alpha: 0.36, duration: 3200, yoyo: true, repeat: -1, ease: 'Sine.inOut' }); }
   const rays = scene.add.graphics();
@@ -163,7 +183,8 @@ function buildCart(scene, x, y) {
   win.fillStyle(0x7cc0d4, 0.45); win.fillRect(-142, -36, 114, 7);                                     // מדף פנימי
   win.fillStyle(0x7cc0d4, 0.3); win.fillCircle(-34, -52, 7); win.fillCircle(-46, -50, 6);             // צנצנות על המדף
   // אלה עובדת בפנים — מתנדנדת קלות עם תנועת-עבודה
-  let ella = Helper.charImg(scene, -85, -48, 'ella', 120);
+  // אלה גיבורת-העל בתחפושת השמורה (טקסטורה שנוצרה ב-BootScene); אם אין — אלה הרגילה
+  let ella = Helper.charImg(scene, -85, -40, 'ella_hero', 150) || Helper.charImg(scene, -85, -48, 'ella', 120);
   if (!ella) ella = scene.add.text(-85, -55, '👧', { fontSize: '78px' }).setOrigin(0.5);
   scene.tweens.add({ targets: ella, y: ella.y - 7, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
   scene.tweens.add({ targets: ella, angle: { from: -3.5, to: 3.5 }, duration: 850, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
@@ -221,12 +242,12 @@ class TitleScene extends Phaser.Scene {
     buildCart(this, DESIGN.w / 2, 450);
 
     const t = Helper.txt(this, DESIGN.w / 2, 150, 'העגלה של אלה', 96, '#ffffff');
-    t.setStroke('#ff5ca8', 12); t.setShadow(0, 8, 'rgba(90,61,92,0.3)', 12);
+    t.setStroke('#1b1036', 16); t.setShadow(6, 8, '#ff2e93', 0, true, true);   // כותרת קומיקס
     Helper.glow(this, t, 0xffd1ec, 5);
     this.tweens.add({ targets: t, scale: 1.04, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
 
-    const sub = Helper.txt(this, DESIGN.w / 2, 232, 'פוד-טראק כיפי וצבעוני 🍔🍕🍦', 36, '#5a3d5c');
-    sub.setBackgroundColor('rgba(255,255,255,0.6)').setPadding(16, 6, 16, 6);
+    const sub = Helper.txt(this, DESIGN.w / 2, 238, 'הפוד-טראק של גיבורת-העל 🦸‍♀️🍔🍕', 36, '#1b1036');
+    sub.setBackgroundColor('#ffc93c').setPadding(22, 8, 22, 8);
 
     Helper.pillBtn(this, DESIGN.w / 2 - 180, 720, '▶  שחקו', Palette.pinkD, () => this.scene.start('World')).setDepth(20);
     Helper.pillBtn(this, DESIGN.w / 2 + 180, 720, '🎨 חופשי', 0x34c79a, () => this.scene.start('World', { free: true })).setDepth(20)._label.setFontSize(30);
@@ -286,8 +307,9 @@ class WorldScene extends Phaser.Scene {
 
     // מטבעות (ימין למעלה)
     const coinBg = this.add.graphics();
-    coinBg.fillStyle(0x000000, 0.12); coinBg.fillRoundedRect(DESIGN.w - 300, 36, 264, 76, 38);
-    coinBg.fillStyle(0xffffff, 1); coinBg.fillRoundedRect(DESIGN.w - 300, 30, 264, 76, 38);
+    coinBg.fillStyle(0x1b1036, 1); coinBg.fillRoundedRect(DESIGN.w - 305, 31, 274, 86, 43);   // צל + מסגרת דיו (קומיקס)
+    coinBg.fillStyle(0x1b1036, 1); coinBg.fillRoundedRect(DESIGN.w - 305, 25, 274, 86, 43);
+    coinBg.fillStyle(0xfffaf0, 1); coinBg.fillRoundedRect(DESIGN.w - 300, 30, 264, 76, 38);
     const coinIco = this.add.image(DESIGN.w - 270, 68, 'coin').setScale(1.1);
     Helper.glow(this, coinIco, 0xffd24c, 5);
     this.tweens.add({ targets: coinIco, angle: 360, duration: 4000, repeat: -1 });
@@ -524,6 +546,7 @@ class WorldScene extends Phaser.Scene {
     const speedTxt = ratio > 0.66 ? 'מהר מאוד! ⚡ טיפ ענק' : ratio > 0.33 ? 'יפה ומהר! 👍' : 'בדיוק בזמן ⏰';
     this.floatMsg(sx, sy - 222, speedTxt, ratio > 0.66 ? '#ff9500' : '#7a5cff');
     if (ratio > 0.66) Voice.say('וואו, מהר מאוד!'); else Voice.praise();
+    this.heroPow(sx, sy - 120, ratio > 0.66 ? 'סופר מהר!' : c.golden ? 'זהב!' : null);
     this.confetti.emitParticleAt(sx, sy - 90, c.golden ? 30 : 16);
     this.hearts.emitParticleAt(sx, sy - 50, 8);
     this.cameras.main.shake(120, 0.004);
@@ -598,6 +621,14 @@ class WorldScene extends Phaser.Scene {
   updateCoins() {
     this.coinText.setText('' + G.coins);
     this.tweens.add({ targets: this.coinText, scale: 1.3, duration: 120, yoyo: true });
+  }
+
+  /* heroPow — פיצוץ קומיקס "POW!" (מ-hero-rewards) במיקום המשחקי: ממירים קואורדינטות משחק למסך */
+  heroPow(x, y, word) {
+    if (!window.HeroRewards) return;
+    const r = this.game.canvas.getBoundingClientRect(), k = r.width / DESIGN.w;
+    const px = r.left + x * k, py = r.top + y * k;
+    HeroRewards.pow({ getBoundingClientRect: () => ({ left: px, top: py, width: 0, height: 0 }) }, word || undefined);
   }
 
   goHome() { this.scene.stop('Store'); this.scene.start('Title'); }
