@@ -6,12 +6,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#78caff" />
-  <meta name="apple-mobile-web-app-title" content="איזור למידה" />
-  <title>איזור הלמידה של אלה</title>
+  <meta name="theme-color" content="#1d0b4a" />
+  <meta name="apple-mobile-web-app-title" content="אקדמיית הגיבורים" />
+  <title>אקדמיית הגיבורים של אלה</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="assets/icon.svg" />
-  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+  <link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+  <link rel="stylesheet" href="shared/theme.css" />
   <style>
     :root { --ink:#37415e; --muted:#66718d; --blue:#68bdff; --deep-blue:#4e8ded; --pink:#ff7ead; --yellow:#ffd45f; --mint:#7fe3ba; --purple:#a78bfa; --card:rgba(255,255,255,.84); --shadow:0 16px 34px rgba(67,103,154,.16); --safe-top:max(12px,env(safe-area-inset-top)); --safe-bottom:max(12px,env(safe-area-inset-bottom)); }
     * { box-sizing:border-box; }
@@ -50,37 +51,188 @@
     .course-list{flex:1;min-height:0;overflow-y:auto;align-content:start;padding:1px 1px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.course-list::-webkit-scrollbar{display:none}
     @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important;transition-duration:.01ms !important}}
   </style>
+  <style>
+    /* =====================================================================
+       אקדמיית הגיבורים — שכבת עיצוב 2026 (דורסת את העיצוב הבהיר הישן)
+       פרק א — רקע לילה | פרק ב — סרגל עליון (מיתוג, HUD, רמה) | פרק ג — פאנלים
+       פרק ד — כרטיס שאלה ואלה | פרק ה — כפתורי תשובה | פרק ו — רכיבי תחנות חדשות
+       פרק ז — חגיגה | פרק ח — מסכים נמוכים
+       ===================================================================== */
+    /* --- פרק א: רקע לילה קולנועי (בלי backdrop-filter) --- */
+    body { font-family: var(--h-font); background: var(--h-night); }
+    .app { background:
+        radial-gradient(55% 60% at 85% 10%, rgba(255,46,147,.42) 0, transparent 70%),
+        radial-gradient(50% 55% at 8% 92%, rgba(41,224,255,.28) 0, transparent 70%),
+        linear-gradient(165deg, #1d0b4a 0%, #3a1177 50%, #5f1a8c 100%); }
+    .app::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+      background-image: radial-gradient(rgba(255,255,255,.09) 1.3px, transparent 1.5px); background-size: 15px 15px; }
+    .glow, .cloud { display: none; }
+
+    /* --- פרק ב: סרגל עליון --- */
+    .topbar { display: flex; align-items: center; gap: clamp(8px, 1.2vw, 16px); }
+    .brand { background: var(--h-paper); border: 4px solid var(--h-ink); box-shadow: 0 5px 0 var(--h-ink); border-radius: 22px; padding: 4px 16px 4px 8px; flex: 0 0 auto; }
+    .brand-hero { width: 54px; height: 62px; flex: 0 0 54px; margin-top: -8px; }
+    .brand-hero svg { width: 100%; height: 100%; }
+    .brand strong { font-weight: 900; color: var(--h-ink); }
+    .brand small { color: var(--h-text-soft); font-weight: 700; }
+    .hud-slot { flex: 1; min-width: 0; cursor: pointer; }
+    .hud-slot .h-hud { padding: 5px 14px 5px 6px; }
+    .hud-slot .h-level { width: 50px; height: 50px; flex-basis: 50px; font-size: 22px; }
+    .grade-button { flex: 0 0 auto; min-height: 58px; padding: 8px 16px; border: 4px solid var(--h-ink); border-radius: 20px;
+      background: linear-gradient(180deg, #7dffcf, #1fbf85); color: var(--h-ink); font: 900 clamp(15px, 1.6vw, 19px)/1 var(--h-font);
+      box-shadow: 0 5px 0 var(--h-ink); cursor: pointer; transition: transform .14s var(--h-spring); }
+    .grade-button.big { background: linear-gradient(180deg, #ffd95a, #ff8a1c); }
+    .grade-button:active { transform: translateY(3px) scale(.96); }
+    .sound-button { background: linear-gradient(180deg, #5cf0ff, #1a9fd6); border: 4px solid var(--h-ink); box-shadow: 0 5px 0 var(--h-ink); flex: 0 0 auto; }
+    .learning-shell { height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 96px); }
+
+    /* --- פרק ג: פאנלים בסגנון קומיקס --- */
+    .course-rail, .lesson-stage { background: var(--h-paper); border: 4px solid var(--h-ink); box-shadow: 7px 8px 0 var(--h-ink), 0 20px 40px rgba(8,2,26,.45); }
+    .journey { background: #2a1a4f; border: 3px solid var(--h-ink); color: #fff; padding: 8px 12px; margin-bottom: 8px; box-shadow: none; }
+    .journey-label { font-size: 15px; }
+    .journey-track { background: #140a33; }
+    .journey-fill { background: linear-gradient(90deg, var(--h-cyan), var(--h-mint), var(--h-gold)); }
+    .journey-score { color: var(--h-gold); }
+    .profile { padding: 0 2px 12px; }
+    .profile-level { background: linear-gradient(90deg, #fff3b0, #ffd4ec); border: 3px solid var(--h-ink); color: var(--h-ink); margin-top: 0; }
+    .course { border: 3px solid transparent; background: #fff; box-shadow: 0 3px 0 rgba(27,16,54,.18); }
+    .course.active { border-color: var(--h-ink); background: color-mix(in srgb, var(--course-color) 22%, white); box-shadow: 0 4px 0 var(--h-ink); }
+    .course-icon { border: 2px solid var(--h-ink); }
+    .course-name { color: var(--h-ink); }
+    .rail-footer { color: var(--h-text-soft); }
+    .lesson-kicker { color: var(--h-magenta); }
+    .lesson-title { font-weight: 900; color: var(--h-ink); }
+    .lesson-stage::after { border-color: rgba(255,46,147,.07); }
+    .listen-button { border: 3px solid var(--h-ink); background: linear-gradient(180deg, #e9fbff, #b6ecff); color: var(--h-ink); box-shadow: 0 4px 0 var(--h-ink); }
+
+    /* --- פרק ד: כרטיס שאלה + אלה --- */
+    .prompt-card { background:
+        radial-gradient(circle at 12% 50%, rgba(255,46,147,.14), transparent 45%),
+        linear-gradient(135deg, #f3ecff, #fff6e0);
+      border: 3px solid var(--h-ink); box-shadow: inset 0 0 0 3px rgba(255,255,255,.8); }
+    .mascot-wrap { position: relative; }
+    .mascot-hero { width: clamp(96px, 12.5vw, 160px); animation: h-float 2.6s ease-in-out infinite alternate; }
+    .mascot-hero svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 10px 10px rgba(27,16,54,.3)); }
+    .mascot-hero.zap { animation: hero-zap .6s var(--h-spring); }
+    @keyframes hero-zap { 30% { transform: translateY(-22px) scale(1.12) rotate(-5deg); } 70% { transform: translateY(0) scale(.97) rotate(3deg); } }
+    .mascot { position: absolute; bottom: 4px; left: 4px; width: 50px; font-size: 28px; border: 3px solid var(--h-ink); border-radius: 50%;
+      background: #fff; box-shadow: 0 3px 0 var(--h-ink); animation: none; }
+    .mascot::after { display: none; }
+    .instruction { font-weight: 900; color: var(--h-ink); }
+    .helper { color: var(--h-text-soft); font-weight: 700; }
+
+    /* --- פרק ה: כפתורי תשובה בסגנון קומיקס --- */
+    .answer { border: 4px solid var(--h-ink); background: #fff; color: var(--h-ink); box-shadow: 0 6px 0 var(--h-ink); font-family: var(--h-font); }
+    .answer:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--h-ink); }
+    .answer:active { transform: translateY(4px) scale(.97); box-shadow: 0 2px 0 var(--h-ink); }
+    .answer.correct { background: linear-gradient(180deg, #b6ffdc, #3ff2b0); }
+    .answer.wrong { background: linear-gradient(180deg, #ffe1ec, #ff9cc0); }
+    .pattern-answer { color: #fff; background: var(--answer-color); -webkit-text-stroke: 2px var(--h-ink); paint-order: stroke fill; }
+    .answer.memory-card, .answer.memory-card:hover { border: 0; box-shadow: none; }
+    .memory-back { background: linear-gradient(145deg, #ff5fb0, #8b5cff); border: 3px solid var(--h-ink); }
+    .memory-front { border: 3px solid var(--h-ink); }
+    .memory-board.big-board .answer.memory-card { min-height: clamp(44px, 7.4vh, 72px); }
+    .memory-board.big-board .memory-front { font-size: clamp(22px, 3vw, 32px); }
+    .puzzle-board .answer.puzzle-piece { border: 3px solid var(--h-ink); box-shadow: 0 3px 0 var(--h-ink); }
+    .next-button { border: 4px solid var(--h-ink); background: linear-gradient(180deg, var(--h-magenta), #c2187a); box-shadow: 0 6px 0 var(--h-ink); font-family: var(--h-font); }
+    .feedback { border: 3px solid rgba(27,16,54,.15); }
+    .feedback.good { border-color: var(--h-ink); background: #d4ffe9; color: #0d6b47; }
+    .feedback.try { border-color: var(--h-ink); background: #ffe3ef; color: #a0215b; }
+    .gentle-tip { color: var(--h-text-soft); }
+    .gentle-tip span { color: var(--h-magenta); }
+
+    /* --- פרק ו: רכיבים של התחנות החדשות --- */
+    .math-row { display: flex; align-items: center; justify-content: center; gap: clamp(6px, 1.2vw, 16px); flex-wrap: wrap; }
+    .math-group { display: flex; flex-wrap: wrap; gap: 5px; max-width: 250px; justify-content: center; padding: 6px; border: 3px dashed rgba(27,16,54,.25); border-radius: 18px; }
+    .math-group .count-item { width: clamp(34px, 4.4vw, 54px); height: clamp(34px, 4.4vw, 54px); font-size: clamp(22px, 3vw, 36px); }
+    .count-item.gone { opacity: .22; filter: grayscale(1); transform: translateY(-6px); }
+    .op { font-size: clamp(34px, 4.6vw, 58px); font-weight: 900; color: var(--h-ink); }
+    .q { color: var(--h-magenta); }
+    .equation { font: 900 clamp(42px, 6.4vw, 84px)/1 var(--h-font); color: var(--h-ink); letter-spacing: 2px; }
+    .equation b { color: var(--h-violet); }
+    .clock { width: clamp(120px, 20vh, 190px); height: auto; filter: drop-shadow(0 8px 0 rgba(27,16,54,.25)); }
+    .coins-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .shekel { display: grid; place-items: center; border-radius: 50%; border: 4px solid var(--h-ink); font: 900 26px/1 var(--h-font); color: var(--h-ink); box-shadow: 0 4px 0 var(--h-ink); background: radial-gradient(circle at 35% 30%, #fff7cf, #ffc93c 60%, #e59a00); }
+    .shekel small { font-size: 14px; }
+    .shekel.s1 { width: 54px; height: 54px; background: radial-gradient(circle at 35% 30%, #fff, #d9dde6 60%, #a7adbb); }
+    .shekel.s2 { width: 60px; height: 60px; background: radial-gradient(circle at 35% 30%, #fff, #d9dde6 60%, #a7adbb); }
+    .shekel.s5 { width: 66px; height: 66px; background: radial-gradient(circle at 35% 30%, #fff, #d9dde6 60%, #a7adbb); }
+    .shekel.s10 { width: 72px; height: 72px; }
+    .music-stage { width: clamp(110px, 17vh, 160px); aspect-ratio: 1; border: 5px solid var(--h-ink); border-radius: 50%; font-size: clamp(56px, 9vh, 88px); cursor: pointer;
+      background: radial-gradient(circle at 35% 30%, #fff, #ffe1f1 55%, #ffb3d7); box-shadow: 0 6px 0 var(--h-ink); }
+    .music-stage.play { animation: beat .35s var(--h-spring); }
+    @keyframes beat { 40% { transform: scale(1.18) rotate(-6deg); } }
+    .simon-board { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .answer.simon-pad { background: var(--pad); min-height: clamp(80px, 13vh, 120px); color: #fff; -webkit-text-stroke: 2px var(--h-ink); paint-order: stroke fill; transition: filter .1s, transform .1s; filter: saturate(.75) brightness(.9); }
+    .answer.simon-pad.lit { filter: saturate(1.3) brightness(1.25); transform: scale(1.06); box-shadow: 0 6px 0 var(--h-ink), 0 0 30px var(--pad); }
+    .simon-dots { display: flex; gap: 12px; justify-content: center; }
+    .simon-dots i { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--h-ink); background: #fff; }
+    .simon-dots i.on { background: var(--h-gold); box-shadow: 0 0 12px var(--h-gold); }
+    .nature-scene { font-size: clamp(60px, 11vh, 110px); line-height: 1.1; letter-spacing: 8px; filter: drop-shadow(0 6px 4px rgba(27,16,54,.2)); }
+    .nature-scene.small { font-size: clamp(44px, 7vh, 70px); }
+    .cycle-row { display: flex; align-items: center; gap: clamp(10px, 2vw, 24px); font-size: clamp(54px, 9vh, 90px); }
+    .cycle-row b { font-size: .5em; color: var(--h-violet); }
+    .read-word { font: 900 clamp(48px, 8vh, 86px)/1.1 var(--h-font); color: var(--h-ink); padding: 8px 28px; border: 4px solid var(--h-ink); border-radius: 22px; background: #fff; box-shadow: 0 6px 0 var(--h-ink); }
+    .poly { width: clamp(100px, 16vh, 150px); height: auto; }
+
+    /* --- פרק ז: חגיגת תחנה --- */
+    .celebration { background: radial-gradient(circle at 50% 45%, rgba(58,17,119,.8), rgba(10,4,30,.92)); backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .celebration-card { background: var(--h-paper); border: 5px solid var(--h-ink); box-shadow: 8px 9px 0 var(--h-ink); font-family: var(--h-font); }
+    .celebration-burst { width: 150px; margin: 0 auto; font-size: 0; }
+    .celebration-burst svg { width: 100%; height: auto; }
+    .celebration-card h2 { font-weight: 900; color: var(--h-ink); }
+    .celebration-card button { border: 4px solid var(--h-ink); background: linear-gradient(180deg, #ffd95a, #ff9f1c); color: var(--h-ink); box-shadow: 0 5px 0 var(--h-ink); font-family: var(--h-font); }
+
+    /* --- פרק ח: מסכים נמוכים (אייפד מיני / טלפון לרוחב) --- */
+    @media (max-width:980px) and (orientation:landscape) {
+      .learning-shell { height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 74px); }
+      .brand small { display: none; }
+      .brand-hero { width: 40px; height: 46px; flex-basis: 40px; }
+      .hud-slot .h-hud-title { font-size: 13px; }
+      .mascot-hero { width: 84px; }
+      .mascot { width: 36px; font-size: 20px; }
+    }
+    @media (max-height: 700px) {
+      .h-hud .h-coins { font-size: 18px; }
+      .grade-button, .sound-button { min-height: 50px; height: 50px; }
+    }
+
+  </style>
 </head>
 <body>
   <div class="app">
     <div class="glow one"></div><div class="glow two"></div><div class="cloud one"></div><div class="cloud two"></div>
     <header class="topbar">
-      <div class="brand"><div class="brand-mark">📚</div><div><strong>איזור הלמידה</strong><small>לומדים, משחקים, גדלים</small></div></div>
-      <div class="journey" aria-label="ההתקדמות במסע הלמידה"><span class="journey-label">מסע הכוכבים</span><div class="journey-track"><div class="journey-fill" id="journeyFill"></div></div><span class="journey-score" id="journeyScore">0/8</span></div>
+      <div class="brand"><div class="brand-hero" id="brandHero"></div><div><strong>אקדמיית הגיבורים</strong><small>כל תשובה = אנרגיית גיבורה ⚡</small></div></div>
+      <div class="hud-slot" id="hudSlot"></div>
+      <button class="grade-button" id="gradeButton" type="button" aria-label="בחירת רמת קושי">🌱 קטנים <bdi dir="ltr">5–6</bdi></button>
       <button class="sound-button" id="soundButton" type="button" aria-label="הפעלת או כיבוי צליל">🔊</button>
     </header>
     <main class="learning-shell">
       <aside class="course-rail" aria-label="בחירת פעילות לימודית">
-        <div class="profile"><div class="profile-top"><div class="profile-orb">🌈</div><div><strong>המסלול של אלה</strong><span>כל תשובה בונה כוכב</span></div></div><div class="profile-level" id="profileLevel">מתחילים מסע חדש</div></div>
+        <div class="profile"><div class="journey" aria-label="ההתקדמות באקדמיה"><span class="journey-label">תחנות</span><div class="journey-track"><div class="journey-fill" id="journeyFill"></div></div><span class="journey-score" id="journeyScore">0/14</span></div><div class="profile-level" id="profileLevel">גיבורה מתחילה</div></div>
         <nav class="course-list" id="courseList"></nav><div class="rail-footer">אין לחץ — נסו שוב כמה שרוצים.<br />כל הכבוד על כל ניסיון! ✨</div>
       </aside>
       <section class="lesson-stage" aria-live="polite">
         <div class="lesson-head"><div class="lesson-name"><div><span class="lesson-kicker" id="lessonKicker">תחנה 1 במסע</span><strong class="lesson-title" id="lessonTitle">סופרים ביחד</strong></div></div><button class="listen-button" id="listenButton" type="button">🔊 הקשיבו</button></div>
-        <div class="prompt-card"><div class="mascot-wrap"><div class="mascot" id="mascot" aria-hidden="true">🦄</div></div><div class="prompt-content"><div class="instruction" id="instruction">כמה פירות יש כאן?</div><div class="target" id="target"></div><div class="helper" id="helper">נסו לספור לאט בקול.</div></div></div>
+        <div class="prompt-card"><div class="mascot-wrap"><div class="mascot-hero" id="mascotHero" aria-hidden="true"></div><div class="mascot" id="mascot" aria-hidden="true">🦄</div></div><div class="prompt-content"><div class="instruction" id="instruction">כמה פירות יש כאן?</div><div class="target" id="target"></div><div class="helper" id="helper">נסו לספור לאט בקול.</div></div></div>
         <div class="answer-grid" id="answerGrid" aria-label="בחירת התשובה"></div>
         <div class="bottom-row"><div class="feedback" id="feedback">לחצו על התשובה שנראית לכם נכונה.</div><button class="next-button" id="nextButton" type="button" disabled>שאלה חדשה</button></div>
-        <div class="gentle-tip">⭐ תשובה נכונה מעניקה כוכב וגם מטבע לעגלת המשחק. <span>אפשר לנסות שוב תמיד.</span></div>
+        <div class="gentle-tip">⚡ כל תשובה נכונה = אנרגיה + מטבע. מד מלא = <span>תחפושת או כוח חדש!</span></div>
       </section>
     </main>
-    <div class="celebration" id="celebration" role="dialog" aria-modal="true" aria-labelledby="celebrationTitle"><div class="celebration-card"><div class="celebration-burst">🏆</div><h2 id="celebrationTitle">תחנה הושלמה!</h2><p id="celebrationText">אספת שלושה כוכבים חדשים.</p><button id="celebrationClose" type="button">ממשיכים למסע</button></div></div>
-    <div class="rotate-message"><div class="rotate-icon">📱</div><strong>בואו נסובב לרוחב</strong><span>איזור הלמידה נבנה במיוחד למסך הרחב של האייפד.</span></div>
+    <div class="celebration" id="celebration" role="dialog" aria-modal="true" aria-labelledby="celebrationTitle"><div class="celebration-card"><div class="celebration-burst" id="celebrationHero">🏆</div><h2 id="celebrationTitle">תחנה הושלמה!</h2><p id="celebrationText">אספת שלושה כוכבים חדשים.</p><button id="celebrationClose" type="button">ממשיכים לטוס! 🚀</button></div></div>
+    <div class="rotate-message"><div class="rotate-icon">📱</div><strong>בואו נסובב לרוחב</strong><span>אקדמיית הגיבורים נבנתה במיוחד למסך הרחב של האייפד.</span></div>
   </div>
   <script src="shared/kids-ui.js"></script><script src="shared/wallet.js"></script><script src="js/audio.js"></script>
+  <script src="shared/hero-avatar.js"></script><script src="shared/hero-rewards.js"></script><script src="js/academy-modules.js"></script>
   <script>
     (function(){
       'use strict';
       const SAVE_KEY='ella-learning-journey-v1', GOAL=3;
       const modules={numbers:{name:'מספרים',subtitle:'סופרים בכיף',icon:'🔢',color:'#70c2ff',title:'סופרים ביחד',mascot:'🐥'},colors:{name:'צבעים',subtitle:'מגלים גוונים',icon:'🎨',color:'#ff87b4',title:'צבעי הקשת',mascot:'🦋'},shapes:{name:'צורות',subtitle:'מוצאים צורה',icon:'🔷',color:'#a88eff',title:'צורות קסומות',mascot:'🦄'},patterns:{name:'דפוסים',subtitle:'ממשיכים סדר',icon:'🧩',color:'#74dcae',title:'סדר של קסם',mascot:'🐸'},letters:{name:'אותיות',subtitle:'א-ב בכיף',icon:'א',color:'#ffcf69',title:'קוראים אותיות',mascot:'🦁'},english:{name:'אנגלית',subtitle:'A-Z באנגלית',icon:'🔤',color:'#66a6ff',title:'אותיות באנגלית',mascot:'🐵'},animals:{name:'חיות',subtitle:'עברית ואנגלית',icon:'🐾',color:'#7fddb3',title:'חיות בשתי שפות',mascot:'🐶'},food:{name:'אוכל',subtitle:'עברית ואנגלית',icon:'🍎',color:'#ff9f86',title:'אוכל בשתי שפות',mascot:'🍓'},size:{name:'גודל',subtitle:'גדול או קטן',icon:'📏',color:'#5fd0c9',title:'מי גדול יותר?',mascot:'🐘'},memory:{name:'זיכרון',subtitle:'מוצאים זוגות',icon:'🧠',color:'#ff9ecf',title:'פותחים זוגות',mascot:'🦉'},puzzles:{name:'פאזלים',subtitle:'מרכיבים תמונה',icon:'🧩',color:'#ffbd67',title:'פאזל הקסם',mascot:'🐼'}};
+      /* תחנות חדשות (חשבון גיבורים, מוזיקה, טבע) מגיעות מ-js/academy-modules.js */
+      if(window.AcademyModules)Object.assign(modules,AcademyModules.meta);
       const colors=[{name:'אדום',value:'#ff6d7f'},{name:'כחול',value:'#5daeff'},{name:'ירוק',value:'#65d49a'},{name:'צהוב',value:'#ffd54f'},{name:'סגול',value:'#b08cff'},{name:'כתום',value:'#ffad62'},{name:'ורוד',value:'#ff86b5'},{name:'טורקיז',value:'#55d8d3'}];
       const shapes=[{name:'עיגול',kind:'circle'},{name:'ריבוע',kind:'square'},{name:'משולש',kind:'triangle'},{name:'כוכב',kind:'star'},{name:'לב',kind:'heart'}], fruits=['🍎','🍓','🍊','🍒','🍇','🍌'];
       const sizeItems=['🎈','⭐','🍎','⚽','🐘','🐞','🌸','🐬'], memoryPool=['🦁','🐶','🐱','🐰','🐸','🐼','🦄','🐟','🍎','🍓','⭐','🎈','🌈','🚀','🦋','🐢'];
@@ -91,8 +243,9 @@
       const animals=[{emoji:'🐶',he:'כלב',en:'Dog'},{emoji:'🐱',he:'חתול',en:'Cat'},{emoji:'🐰',he:'ארנב',en:'Rabbit'},{emoji:'🦁',he:'אריה',en:'Lion'},{emoji:'🐘',he:'פיל',en:'Elephant'},{emoji:'🐸',he:'צפרדע',en:'Frog'},{emoji:'🐟',he:'דג',en:'Fish'},{emoji:'🐦',he:'ציפור',en:'Bird'}];
       const foods=[{emoji:'🍎',he:'תפוח',en:'Apple'},{emoji:'🍌',he:'בננה',en:'Banana'},{emoji:'🍓',he:'תות',en:'Strawberry'},{emoji:'🍕',he:'פיצה',en:'Pizza'},{emoji:'🥕',he:'גזר',en:'Carrot'},{emoji:'🍞',he:'לחם',en:'Bread'},{emoji:'🧀',he:'גבינה',en:'Cheese'},{emoji:'🍪',he:'עוגייה',en:'Cookie'}];
       const puzzleScenes=[{name:'האריה',emoji:'🦁',background:'linear-gradient(135deg,#ffc45d,#ff8f7f 56%,#a68cff)'},{name:'החד-קרן',emoji:'🦄',background:'linear-gradient(135deg,#78d7ff,#b28dff 56%,#ff98be)'},{name:'הכלבלב',emoji:'🐶',background:'linear-gradient(135deg,#73dfb7,#7bbdff 55%,#ffe070)'},{name:'החללית',emoji:'🚀',background:'linear-gradient(135deg,#93a5ff,#6759c6 56%,#ff9ac3)'}];
-      function defaults(){return{active:'numbers',stars:0,totalCorrect:0,progress:{numbers:0,colors:0,shapes:0,patterns:0,letters:0,english:0,animals:0,food:0,size:0,memory:0,puzzles:0},completed:{numbers:false,colors:false,shapes:false,patterns:false,letters:false,english:false,animals:false,food:false,size:false,memory:false,puzzles:false}}}
-      function load(){try{const saved=JSON.parse(localStorage.getItem(SAVE_KEY));if(!saved)return defaults();const base=defaults();return{active:modules[saved.active]?saved.active:base.active,stars:Math.max(0,Number(saved.stars)||0),totalCorrect:Math.max(0,Number(saved.totalCorrect)||0),progress:Object.assign(base.progress,saved.progress||{}),completed:Object.assign(base.completed,saved.completed||{})}}catch(error){return defaults()}}
+      /* ברירות מחדל נבנות מרשימת התחנות — כך כל תחנה חדשה מקבלת מקום בשמירה אוטומטית. grade: 'young'=5–6, 'big'=7–8 */
+      function defaults(){const progress={},completed={};Object.keys(modules).forEach(function(k){progress[k]=0;completed[k]=false});return{active:'numbers',grade:'young',stars:0,totalCorrect:0,progress:progress,completed:completed}}
+      function load(){try{const saved=JSON.parse(localStorage.getItem(SAVE_KEY));if(!saved)return defaults();const base=defaults();return{active:modules[saved.active]?saved.active:base.active,grade:saved.grade==='big'?'big':'young',stars:Math.max(0,Number(saved.stars)||0),totalCorrect:Math.max(0,Number(saved.totalCorrect)||0),progress:Object.assign(base.progress,saved.progress||{}),completed:Object.assign(base.completed,saved.completed||{})}}catch(error){return defaults()}}
       const state=load();let currentRound=null,locked=false;
       const el={courseList:document.getElementById('courseList'),journeyFill:document.getElementById('journeyFill'),journeyScore:document.getElementById('journeyScore'),profileLevel:document.getElementById('profileLevel'),lessonKicker:document.getElementById('lessonKicker'),lessonTitle:document.getElementById('lessonTitle'),mascot:document.getElementById('mascot'),instruction:document.getElementById('instruction'),helper:document.getElementById('helper'),target:document.getElementById('target'),answers:document.getElementById('answerGrid'),feedback:document.getElementById('feedback'),next:document.getElementById('nextButton'),listen:document.getElementById('listenButton'),sound:document.getElementById('soundButton'),celebration:document.getElementById('celebration'),celebrationTitle:document.getElementById('celebrationTitle'),celebrationText:document.getElementById('celebrationText')};
       const save=function(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state))}catch(error){}};
@@ -101,14 +254,49 @@
       function choicesFor(correct,pool,count){return shuffle([correct].concat(shuffle(pool.filter(function(item){return item!==correct})).slice(0,count-1)))}
       function say(text){if(window.Voice)Voice.say(text,{rate:.9,pitch:1.18})}function sound(name){if(window.Sound&&Sound[name])Sound[name]()}
       function readParts(parts){if(!parts||!parts.length)return;if(window.Sound&&!Sound.isOn())return;if(!('speechSynthesis'in window)||!window.SpeechSynthesisUtterance){say(parts.map(function(part){return part.text}).join(', '));return}const synth=window.speechSynthesis;let index=0;synth.cancel();function next(){if(index>=parts.length)return;const part=parts[index++],utterance=new SpeechSynthesisUtterance(part.text);utterance.lang=part.lang||'he-IL';utterance.rate=.82;utterance.pitch=1.12;utterance.onend=next;utterance.onerror=next;synth.speak(utterance)}next()}
-      function completedCount(){return Object.values(state.completed).filter(Boolean).length}function levelText(){const done=completedCount(),total=Object.keys(modules).length;return !done?'מתחילים מסע חדש':done<3?'חוקר כוכבים צעיר':done<total?'אלוף הלמידה שלנו':'מסע הלמידה הושלם!'}
+      function completedCount(){return Object.values(state.completed).filter(Boolean).length}function levelText(){const done=completedCount(),total=Object.keys(modules).length;return !done?'גיבורה מתחילה':done<3?'גיבורה בהתהוות':done<total?'גיבורת-על של למידה':'כל האקדמיה הושלמה!'}
       function starsHTML(key){return[0,1,2].map(function(index){return'<span class="'+(state.progress[key]>index?'earned':'')+'">★</span>'}).join('')}
       function buildCourseList(){el.courseList.innerHTML='';Object.keys(modules).forEach(function(key){const info=modules[key],item=document.createElement('button');item.type='button';item.dataset.key=key;item.className='course';item.style.setProperty('--course-color',info.color);item.innerHTML='<span class="course-icon">'+info.icon+'</span><span><span class="course-name">'+info.name+'</span><span class="course-sub">'+info.subtitle+'</span></span><span class="course-stars">'+starsHTML(key)+'</span>';item.addEventListener('click',function(){select(key)});el.courseList.appendChild(item)})}
       function updateCourseList(){Array.from(el.courseList.children).forEach(function(item){const key=item.dataset.key,active=key===state.active;item.classList.toggle('active',active);item.setAttribute('aria-pressed',active?'true':'false');item.querySelector('.course-stars').innerHTML=starsHTML(key)})}
       function chrome(){const progress=state.progress[state.active],module=modules[state.active],total=Object.keys(modules).length;el.journeyFill.style.width=(completedCount()/total*100)+'%';el.journeyScore.textContent=completedCount()+'/'+total;el.profileLevel.textContent=levelText()+' · ⭐ '+state.stars;el.lessonKicker.textContent='תחנה '+(Object.keys(modules).indexOf(state.active)+1)+' במסע · '+progress+'/'+GOAL+' כוכבים';el.lessonTitle.textContent=module.title;el.mascot.textContent=module.mascot;updateCourseList()}
       function resetMessage(){el.feedback.className='feedback';el.feedback.textContent='לחצו על התשובה שנראית לכם נכונה.';el.next.disabled=true;el.next.textContent='שאלה חדשה'}
       function select(key){if(!modules[key]||(key===state.active&&currentRound))return;state.active=key;save();chrome();round();sound('bubble')}
-      function round(){locked=false;resetMessage();el.target.innerHTML='';el.answers.innerHTML='';el.answers.className='answer-grid';if(state.active==='numbers')numberRound();if(state.active==='colors')colorRound();if(state.active==='shapes')shapeRound();if(state.active==='patterns')patternRound();if(state.active==='letters')letterRound();if(state.active==='english')englishRound();if(state.active==='animals')wordRound(animals,'חיה');if(state.active==='food')wordRound(foods,'מאכל');if(state.active==='size')sizeRound();if(state.active==='memory')memoryRound();if(state.active==='puzzles')puzzleRound()}
+      /* ===== חיבור לאקדמיה: רמת קושי, api לתחנות החדשות, פרסי גיבורה ===== */
+      /* big() — האם נבחרה רמת 7–8 */
+      function big(){return state.grade==='big'}
+      /* api — הכלים שהדף מעביר ל-js/academy-modules.js */
+      const api={el:el,answer:answer,setRound:function(r){currentRound=r},random:random,shuffle:shuffle,choicesFor:choicesFor,big:big,
+        win:function(origin,text,speech){finishCustom(origin,text,speech)},
+        feedback:function(cls,text){el.feedback.className='feedback'+(cls?' '+cls:'');el.feedback.textContent=text},
+        say:say,sound:sound}
+      /* heroJump — אלה בכרטיס השאלה קופצת משמחה */
+      function heroJump(){const h=document.getElementById('mascotHero');if(!h)return;h.classList.remove('zap');void h.offsetWidth;h.classList.add('zap')}
+      /* reward — מטבע לארנק + אנרגיית גיבורה (בסיס + 3 בונוס כשתחנה הושלמה) */
+      function reward(origin,justCompleted,base){if(window.Wallet)Wallet.add(1);heroJump();if(window.HeroRewards)HeroRewards.award(base+(justCompleted?3:0),origin);if(window.HeroRewards)HeroRewards.refresh()}
+      /* finishCustom — סיום משימה מיוחדת מתוך מודול (למשל סיימון במוזיקה) */
+      function finishCustom(origin,text,speech){if(locked)return
+locked=true
+const key=state.active
+state.stars++
+state.totalCorrect++
+state.progress[key]=Math.min(GOAL,state.progress[key]+1)
+let justCompleted=false
+if(state.progress[key]>=GOAL&&!state.completed[key]){state.completed[key]=true
+justCompleted=true}reward(origin,justCompleted,2)
+save()
+chrome()
+el.feedback.className='feedback good'
+el.feedback.textContent=justCompleted?'וואו! התחנה הושלמה!':text
+el.next.disabled=false
+el.next.textContent='עוד אחד ←'
+say(justCompleted?'וואו, סיימת את התחנה!':speech)
+sound('happy')
+burst(origin)
+if(justCompleted)setTimeout(function(){celebrate(key)},430)}
+      function round(){locked=false;resetMessage();el.target.innerHTML='';el.answers.innerHTML='';el.answers.className='answer-grid';
+/* תחנות חדשות ורמת 7–8 מגיעות מהמודול החיצוני; זיכרון ופאזלים מטפלים ברמה בעצמם */
+if(window.AcademyModules){const M=AcademyModules;if(M.rounds[state.active])return M.rounds[state.active](api);if(big()&&M.bigRounds[state.active])return M.bigRounds[state.active](api)}
+if(state.active==='numbers')numberRound();if(state.active==='colors')colorRound();if(state.active==='shapes')shapeRound();if(state.active==='patterns')patternRound();if(state.active==='letters')letterRound();if(state.active==='english')englishRound();if(state.active==='animals')wordRound(animals,'חיה');if(state.active==='food')wordRound(foods,'מאכל');if(state.active==='size')sizeRound();if(state.active==='memory')memoryRound();if(state.active==='puzzles')puzzleRound()}
       function answer(label,correct,extraClass,color){const button=document.createElement('button');button.type='button';button.className='answer'+(extraClass?' '+extraClass:'');if(color)button.style.setProperty('--answer-color',color);button.innerHTML=label;button.addEventListener('click',function(){choose(button,correct)});el.answers.appendChild(button)}
       function numberRound(){const kind=random(['count','count','count','sequence','compare']);if(kind==='sequence')return numberSequenceRound();if(kind==='compare')return numberCompareRound();return numberCountRound()}
       function numberCountRound(){const max=completedCount()>=2?10:6,number=1+Math.floor(Math.random()*max),fruit=random(fruits),word=numberWords[number];currentRound={speak:'כמה '+(number===1?'פרי אחד':'פירות')+' יש כאן? נסו לספור.',read:[{text:'המספר '+word,lang:'he-IL'}],success:'מעולה! '+number+' זה '+word+'!'};el.instruction.textContent='כמה '+(number===1?'פרי':'פירות')+' יש כאן?';el.helper.textContent='נסו לספור לאט בקול, ואז גם להקשיב לשם המספר.';el.target.className='target count-items';for(let i=0;i<number;i++){const item=document.createElement('span');item.className='count-item';item.style.animationDelay=i*55+'ms';item.textContent=fruit;el.target.appendChild(item)}const card=document.createElement('div');card.className='number-card';card.innerHTML='<strong>'+number+'</strong><span>'+word+'</span>';el.target.appendChild(card);const options=new Set([number]);while(options.size<4)options.add(1+Math.floor(Math.random()*max));shuffle(Array.from(options)).forEach(function(value){answer(String(value),value===number)})}
@@ -121,18 +309,28 @@
       function englishRound(){const item=random(englishLetters);currentRound={speak:'This is the letter '+item.letter+'. '+item.word+'.',read:[{text:item.letter,lang:'en-US'},{text:item.word,lang:'en-US'}],success:'כל הכבוד! '+item.letter+' זו האות '+item.name+', כמו '+item.word+' — '+item.he+'!'};el.instruction.textContent='איזו אות באנגלית זו?';el.helper.textContent='הקשיבו איך קוראים לאות, ולמילה שמתחילה בה.';el.target.className='target';el.target.innerHTML='<div class="letter-target"><span class="letter-symbol" dir="ltr">'+item.letter+'</span><span class="letter-copy"><strong>'+item.name+'</strong><span>כמו</span><i>'+item.emoji+' <span dir="ltr">'+item.word+'</span> · '+item.he+'</i></span></div>';choicesFor(item,englishLetters,4).forEach(function(choice){answer('<span class="answer-label" dir="ltr" style="font-size:clamp(38px,5vw,58px)">'+choice.letter+'</span>',choice.letter===item.letter)})}
       function wordRound(items,kind){const item=random(items);currentRound={speak:'זה '+kind+' בשם '+item.he+'. איך אומרים '+item.he+' באנגלית?',read:[{text:item.he,lang:'he-IL'},{text:item.en,lang:'en-US'}],success:'כל הכבוד! '+item.he+' באנגלית הוא '+item.en+'!'};el.instruction.textContent='איך אומרים '+item.he+' באנגלית?';el.helper.textContent='לחצו על הקשיבו כדי לשמוע עברית ואנגלית, ואז בחרו.';el.target.className='target';el.target.innerHTML='<div class="bilingual-card"><span class="emoji">'+item.emoji+'</span><span class="bilingual-copy"><strong class="hebrew">'+item.he+'</strong><small>איך אומרים באנגלית?</small></span></div>';choicesFor(item,items,4).forEach(function(choice){answer('<span class="answer-label" dir="ltr">'+choice.en+'</span>',choice.en===item.en)})}
       function sizeRound(){const item=random(sizeItems),bigPx=70+Math.floor(Math.random()*28),smallPx=26+Math.floor(Math.random()*13),askBig=Math.random()<0.5,firstIsBig=Math.random()<0.5,leftPx=firstIsBig?bigPx:smallPx,rightPx=firstIsBig?smallPx:bigPx,correctSide=askBig?(firstIsBig?'left':'right'):(firstIsBig?'right':'left');currentRound={speak:askBig?'איזה מהם גדול יותר?':'איזה מהם קטן יותר?'};el.instruction.textContent=askBig?'איזה גדול יותר?':'איזה קטן יותר?';el.helper.textContent='הסתכלו טוב על הגודל של כל אחד, ואז בחרו.';el.target.className='target size-pair';el.target.innerHTML='<span class="size-item" style="font-size:'+leftPx+'px">'+item+'</span><span class="size-vs">מול</span><span class="size-item" style="font-size:'+rightPx+'px">'+item+'</span>';[['left',leftPx],['right',rightPx]].forEach(function(pair){const shown=Math.round(pair[1]*0.56);answer('<span style="font-size:'+shown+'px;line-height:1">'+item+'</span>',pair[0]===correctSide)})}
-      function memoryRound(){const chosen=shuffle(memoryPool).slice(0,6),board=shuffle(chosen.concat(chosen));currentRound={speak:'מוצאים את הזוגות! הפכו שני קלפים בכל פעם ובידקו אם הם מתאימים.',board:board,revealed:[],matched:new Array(12).fill(false),busy:false};el.instruction.textContent='מוצאים את הזוגות';el.helper.textContent='הפכו שני קלפים בכל פעם. אם הם מתאימים — הם נשארים גלויים.';el.target.className='target';el.target.innerHTML='';el.answers.className='answer-grid memory-board';renderMemory()}
+      function memoryRound(){const chosen=shuffle(memoryPool).slice(0,big()?8:6),board=shuffle(chosen.concat(chosen));currentRound={speak:'מוצאים את הזוגות! הפכו שני קלפים בכל פעם ובידקו אם הם מתאימים.',board:board,revealed:[],matched:new Array(board.length).fill(false),busy:false};el.instruction.textContent='מוצאים את הזוגות';el.helper.textContent='הפכו שני קלפים בכל פעם. אם הם מתאימים — הם נשארים גלויים.';el.target.className='target';el.target.innerHTML='';el.answers.className='answer-grid memory-board'+(big()?' big-board':'');renderMemory()}
       function renderMemory(){const m=currentRound;if(!m||!m.board)return;el.answers.innerHTML='';m.board.forEach(function(symbol,index){const isUp=m.matched[index]||m.revealed.indexOf(index)!==-1,button=document.createElement('button');button.type='button';button.className='answer memory-card'+(isUp?' flipped':'')+(m.matched[index]?' matched':'');button.setAttribute('aria-label','קלף זיכרון '+(index+1));button.innerHTML='<span class="memory-inner"><span class="memory-back">✦</span><span class="memory-front">'+symbol+'</span></span>';button.addEventListener('click',function(){flipMemory(index)});el.answers.appendChild(button)})}
       function flipMemory(index){const m=currentRound;if(!m||m.busy||m.matched[index]||m.revealed.indexOf(index)!==-1||m.revealed.length>=2)return;sound('tap');m.revealed.push(index);renderMemory();if(m.revealed.length===2){const a=m.revealed[0],b=m.revealed[1];if(m.board[a]===m.board[b]){m.matched[a]=true;m.matched[b]=true;m.revealed=[];sound('happy');el.feedback.className='feedback good';el.feedback.textContent='זוג מתאים! ✨';renderMemory();if(m.matched.every(Boolean))setTimeout(function(){finishMemory(el.answers.children[b])},260)}else{m.busy=true;el.feedback.className='feedback try';el.feedback.textContent='כמעט! נסו זוג אחר.';sound('sad');setTimeout(function(){m.revealed=[];m.busy=false;renderMemory()},850)}}}
-      function finishMemory(origin){if(locked)return;locked=true;state.stars++;state.totalCorrect++;state.progress.memory=Math.min(GOAL,state.progress.memory+1);let justCompleted=false;if(state.progress.memory>=GOAL&&!state.completed.memory){state.completed.memory=true;justCompleted=true}if(window.Wallet&&Wallet.add)Wallet.add(1);save();chrome();el.feedback.className='feedback good';el.feedback.textContent=justCompleted?'איזו זכירה מדהימה! תחנת הזיכרון הושלמה!':'כל הכבוד! מצאתם את כל הזוגות.';el.next.disabled=false;el.next.textContent='לוח חדש ←';say(justCompleted?'וואו, סיימתם את תחנת הזיכרון!':'כל הכבוד, מצאתם את כל הזוגות!');sound('happy');burst(origin);if(justCompleted)setTimeout(function(){celebrate('memory')},430)}
-      function puzzleRound(){const scene=random(puzzleScenes);let board=shuffle([0,1,2,3,4,5]);while(board.every(function(value,index){return value===index}))board=shuffle([0,1,2,3,4,5]);currentRound={speak:'זה פאזל של '+scene.name+'. לחצו על שתי חתיכות כדי להחליף ביניהן ולהרכיב את התמונה.',scene:scene,board:board,selected:null};el.instruction.textContent='מרכיבים את פאזל ה'+scene.name;el.helper.textContent='לחצו על שתי חתיכות כדי להחליף ביניהן. המטרה: לסדר את התמונה.';el.target.className='target';el.target.innerHTML='<div class="puzzle-preview"><div class="puzzle-scene" style="background:'+scene.background+'"><span>'+scene.emoji+'</span></div></div>';el.answers.classList.add('puzzle-board');renderPuzzle()}
-      function renderPuzzle(){const puzzle=currentRound;if(!puzzle||!puzzle.board)return;el.answers.innerHTML='';puzzle.board.forEach(function(piece,index){const row=Math.floor(piece/3),col=piece%3,button=document.createElement('button');button.type='button';button.className='answer puzzle-piece'+(puzzle.selected===index?' selected':'');button.setAttribute('aria-label','חתיכת פאזל '+(index+1));button.innerHTML='<span class="puzzle-picture" style="background:'+puzzle.scene.background+';transform:translate(-'+(col*100/3)+'%,-'+(row*50)+'%)"><span>'+puzzle.scene.emoji+'</span></span>';button.addEventListener('click',function(){choosePuzzlePiece(index,button)});el.answers.appendChild(button)})}
+      function finishMemory(origin){if(locked)return;locked=true;state.stars++;state.totalCorrect++;state.progress.memory=Math.min(GOAL,state.progress.memory+1);let justCompleted=false;if(state.progress.memory>=GOAL&&!state.completed.memory){state.completed.memory=true;justCompleted=true}reward(origin,justCompleted,2);save();chrome();el.feedback.className='feedback good';el.feedback.textContent=justCompleted?'איזו זכירה מדהימה! תחנת הזיכרון הושלמה!':'כל הכבוד! מצאתם את כל הזוגות.';el.next.disabled=false;el.next.textContent='לוח חדש ←';say(justCompleted?'וואו, סיימתם את תחנת הזיכרון!':'כל הכבוד, מצאתם את כל הזוגות!');sound('happy');burst(origin);if(justCompleted)setTimeout(function(){celebrate('memory')},430)}
+      function puzzleRound(){const scene=random(puzzleScenes),cells=big()?[0,1,2,3,4,5,6,7,8]:[0,1,2,3,4,5];let board=shuffle(cells);while(board.every(function(value,index){return value===index}))board=shuffle(cells);currentRound={speak:'זה פאזל של '+scene.name+'. לחצו על שתי חתיכות כדי להחליף ביניהן ולהרכיב את התמונה.',scene:scene,board:board,rows:cells.length/3,selected:null};el.instruction.textContent='מרכיבים את פאזל ה'+scene.name;el.helper.textContent='לחצו על שתי חתיכות כדי להחליף ביניהן. המטרה: לסדר את התמונה.';el.target.className='target';el.target.innerHTML='<div class="puzzle-preview"><div class="puzzle-scene" style="background:'+scene.background+'"><span>'+scene.emoji+'</span></div></div>';el.answers.classList.add('puzzle-board');renderPuzzle()}
+      function renderPuzzle(){const puzzle=currentRound;if(!puzzle||!puzzle.board)return;el.answers.innerHTML='';puzzle.board.forEach(function(piece,index){const row=Math.floor(piece/3),col=piece%3,button=document.createElement('button');button.type='button';button.className='answer puzzle-piece'+(puzzle.selected===index?' selected':'');button.setAttribute('aria-label','חתיכת פאזל '+(index+1));button.innerHTML='<span class="puzzle-picture" style="background:'+puzzle.scene.background+';height:'+(puzzle.rows*100)+'%;transform:translate(-'+(col*100/3)+'%,-'+(row*100/puzzle.rows)+'%)"><span>'+puzzle.scene.emoji+'</span></span>';button.addEventListener('click',function(){choosePuzzlePiece(index,button)});el.answers.appendChild(button)})}
       function choosePuzzlePiece(index,button){const puzzle=currentRound;if(locked||!puzzle)return;sound('tap');if(puzzle.selected===null){puzzle.selected=index;el.feedback.className='feedback';el.feedback.textContent='מעולה. עכשיו בחרו חתיכה נוספת כדי להחליף ביניהן.';renderPuzzle();return}if(puzzle.selected===index){puzzle.selected=null;renderPuzzle();return}const first=puzzle.selected;[puzzle.board[first],puzzle.board[index]]=[puzzle.board[index],puzzle.board[first]];puzzle.selected=null;renderPuzzle();if(puzzle.board.every(function(value,place){return value===place}))setTimeout(function(){finishPuzzle(el.answers.children[index])},120);else{el.feedback.className='feedback';el.feedback.textContent='יפה! המשיכו להחליף חתיכות עד שהתמונה תהיה שלמה.'}}
-      function finishPuzzle(origin){if(locked)return;locked=true;state.stars++;state.totalCorrect++;state.progress.puzzles=Math.min(GOAL,state.progress.puzzles+1);let justCompleted=false;if(state.progress.puzzles>=GOAL&&!state.completed.puzzles){state.completed.puzzles=true;justCompleted=true}if(window.Wallet&&Wallet.add)Wallet.add(1);save();chrome();el.feedback.className='feedback good';el.feedback.textContent=justCompleted?'איזו אליפות! תחנת הפאזלים הושלמה!':'הפאזל הושלם! קיבלתם כוכב חדש.';el.next.disabled=false;el.next.textContent='פאזל חדש ←';say(justCompleted?'וואו, סיימתם את תחנת הפאזלים!':'כל הכבוד, הפאזל הושלם!');sound('happy');burst(origin);if(justCompleted)setTimeout(function(){celebrate('puzzles')},430)}
-      function choose(button,correct){if(locked||button.classList.contains('wrong'))return;sound('tap');if(!correct){button.classList.add('wrong');el.feedback.className='feedback try';el.feedback.textContent='כמעט! הסתכלו שוב — אפשר לנסות תשובה אחרת.';say('כמעט, נסו שוב.');sound('sad');return}locked=true;Array.from(el.answers.children).forEach(function(item){item.classList.add('disabled')});button.classList.add('correct');state.stars++;state.totalCorrect++;state.progress[state.active]=Math.min(GOAL,state.progress[state.active]+1);let justCompleted=false;if(state.progress[state.active]>=GOAL&&!state.completed[state.active]){state.completed[state.active]=true;justCompleted=true}if(window.Wallet&&Wallet.add)Wallet.add(1);save();chrome();el.feedback.className='feedback good';el.feedback.textContent=justCompleted?'וואו! התחנה הושלמה — פתחתם כוכב גדול!':(currentRound.success||'כל הכבוד! מצאתם את התשובה הנכונה!');el.next.disabled=false;el.next.textContent='ממשיכים הלאה ←';if(currentRound.read)readParts(currentRound.read);else say(justCompleted?'וואו, סיימתם את התחנה!':'כל הכבוד!');sound('happy');burst(button);if(justCompleted)setTimeout(function(){celebrate(state.active)},430)}
-      function celebrate(key){const done=completedCount(),allDone=done===Object.keys(modules).length;el.celebrationTitle.textContent=allDone?'כל המסע הושלם! 🌟':modules[key].name+' הושלמו!';el.celebrationText.textContent=allDone?'כל שמונה התחנות נוצצות. איזה הישג לימודי יפה!':'אספתם 3 כוכבים בתחנת '+modules[key].name+'. התחנה הבאה כבר מחכה לכם.';el.celebration.classList.add('visible')}
+      function finishPuzzle(origin){if(locked)return;locked=true;state.stars++;state.totalCorrect++;state.progress.puzzles=Math.min(GOAL,state.progress.puzzles+1);let justCompleted=false;if(state.progress.puzzles>=GOAL&&!state.completed.puzzles){state.completed.puzzles=true;justCompleted=true}reward(origin,justCompleted,2);save();chrome();el.feedback.className='feedback good';el.feedback.textContent=justCompleted?'איזו אליפות! תחנת הפאזלים הושלמה!':'הפאזל הושלם! קיבלתם כוכב חדש.';el.next.disabled=false;el.next.textContent='פאזל חדש ←';say(justCompleted?'וואו, סיימתם את תחנת הפאזלים!':'כל הכבוד, הפאזל הושלם!');sound('happy');burst(origin);if(justCompleted)setTimeout(function(){celebrate('puzzles')},430)}
+      function choose(button,correct){if(locked||button.classList.contains('wrong'))return;sound('tap');if(!correct){button.classList.add('wrong');el.feedback.className='feedback try';el.feedback.textContent='כמעט! הסתכלו שוב — אפשר לנסות תשובה אחרת.';say('כמעט, נסו שוב.');sound('sad');return}locked=true;Array.from(el.answers.children).forEach(function(item){item.classList.add('disabled')});button.classList.add('correct');state.stars++;state.totalCorrect++;state.progress[state.active]=Math.min(GOAL,state.progress[state.active]+1);let justCompleted=false;if(state.progress[state.active]>=GOAL&&!state.completed[state.active]){state.completed[state.active]=true;justCompleted=true}reward(button,justCompleted,1);save();chrome();el.feedback.className='feedback good';el.feedback.textContent=justCompleted?'וואו! התחנה הושלמה — פתחתם כוכב גדול!':(currentRound.success||'כל הכבוד! מצאתם את התשובה הנכונה!');el.next.disabled=false;el.next.textContent='ממשיכים הלאה ←';if(currentRound.read)readParts(currentRound.read);else say(justCompleted?'וואו, סיימתם את התחנה!':'כל הכבוד!');sound('happy');burst(button);if(justCompleted)setTimeout(function(){celebrate(state.active)},430)}
+      function celebrate(key){const done=completedCount(),allDone=done===Object.keys(modules).length;el.celebrationTitle.textContent=allDone?'כל המסע הושלם! 🌟':modules[key].name+' הושלמו!';el.celebrationText.textContent=allDone?'כל '+Object.keys(modules).length+' התחנות נוצצות. איזו גיבורה!':'אספתם 3 כוכבים בתחנת '+modules[key].name+'. התחנה הבאה כבר מחכה לכם.';el.celebration.classList.add('visible')}
       function burst(origin){const rect=origin.getBoundingClientRect(),palette=['#ffd34e','#ff83b2','#76dcae','#75c4ff','#a98eff'];for(let i=0;i<18;i++){const dot=document.createElement('i');dot.className='particle';dot.style.background=palette[i%palette.length];dot.style.left=rect.left+rect.width/2-5+'px';dot.style.top=rect.top+rect.height/2-5+'px';document.body.appendChild(dot);const angle=Math.PI*2*i/18,distance=75+Math.random()*110;dot.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+Math.cos(angle)*distance+'px,'+Math.sin(angle)*distance+'px) scale(.2)',opacity:0}],{duration:650,easing:'cubic-bezier(.2,.85,.3,1)'});setTimeout(function(){dot.remove()},700)}}
-      el.next.addEventListener('click',function(){if(!el.next.disabled)round()});el.listen.addEventListener('click',function(){if(currentRound){if(currentRound.read)readParts(currentRound.read);else say(currentRound.speak);sound('bubble')}});el.sound.addEventListener('click',function(){if(window.Sound&&Sound.toggle){const on=Sound.toggle();el.sound.textContent=on?'🔊':'🔇';el.sound.classList.toggle('off',!on)}});document.getElementById('celebrationClose').addEventListener('click',function(){el.celebration.classList.remove('visible');round()});document.addEventListener('pointerdown',function(){if(window.Sound)Sound.unlock()},{once:true});if(window.KidsUI&&KidsUI.HomeButton)KidsUI.HomeButton.attach();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});buildCourseList();chrome();round();
+      el.next.addEventListener('click',function(){if(!el.next.disabled)round()});el.listen.addEventListener('click',function(){if(currentRound&&currentRound.replay){currentRound.replay();sound('bubble');return}if(currentRound){if(currentRound.read)readParts(currentRound.read);else say(currentRound.speak);sound('bubble')}});el.sound.addEventListener('click',function(){if(window.Sound&&Sound.toggle){const on=Sound.toggle();el.sound.textContent=on?'🔊':'🔇';el.sound.classList.toggle('off',!on)}});document.getElementById('celebrationClose').addEventListener('click',function(){el.celebration.classList.remove('visible');round()});document.addEventListener('pointerdown',function(){if(window.Sound)Sound.unlock()},{once:true});if(window.KidsUI&&KidsUI.HomeButton)KidsUI.HomeButton.attach()
+/* בורר רמת קושי: 🌱 קטנים 5–6 / 🚀 גדולים 7–8 (נשמר במכשיר) */
+const gradeBtn=document.getElementById('gradeButton')
+function gradeUI(){gradeBtn.innerHTML=big()?'🚀 גדולים <bdi dir="ltr">7–8</bdi>':'🌱 קטנים <bdi dir="ltr">5–6</bdi>';gradeBtn.classList.toggle('big',big())}
+gradeUI()
+gradeBtn.addEventListener('click',function(){state.grade=big()?'young':'big';save();gradeUI();sound('bubble');say(big()?'רמת גדולים! אתגר של גיבורות!':'רמת קטנים!');round()})
+/* אלה גיבורת-העל: במיתוג, בכרטיס השאלה ובחלון החגיגה — מתעדכנת כשמחליפים תחפושת */
+function drawHeroes(){if(!window.HeroAvatar||!window.HeroRewards)return;const o=HeroRewards.outfit;document.getElementById('brandHero').innerHTML=HeroAvatar.svg(o);document.getElementById('mascotHero').innerHTML=HeroAvatar.svg(o);document.getElementById('celebrationHero').innerHTML=HeroAvatar.svg(o)}
+drawHeroes()
+window.addEventListener('hero:outfit',drawHeroes)
+if(window.HeroRewards){HeroRewards.mountHUD(document.getElementById('hudSlot'));document.getElementById('hudSlot').addEventListener('click',function(){HeroRewards.openWardrobe()})};if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});buildCourseList();chrome();round();
     })();
   </script>
 </body>

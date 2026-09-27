@@ -1,0 +1,13 @@
+# פריסה אוטומטית ב-Netlify: האתר הוא קבצים סטטיים בשורש הריפו — אין שלב build.
+[build]
+  publish = "."
+
+# ה-Service Worker והמניפסט לא נשמרים במטמון הדפדפן — כדי שעדכונים יגיעו לאייפד מיד.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "no-cache"
