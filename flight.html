@@ -33,6 +33,16 @@
   .timebar { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 58px); right: 14px; left: 90px; height: 14px; border: 3px solid var(--h-ink); border-radius: 999px; background: #2a1a4f; overflow: hidden; z-index: 10; pointer-events: none; }
   .timebar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--h-gold), var(--h-magenta)); transition: width .25s linear; }
   .pause { pointer-events: auto; width: 56px; height: 56px; border: 4px solid var(--h-ink); border-radius: 50%; background: var(--h-paper); font-size: 24px; box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; }
+  /* שורת HUD שנייה: מילה באנגלית, קומבו, מתנות פעילות */
+  .hud2 { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 84px); right: 14px; left: 90px; display: flex; gap: 10px; justify-content: center; pointer-events: none; z-index: 10; }
+  .hud2 .chip { font-size: clamp(16px, 2vw, 24px); }
+  #hWord bdi { display: inline-flex; gap: 4px; letter-spacing: 1px; }
+  #hWord b { min-width: .9em; text-align: center; }
+  #hWord .got { color: #10a36a; }
+  #hWord .next { color: var(--h-magenta); animation: nextBlink .7s ease-in-out infinite alternate; }
+  #hWord .todo { color: #9aa6bd; }
+  @keyframes nextBlink { from { transform: scale(1); } to { transform: scale(1.25); } }
+  #hCombo { background: linear-gradient(180deg, #ffe7a0, #ffb13b); }
   .power { position: fixed; bottom: max(14px, env(safe-area-inset-bottom)); right: 14px; z-index: 10; pointer-events: none; }
 
   /* --- פרק ג: מסך פתיחה --- */
@@ -53,6 +63,11 @@
   .stat { border: 4px solid var(--h-ink); border-radius: 20px; background: #fff; padding: 10px; box-shadow: 0 4px 0 var(--h-ink); }
   .stat b { display: block; font-size: 40px; line-height: 1.1; }
   .stat span { font-weight: 800; color: var(--h-text-soft); }
+  .stats.small .stat b { font-size: 30px; }
+  .medal { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0 2px; }
+  .medal b { font-size: 76px; line-height: 1; animation: h-float 1.6s ease-in-out infinite alternate; }
+  .medal span { font-size: clamp(22px, 3vw, 32px); font-weight: 900; color: var(--h-ink); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; font-weight: 800; font-size: clamp(13px, 1.5vw, 16px); color: var(--h-text-soft); margin: -4px 0 10px; }
 
   /* --- פרק ה: סיבוב מסך --- */
   .rotate { display: none; }
@@ -72,6 +87,7 @@
     <span class="chip mission" id="hMission">משימה</span>
     <button class="pause" id="pauseBtn" type="button" aria-label="השהיה">⏸</button>
   </div>
+  <div class="hud2"><span class="chip" id="hWord" style="display:none"></span><span class="chip" id="hCombo" style="display:none"></span><span class="chip" id="hActive" style="display:none"></span></div>
   <div class="timebar"><i id="timeFill"></i></div>
   <div class="power" id="powerChip"></div>
 
@@ -80,7 +96,8 @@
     <div class="card h-panel">
       <div class="hero-prev" id="heroPrev"></div>
       <h1>טיסת גיבורה</h1>
-      <p>גוררים את האצבע למעלה ולמטה — אוספים כוכבים ⭐ ומצילים חתולים 🐱. זהירות מענני סערה ⛈️!</p>
+      <p>גוררים את האצבע למעלה ולמטה — אוספים כוכבים ⭐, מצילים חתולים 🐱 ובונים מילים באנגלית 🔤</p>
+      <div class="legend"><span>💫 טבעות ברצף = בונוס כפול</span><span>🧲🚀🛡️🌠 מתנות</span><span>⚠️ ברק — זזים לצד השני</span><span>🫧 בועה — מקישים מהר</span><span>🟣 דבק מאט</span><span>🦹 בלגנון — 3 טבעות זהב</span></div>
       <div class="zones" id="zones"></div>
       <div class="row"><button class="h-btn gold" id="goBtn" type="button">טסים! 🚀</button></div>
     </div>
@@ -97,10 +114,16 @@
   <div class="overlay" id="endScreen">
     <div class="card h-panel">
       <span class="h-modal-kicker" id="endKicker">הטיסה הסתיימה!</span>
+      <div class="medal"><b id="rMedal">🥉</b><span id="rMedalT"></span></div>
       <div class="stats">
         <div class="stat"><b id="rStars">0</b><span>כוכבים ⭐</span></div>
         <div class="stat"><b id="rCats">0</b><span>חתולים שניצלו 🐱</span></div>
         <div class="stat"><b id="rCoins">0</b><span>מטבעות 🪙</span></div>
+      </div>
+      <div class="stats small">
+        <div class="stat"><b id="rRings">0</b><span>טבעות 💫</span></div>
+        <div class="stat"><b id="rWords">0</b><span>מילים באנגלית 🔤</span></div>
+        <div class="stat"><b id="rCombo">0</b><span>קומבו שיא 🔥</span></div>
       </div>
       <p id="endText"></p>
       <div class="row"><button class="h-btn gold" id="againBtn" type="button">עוד טיסה! 🚀</button><button class="h-btn violet" id="zonesBtn" type="button">בחירת אזור</button></div>
@@ -117,6 +140,8 @@
   <script src="shared/hero-rewards.js"></script>
   <script src="shared/progress.js"></script>
   <script src="shared/stickers.js"></script>
+  <script src="js/dragon-data.js"></script>
+  <script src="js/voice-en.js"></script>
   <script src="js/flight.js"></script>
   <script>
     window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
