@@ -17,9 +17,16 @@
   var KEY = 'ella-hero-v1';
 
   /* מצב התחלתי: רמה 1, אפס אנרגיה, רק פריטי ברירת המחדל פתוחים */
+  /* freeIds — כל הפריטים החופשיים (free:true) + ברירות המחדל: פתוחים תמיד, בלי רמה ובלי מטבעות */
+  function freeIds() {
+    var ids = [];
+    Object.keys(HeroAvatar.CATALOG).forEach(function (slot) {
+      HeroAvatar.CATALOG[slot].forEach(function (it, i) { if (i === 0 || it.free) ids.push(it.id); });
+    });
+    return ids;
+  }
   function fresh() {
-    var o = HeroAvatar.defaultOutfit();
-    return { level: 1, energy: 0, total: 0, unlocked: [o.cape, o.suit, o.mask, o.emblem, o.aura], outfit: o };
+    return { level: 1, energy: 0, total: 0, unlocked: freeIds(), outfit: HeroAvatar.defaultOutfit(), gift: '' };
   }
   /* טעינה עם הגנה: קובץ פגום/חסר → מצב התחלתי; שדות חסרים מקבלים ברירת מחדל */
   function load() {
@@ -32,7 +39,8 @@
         energy: Math.max(0, s.energy | 0),
         total: Math.max(0, s.total | 0),
         unlocked: Array.isArray(s.unlocked) ? s.unlocked.concat(f.unlocked.filter(function (id) { return s.unlocked.indexOf(id) < 0; })) : f.unlocked,
-        outfit: Object.assign(f.outfit, s.outfit || {})
+        outfit: Object.assign(f.outfit, s.outfit || {}),
+        gift: typeof s.gift === 'string' ? s.gift : ''
       };
     } catch (e) { return fresh(); }
   }
@@ -58,7 +66,9 @@
     ['mask', 'mask_cat'],              // רמה 14
     ['emblem', 'emb_butterfly'],       // רמה 15
     ['suit', 'suit_mint'],             // רמה 16
-    ['aura', 'aura_shield']            // רמה 17 — מגן הכוכבים
+    ['aura', 'aura_shield'],           // רמה 17 — מגן הכוכבים
+    ['acc', 'acc_tiara'],              // רמה 18 — נזר יהלומים
+    ['acc', 'acc_headphones']          // רמה 19 — אוזניות DJ
   ];
   var MAX_LEVEL = UNLOCKS.length - 1;
 
@@ -213,9 +223,29 @@
 
   /* הלבשה: שומר את הפריט בחריץ ומודיע לדף (אירוע hero:outfit) כדי שהדמות תתעדכן */
   function wear(slot, id) {
-    if (state.unlocked.indexOf(id) < 0) return false;
+    /* צבע סטודיו (id מסוג cape_custom) תמיד מותר; פריט רגיל — רק אם נפתח */
+    if (id !== slot + '_custom' && state.unlocked.indexOf(id) < 0) return false;
     state.outfit[slot] = id; save();
     window.dispatchEvent(new CustomEvent('hero:outfit', { detail: state.outfit }));
+    return true;
+  }
+
+  /* ---------- פרק 3.5 — תיבת הפתעה יומית ----------
+     פעם ביום: 5 מטבעות + קונפטי + בדיחה/עובדה מצחיקה. נשמר לפי תאריך מקומי. */
+  var GIFT_LINES = ['למה הדג לא משחק כדורגל? כי הוא מפחד מהרשת! 🐟', 'ידעת? תמנון יכול לשנות צבע! 🐙', 'ידעת? דבורה מבקרת מאות פרחים ביום! 🐝',
+                    'מה אומר הגזר לארנב? אל תאכל אותי, אני הכוכב! 🥕', 'ידעת? הלב של לוויתן גדול כמו מכונית! 🐋', 'גיבורה אמיתית לומדת כל יום משהו חדש! 🦸‍♀️'];
+  function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function giftAvailable() { return state.gift !== today(); }
+  function claimGift(originEl) {
+    if (!giftAvailable()) return false;
+    state.gift = today(); save();
+    if (window.Wallet) Wallet.add(5);
+    pow(originEl, 'הפתעה!'); confetti(); snd('cha_ching');
+    var line = GIFT_LINES[(Math.random() * GIFT_LINES.length) | 0];
+    openModal('<span class="h-modal-kicker">🎁 תיבת ההפתעה היומית</span><div style="font-size:90px;line-height:1.1;margin:10px 0">🎁✨</div><h2>קיבלת 5 מטבעות! 🪙</h2><p>' + line + '</p><p>מחר מחכה הפתעה חדשה!</p>',
+      [{ text: 'יש! 🎉', cls: 'h-btn gold', fn: function () {} }]);
+    say('הפתעה! קיבלת חמישה מטבעות!');
+    refreshHUDs();
     return true;
   }
 
@@ -258,10 +288,19 @@
       var html = '<button type="button" class="h-ward-close" aria-label="סגירה">✖</button>' +
         '<span class="h-modal-kicker">ארון התחפושות</span>' +
         '<div class="h-ward-body"><div class="h-ward-hero">' + HeroAvatar.svg(state.outfit) + '</div><div class="h-ward-side">' +
-        '<div class="h-ward-tabs">' + slots.map(function (s) {
-          return '<button type="button" data-slot="' + s + '" class="h-ward-tab' + (s === activeSlot ? ' on' : '') + '">' + HeroAvatar.SLOT_NAMES[s] + '</button>';
-        }).join('') + '</div><div class="h-ward-grid">';
-      HeroAvatar.CATALOG[activeSlot].forEach(function (it, idx) {
+        '<div class="h-ward-tabs">' + slots.concat(['studio']).map(function (s) {
+          return '<button type="button" data-slot="' + s + '" class="h-ward-tab' + (s === activeSlot ? ' on' : '') + (s === 'studio' ? ' studio' : '') + '">' + (s === 'studio' ? '🎨 סטודיו' : HeroAvatar.SLOT_NAMES[s]) + '</button>';
+        }).join('') + '<button type="button" class="h-ward-tab surprise">🎲 הפתעה!</button></div><div class="h-ward-grid' + (activeSlot === 'studio' ? ' studio-grid' : '') + '">';
+      /* לשונית הסטודיו: בחירה חופשית של צבע לגלימה, לחליפה ולמסכה */
+      if (activeSlot === 'studio') {
+        [['cape', 'גלימה'], ['suit', 'חליפה'], ['mask', 'מסכה']].forEach(function (row) {
+          html += '<div class="h-studio-row"><b>' + row[1] + '</b>' + HeroAvatar.STUDIO.map(function (c) {
+            var on = state.outfit[row[0]] === row[0] + '_custom' && state.outfit.colors && state.outfit.colors[row[0]] === c;
+            return '<button type="button" class="h-swatch' + (on ? ' on' : '') + '" data-slot="' + row[0] + '" data-color="' + c + '" style="background:' + c + '" aria-label="צבע"></button>';
+          }).join('') + '</div>';
+        });
+      }
+      (HeroAvatar.CATALOG[activeSlot] || []).forEach(function (it, idx) {
         var open = state.unlocked.indexOf(it.id) >= 0, on = state.outfit[activeSlot] === it.id;
         var lvl = 0; for (var L = 0; L < UNLOCKS.length; L++) if (UNLOCKS[L] && UNLOCKS[L][1] === it.id) lvl = L;
         html += '<button type="button" class="h-ward-item' + (on ? ' on' : '') + (open ? '' : ' locked') + '" data-id="' + it.id + '">' +
@@ -272,6 +311,19 @@
       card.innerHTML = html;
 
       card.querySelector('.h-ward-close').onclick = function () { snd('tap'); m.remove(); };
+      /* צבע סטודיו */
+      Array.prototype.forEach.call(card.querySelectorAll('.h-swatch'), function (b) {
+        b.onclick = function () { state.outfit.colors = state.outfit.colors || {}; state.outfit.colors[b.dataset.slot] = b.dataset.color; wear(b.dataset.slot, b.dataset.slot + '_custom'); snd('sparkle'); render(); };
+      });
+      /* 🎲 הפתעה: תחפושת אקראית מכל מה שפתוח */
+      card.querySelector('.surprise').onclick = function () {
+        Object.keys(HeroAvatar.CATALOG).forEach(function (slot) {
+          var open = HeroAvatar.CATALOG[slot].filter(function (it) { return state.unlocked.indexOf(it.id) >= 0; });
+          if (open.length) state.outfit[slot] = open[Math.floor(Math.random() * open.length)].id;
+        });
+        save(); window.dispatchEvent(new CustomEvent('hero:outfit', { detail: state.outfit }));
+        snd('ding'); say('תחפושת הפתעה!'); render();
+      };
       Array.prototype.forEach.call(card.querySelectorAll('.h-ward-tab'), function (b) {
         b.onclick = function () { snd('bubble'); activeSlot = b.dataset.slot; render(); };
       });
@@ -302,6 +354,13 @@
     '.h-ward-item .ico{font-size:40px;line-height:1}.h-ward-item .nm{font-weight:800;font-size:16px;color:var(--h-ink)}.h-ward-item .lv{font-size:13px;font-weight:700;color:var(--h-text-soft)}' +
     '.h-ward-item.on{background:linear-gradient(180deg,#fff3b0,#ffc93c);box-shadow:0 4px 0 var(--h-ink),0 0 0 4px rgba(255,46,147,.5)}' +
     '.h-ward-item.locked{background:#ece6f7;opacity:.8}' +
+    '.h-ward-tab.studio{background:linear-gradient(90deg,#ffe1f1,#e1f6ff)}.h-ward-tab.studio.on{background:var(--h-gold)}' +
+    '.h-ward-tab.surprise{background:linear-gradient(180deg,#b6ffdc,#3ff2b0)}' +
+    '.h-ward-grid.studio-grid{grid-template-columns:1fr;gap:14px}' +
+    '.h-studio-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border:3px solid var(--h-ink);border-radius:18px;background:#fff}' +
+    '.h-studio-row b{min-width:62px;font:900 18px/1 var(--h-font);color:var(--h-ink)}' +
+    '.h-swatch{width:42px;height:42px;border:3px solid var(--h-ink);border-radius:50%;cursor:pointer;box-shadow:0 3px 0 var(--h-ink);transition:transform .12s var(--h-spring)}' +
+    '.h-swatch.on{transform:scale(1.18);box-shadow:0 3px 0 var(--h-ink),0 0 0 4px var(--h-gold)}' +
     '@media (max-width:760px){.h-ward-body{grid-template-columns:1fr}.h-ward-hero svg{max-height:34vh}}';
   document.head.appendChild(st);
 
@@ -309,6 +368,8 @@
   window.HeroRewards = {
     award: award,
     pow: pow,
+    giftAvailable: giftAvailable,
+    claimGift: claimGift,
     mountHUD: mountHUD,
     refresh: refreshHUDs,
     openWardrobe: openWardrobe,

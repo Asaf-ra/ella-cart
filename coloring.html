@@ -6,12 +6,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="mobile-web-app-capable" content="yes" />
-<meta name="theme-color" content="#b28dff" />
+<meta name="theme-color" content="#2a1260" />
 <meta name="apple-mobile-web-app-title" content="ציור קסם" />
 <title>ציור קסם — העולם של אלה</title>
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
 <link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<link rel="stylesheet" href="shared/theme.css" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 100%; height: 100%; overflow: hidden; }
@@ -88,6 +89,22 @@
     display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .gal-item svg, .gal-item img { max-width: 92%; max-height: 92%; }
   .gal-empty { grid-column: 1 / -1; font-size: 30px; color: #5a3d5c; text-align: center; padding: 30px; }
+
+  /* ===== סטודיו הציור של הגיבורה — שכבת עיצוב 2026 (דורסת את העיצוב הבהיר) ===== */
+  body { background: radial-gradient(55% 60% at 85% 8%, rgba(255,46,147,.4), transparent 70%), linear-gradient(170deg, #1d0b4a, #3a1177 55%, #6a1b8f); font-family: var(--h-font); }
+  .char-thumb { background: #fffaf0; border: 3px solid var(--h-ink); box-shadow: 0 4px 0 var(--h-ink); }
+  .char-thumb.active { background: #fff3b0; box-shadow: 0 4px 0 var(--h-ink), 0 0 0 4px var(--h-magenta); }
+  #chars { overflow-x: auto; scrollbar-width: none; padding: 6px 4px; max-width: calc(100vw - 600px); }
+  #chars::-webkit-scrollbar { display: none; }
+  .char-thumb { flex: 0 0 auto; }
+  .tool-btn { background: #fffaf0; border: 3px solid var(--h-ink); box-shadow: 0 4px 0 var(--h-ink); }
+  .tool-btn.active { background: linear-gradient(180deg, #ffd95a, #ff9f1c); box-shadow: 0 4px 0 var(--h-ink), 0 0 0 4px rgba(255,201,60,.5); }
+  .swatch { border: 4px solid var(--h-ink); box-shadow: 0 4px 0 var(--h-ink); }
+  .swatch.active { border-color: #fff; box-shadow: 0 0 0 4px var(--h-ink), 0 0 18px rgba(255,255,255,.7); }
+  #stage { background: #fffaf0; border: 5px solid var(--h-ink); box-shadow: 7px 8px 0 var(--h-ink), 0 20px 40px rgba(8,2,26,.45); }
+  #galleryBox { border: 5px solid var(--h-ink); box-shadow: 7px 8px 0 var(--h-ink); background: #fffaf0; }
+  #gallery { background: radial-gradient(circle, rgba(58,17,119,.8), rgba(10,4,30,.92)); }
+  .gal-item { border: 3px solid var(--h-ink); }
 </style>
 </head>
 <body>
@@ -118,6 +135,8 @@
 <script src="js/audio.js"></script>
 <script src="shared/kids-ui.js"></script>
 <script src="shared/wallet.js"></script>
+<script src="shared/hero-avatar.js"></script>
+<script src="shared/hero-rewards.js"></script>
 <script src="js/coloring.js"></script>
 <script>
   window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });

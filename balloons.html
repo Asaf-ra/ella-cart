@@ -6,13 +6,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="mobile-web-app-capable" content="yes" />
-<meta name="theme-color" content="#ff7eb9" />
+<meta name="theme-color" content="#2a1260" />
 <meta name="apple-mobile-web-app-title" content="בלונים" />
 <title>בלונים — העולם של אלה</title>
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
 <link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
 <link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="shared/theme.css" />
+<!-- תחתית הדף בצבע העיר — בלי פס בהיר מתחת לקנבס -->
+<style>html,body{background:linear-gradient(180deg,#2a1260 0%,#6a1b8f 30%,#ff5d8f 62%,#ffb36b 80%,#2a1260 80.1%,#1d0b4a 100%)}</style>
 </head>
 <body>
 
@@ -27,6 +30,8 @@
 <script src="js/audio.js"></script>
 <script src="shared/kids-ui.js"></script>
 <script src="shared/wallet.js"></script>
+<script src="shared/hero-avatar.js"></script>
+<script src="shared/hero-rewards.js"></script>
 <script src="js/balloons.js"></script>
 <script>
   window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });

@@ -183,6 +183,58 @@
     .celebration-card h2 { font-weight: 900; color: var(--h-ink); }
     .celebration-card button { border: 4px solid var(--h-ink); background: linear-gradient(180deg, #ffd95a, #ff9f1c); color: var(--h-ink); box-shadow: 0 5px 0 var(--h-ink); font-family: var(--h-font); }
 
+    /* --- פרק ט: שורת הפרקים --- */
+    .lesson-head { gap: 10px; }
+    .chapter-strip { display: flex; gap: 6px; flex: 1; justify-content: center; min-width: 0; }
+    .chapter { position: relative; display: grid; justify-items: center; align-content: center; gap: 1px; width: clamp(58px, 6.8vw, 84px); min-height: 58px; padding: 4px 2px;
+      border: 3px solid var(--h-ink); border-radius: 14px; background: #fff; color: var(--h-ink); font-family: var(--h-font); cursor: pointer; box-shadow: 0 3px 0 var(--h-ink); transition: transform .12s var(--h-spring); }
+    .chapter b { font-size: 18px; line-height: 1; }
+    /* שם הפרק המלא — עד 2 שורות */
+    .chapter small { font-size: 10px; font-weight: 700; line-height: 1.05; max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; padding: 0 2px; }
+    .chapter.done { background: linear-gradient(180deg, #fff3b0, #ffc93c); }
+    .chapter.cur { background: linear-gradient(180deg, var(--h-pink), var(--h-magenta)); color: #fff; transform: translateY(-3px); box-shadow: 0 5px 0 var(--h-ink), 0 0 16px rgba(255,46,147,.5); }
+    .chapter.locked { background: #ece6f7; color: #8a7fa6; }
+    .chapter:active { transform: scale(.94); }
+    .course-stars { gap: 1px; font-size: clamp(9px, 1vw, 12px); }
+
+    /* --- פרק י: פאזל גרירה --- */
+    .prompt-card.pz-mode { grid-template-columns: 1fr; }
+    .prompt-card.pz-mode .mascot-wrap { display: none; }
+    .prompt-card.pz-mode .prompt-content { display: grid; grid-template-rows: auto 1fr auto; height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
+    .prompt-card.pz-mode .helper { font-size: clamp(12px, 1.3vw, 15px); margin-top: 2px; }
+    .prompt-card.pz-mode .instruction { font-size: clamp(17px, 2vw, 24px); }
+    .pz-zone { width: 100%; display: flex; gap: clamp(10px, 1.8vw, 22px); align-items: center; justify-content: center; min-height: 0; height: 100%; margin: 4px 0; }
+    .pz-hidden { display: none !important; }
+    .pz-board { position: relative; flex: 0 0 auto; height: min(100%, 36vh); max-height: 320px; min-height: 140px; aspect-ratio: 4 / 3; border: 4px solid var(--h-ink); border-radius: 14px; overflow: hidden; background: #fff; box-shadow: 0 6px 0 var(--h-ink); }
+    .pz-ghost, .pz-ghost svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .pz-ghost { filter: grayscale(.55); transition: opacity .5s ease, filter .5s ease; }
+    .pz-board.complete .pz-ghost { filter: none; }
+    .pz-board.complete { animation: pz-done .8s var(--h-spring); box-shadow: 0 6px 0 var(--h-ink), 0 0 34px rgba(255,201,60,.9); }
+    @keyframes pz-done { 40% { transform: scale(1.05) rotate(-1deg); } }
+    .pz-slot { position: absolute; box-shadow: inset 0 0 0 1.5px rgba(27,16,54,.28); }
+    .pz-slot.over { background: rgba(255,201,60,.4); box-shadow: inset 0 0 0 4px var(--h-gold); }
+    .pz-slot.hint { animation: pz-hint .5s ease-in-out 5 alternate; }
+    @keyframes pz-hint { to { background: rgba(255,46,147,.35); box-shadow: inset 0 0 0 4px var(--h-magenta); } }
+    .pz-tray { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 8px; width: clamp(130px, 22vw, 260px); max-height: min(100%, 36vh); overflow: auto; padding: 6px; border: 3px dashed rgba(27,16,54,.25); border-radius: 16px; align-content: start; }
+    .pz-piece { border: 3px solid var(--h-ink); border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 3px 0 var(--h-ink); touch-action: none; cursor: grab; transition: transform .12s var(--h-spring); }
+    .pz-piece svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+    .pz-piece.dragging { position: fixed; z-index: 9000; cursor: grabbing; transform: scale(1.06) rotate(-2deg); box-shadow: 0 16px 28px rgba(10,4,30,.45); transition: none; }
+    .pz-piece.sel { outline: 5px solid var(--h-gold); outline-offset: 2px; transform: scale(.95); }
+    .pz-piece.shake { animation: answer-no .32s ease; }
+    .pz-slot .pz-piece.placed { width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; cursor: default; animation: pz-snap .35s var(--h-spring); }
+    @keyframes pz-snap { from { transform: scale(1.2); } }
+
+    /* --- פרק יא: רכיבים נוספים לפרקים --- */
+    .count-item.sm { width: clamp(28px, 3.4vw, 42px); height: clamp(28px, 3.4vw, 42px); font-size: clamp(18px, 2.4vw, 28px); border-radius: 12px; }
+    .ten-bar { display: grid; place-items: center; font-size: clamp(30px, 4vw, 44px); padding: 2px 6px; border: 3px solid var(--h-ink); border-radius: 12px; background: #fff3b0; }
+    .answer-swatch.big { width: clamp(52px, 6vw, 74px); height: clamp(52px, 6vw, 74px); border: 4px solid var(--h-ink); border-radius: 18px; }
+    .grow-step { display: inline-grid; place-items: center; min-width: 40px; padding: 4px 8px; margin: 0 4px; border: 3px solid var(--h-ink); border-radius: 12px; background: #fff; color: var(--h-magenta); font-size: clamp(16px, 2vw, 24px); letter-spacing: 2px; }
+    .target.bars { flex-direction: column; align-items: stretch; width: min(520px, 100%); gap: 14px; }
+    .len-bar { height: 34px; border: 4px solid var(--h-ink); border-radius: 999px; box-shadow: 0 4px 0 var(--h-ink); }
+    .len-chip { width: 64px; height: 28px; border: 3px solid var(--h-ink); border-radius: 999px; }
+    .mem-letter { font: 900 clamp(26px, 3.6vw, 40px)/1 var(--h-font); color: var(--h-ink); }
+    .mem-dots { font-size: clamp(11px, 1.4vw, 16px); line-height: 1.1; color: var(--h-magenta); word-break: break-all; max-width: 80%; text-align: center; }
+
     /* --- פרק ח: מסכים נמוכים (אייפד מיני / טלפון לרוחב) --- */
     @media (max-width:980px) and (orientation:landscape) {
       .learning-shell { height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 74px); }
@@ -214,7 +266,7 @@
         <nav class="course-list" id="courseList"></nav><div class="rail-footer">אין לחץ — נסו שוב כמה שרוצים.<br />כל הכבוד על כל ניסיון! ✨</div>
       </aside>
       <section class="lesson-stage" aria-live="polite">
-        <div class="lesson-head"><div class="lesson-name"><div><span class="lesson-kicker" id="lessonKicker">תחנה 1 במסע</span><strong class="lesson-title" id="lessonTitle">סופרים ביחד</strong></div></div><button class="listen-button" id="listenButton" type="button">🔊 הקשיבו</button></div>
+        <div class="lesson-head"><div class="lesson-name"><div><span class="lesson-kicker" id="lessonKicker">תחנה 1 במסע</span><strong class="lesson-title" id="lessonTitle">סופרים ביחד</strong></div></div><nav class="chapter-strip" id="chapterStrip" aria-label="פרקים"></nav><button class="listen-button" id="listenButton" type="button">🔊 הקשיבו</button></div>
         <div class="prompt-card"><div class="mascot-wrap"><div class="mascot-hero" id="mascotHero" aria-hidden="true"></div><div class="mascot" id="mascot" aria-hidden="true">🦄</div></div><div class="prompt-content"><div class="instruction" id="instruction">כמה פירות יש כאן?</div><div class="target" id="target"></div><div class="helper" id="helper">נסו לספור לאט בקול.</div></div></div>
         <div class="answer-grid" id="answerGrid" aria-label="בחירת התשובה"></div>
         <div class="bottom-row"><div class="feedback" id="feedback">לחצו על התשובה שנראית לכם נכונה.</div><button class="next-button" id="nextButton" type="button" disabled>שאלה חדשה</button></div>
@@ -225,7 +277,7 @@
     <div class="rotate-message"><div class="rotate-icon">📱</div><strong>בואו נסובב לרוחב</strong><span>אקדמיית הגיבורים נבנתה במיוחד למסך הרחב של האייפד.</span></div>
   </div>
   <script src="shared/kids-ui.js"></script><script src="shared/wallet.js"></script><script src="js/audio.js"></script>
-  <script src="shared/hero-avatar.js"></script><script src="shared/hero-rewards.js"></script><script src="js/academy-modules.js"></script>
+  <script src="shared/hero-avatar.js"></script><script src="shared/hero-rewards.js"></script><script src="js/academy-puzzle.js"></script><script src="js/academy-modules.js"></script>
   <script>
     (function(){
       'use strict';
@@ -244,28 +296,60 @@
       const foods=[{emoji:'🍎',he:'תפוח',en:'Apple'},{emoji:'🍌',he:'בננה',en:'Banana'},{emoji:'🍓',he:'תות',en:'Strawberry'},{emoji:'🍕',he:'פיצה',en:'Pizza'},{emoji:'🥕',he:'גזר',en:'Carrot'},{emoji:'🍞',he:'לחם',en:'Bread'},{emoji:'🧀',he:'גבינה',en:'Cheese'},{emoji:'🍪',he:'עוגייה',en:'Cookie'}];
       const puzzleScenes=[{name:'האריה',emoji:'🦁',background:'linear-gradient(135deg,#ffc45d,#ff8f7f 56%,#a68cff)'},{name:'החד-קרן',emoji:'🦄',background:'linear-gradient(135deg,#78d7ff,#b28dff 56%,#ff98be)'},{name:'הכלבלב',emoji:'🐶',background:'linear-gradient(135deg,#73dfb7,#7bbdff 55%,#ffe070)'},{name:'החללית',emoji:'🚀',background:'linear-gradient(135deg,#93a5ff,#6759c6 56%,#ff9ac3)'}];
       /* ברירות מחדל נבנות מרשימת התחנות — כך כל תחנה חדשה מקבלת מקום בשמירה אוטומטית. grade: 'young'=5–6, 'big'=7–8 */
-      function defaults(){const progress={},completed={};Object.keys(modules).forEach(function(k){progress[k]=0;completed[k]=false});return{active:'numbers',grade:'young',stars:0,totalCorrect:0,progress:progress,completed:completed}}
-      function load(){try{const saved=JSON.parse(localStorage.getItem(SAVE_KEY));if(!saved)return defaults();const base=defaults();return{active:modules[saved.active]?saved.active:base.active,grade:saved.grade==='big'?'big':'young',stars:Math.max(0,Number(saved.stars)||0),totalCorrect:Math.max(0,Number(saved.totalCorrect)||0),progress:Object.assign(base.progress,saved.progress||{}),completed:Object.assign(base.completed,saved.completed||{})}}catch(error){return defaults()}}
+      function defaults(){const progress={},completed={};Object.keys(modules).forEach(function(k){progress[k]=0;completed[k]=false});return{active:'numbers',grade:'young',stars:0,totalCorrect:0,progress:progress,completed:completed,chap:{young:{},big:{}}}}
+      /* migrateChap — מבנה פרקים: chap[רמה][תחנה] = {open: הפרק הפתוח הגבוה, cur: הפרק הנבחר, stars: כוכבים לכל פרק}.
+         שמירה ישנה (בלי פרקים): הכוכבים של כל תחנה עוברים לפרק 1 ברמת הקטנים, ותחנה שהושלמה פותחת את פרק 2 */
+      function migrateChap(saved){if(saved.chap&&typeof saved.chap==='object')return{young:saved.chap.young||{},big:saved.chap.big||{}}
+const young={};Object.keys(saved.progress||{}).forEach(function(k){const p=Math.min(3,Number(saved.progress[k])||0);if(p>0)young[k]={open:p>=3?1:0,cur:p>=3?1:0,stars:[p,0,0,0,0]}});return{young:young,big:{}}}
+      function load(){try{const saved=JSON.parse(localStorage.getItem(SAVE_KEY));if(!saved)return defaults();const base=defaults();return{active:modules[saved.active]?saved.active:base.active,grade:saved.grade==='big'?'big':'young',chap:migrateChap(saved),stars:Math.max(0,Number(saved.stars)||0),totalCorrect:Math.max(0,Number(saved.totalCorrect)||0),progress:Object.assign(base.progress,saved.progress||{}),completed:Object.assign(base.completed,saved.completed||{})}}catch(error){return defaults()}}
       const state=load();let currentRound=null,locked=false;
       const el={courseList:document.getElementById('courseList'),journeyFill:document.getElementById('journeyFill'),journeyScore:document.getElementById('journeyScore'),profileLevel:document.getElementById('profileLevel'),lessonKicker:document.getElementById('lessonKicker'),lessonTitle:document.getElementById('lessonTitle'),mascot:document.getElementById('mascot'),instruction:document.getElementById('instruction'),helper:document.getElementById('helper'),target:document.getElementById('target'),answers:document.getElementById('answerGrid'),feedback:document.getElementById('feedback'),next:document.getElementById('nextButton'),listen:document.getElementById('listenButton'),sound:document.getElementById('soundButton'),celebration:document.getElementById('celebration'),celebrationTitle:document.getElementById('celebrationTitle'),celebrationText:document.getElementById('celebrationText')};
       const save=function(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state))}catch(error){}};
       const random=function(list){return list[Math.floor(Math.random()*list.length)]};
       function shuffle(list){const copy=list.slice();for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]]}return copy}
       function choicesFor(correct,pool,count){return shuffle([correct].concat(shuffle(pool.filter(function(item){return item!==correct})).slice(0,count-1)))}
-      function say(text){if(window.Voice)Voice.say(text,{rate:.9,pitch:1.18})}function sound(name){if(window.Sound&&Sound[name])Sound[name]()}
-      function readParts(parts){if(!parts||!parts.length)return;if(window.Sound&&!Sound.isOn())return;if(!('speechSynthesis'in window)||!window.SpeechSynthesisUtterance){say(parts.map(function(part){return part.text}).join(', '));return}const synth=window.speechSynthesis;let index=0;synth.cancel();function next(){if(index>=parts.length)return;const part=parts[index++],utterance=new SpeechSynthesisUtterance(part.text);utterance.lang=part.lang||'he-IL';utterance.rate=.82;utterance.pitch=1.12;utterance.onend=next;utterance.onerror=next;synth.speak(utterance)}next()}
+      /* say / readParts — כל ההקראה עוברת דרך Voice (audio.js): תור, ניקוי אימוג'י וסימנים, קול עברי/אנגלי נכון */
+      function say(text,opts){if(window.Voice)Voice.say(text,Object.assign({rate:.92,pitch:1.15},opts||{}))}function sound(name){if(window.Sound&&Sound[name])Sound[name]()}
+      function readParts(parts,opts){if(window.Voice&&parts&&parts.length)Voice.read(parts,opts||{})}
+      /* speakPrompt — מקריא את השאלה (וגם את תוכן השאלה, q, אם יש) — בלי לגלות את התשובה */
+      function speakPrompt(interrupt){if(!currentRound)return;const parts=[{text:currentRound.speak||el.instruction.textContent,lang:'he-IL'}].concat(currentRound.q||[]);readParts(parts,{interrupt:!!interrupt})}
       function completedCount(){return Object.values(state.completed).filter(Boolean).length}function levelText(){const done=completedCount(),total=Object.keys(modules).length;return !done?'גיבורה מתחילה':done<3?'גיבורה בהתהוות':done<total?'גיבורת-על של למידה':'כל האקדמיה הושלמה!'}
-      function starsHTML(key){return[0,1,2].map(function(index){return'<span class="'+(state.progress[key]>index?'earned':'')+'">★</span>'}).join('')}
+      /* starsHTML — 5 נקודות: פרק שהושלם ברמה הנוכחית מסומן בכוכב זהוב */
+      function starsHTML(key){const c=chapOf(key);return[0,1,2,3,4].map(function(i){return'<span class="'+(c.stars[i]>=GOAL?'earned':'')+'">★</span>'}).join('')}
       function buildCourseList(){el.courseList.innerHTML='';Object.keys(modules).forEach(function(key){const info=modules[key],item=document.createElement('button');item.type='button';item.dataset.key=key;item.className='course';item.style.setProperty('--course-color',info.color);item.innerHTML='<span class="course-icon">'+info.icon+'</span><span><span class="course-name">'+info.name+'</span><span class="course-sub">'+info.subtitle+'</span></span><span class="course-stars">'+starsHTML(key)+'</span>';item.addEventListener('click',function(){select(key)});el.courseList.appendChild(item)})}
       function updateCourseList(){Array.from(el.courseList.children).forEach(function(item){const key=item.dataset.key,active=key===state.active;item.classList.toggle('active',active);item.setAttribute('aria-pressed',active?'true':'false');item.querySelector('.course-stars').innerHTML=starsHTML(key)})}
-      function chrome(){const progress=state.progress[state.active],module=modules[state.active],total=Object.keys(modules).length;el.journeyFill.style.width=(completedCount()/total*100)+'%';el.journeyScore.textContent=completedCount()+'/'+total;el.profileLevel.textContent=levelText()+' · ⭐ '+state.stars;el.lessonKicker.textContent='תחנה '+(Object.keys(modules).indexOf(state.active)+1)+' במסע · '+progress+'/'+GOAL+' כוכבים';el.lessonTitle.textContent=module.title;el.mascot.textContent=module.mascot;updateCourseList()}
+      function chrome(){const progress=state.progress[state.active],module=modules[state.active],total=Object.keys(modules).length;el.journeyFill.style.width=(completedCount()/total*100)+'%';el.journeyScore.textContent=completedCount()+'/'+total;el.profileLevel.textContent=levelText()+' · ⭐ '+state.stars;{const c=chapOf(state.active),list=chapterList(state.active);el.lessonKicker.textContent='תחנה '+(Object.keys(modules).indexOf(state.active)+1)+(list?' · פרק '+(c.cur+1)+': '+list[c.cur].n+' · '+c.stars[c.cur]+'/'+GOAL+' ⭐':'')};el.lessonTitle.textContent=module.title;el.mascot.textContent=module.mascot;updateCourseList()}
       function resetMessage(){el.feedback.className='feedback';el.feedback.textContent='לחצו על התשובה שנראית לכם נכונה.';el.next.disabled=true;el.next.textContent='שאלה חדשה'}
       function select(key){if(!modules[key]||(key===state.active&&currentRound))return;state.active=key;save();chrome();round();sound('bubble')}
       /* ===== חיבור לאקדמיה: רמת קושי, api לתחנות החדשות, פרסי גיבורה ===== */
       /* big() — האם נבחרה רמת 7–8 */
       function big(){return state.grade==='big'}
+      /* CH — מספר הפרקים בכל תחנה; chapOf(key) — נתוני הפרקים של התחנה ברמה הנוכחית (נוצרים לפי הצורך) */
+      const CH=(window.AcademyModules&&AcademyModules.CH_COUNT)||5
+      function chapOf(key){const g=state.grade;state.chap[g]=state.chap[g]||{};let c=state.chap[g][key];if(!c){c={open:0,cur:0,stars:[0,0,0,0,0]};state.chap[g][key]=c}if(c.cur>Math.min(c.open,CH-1))c.cur=Math.min(c.open,CH-1);return c}
+      /* chapterList(key) — רשימת 5 הפרקים (שם + פונקציה) של התחנה ברמה הנוכחית */
+      function chapterList(key){const set=window.AcademyModules&&AcademyModules.CHAPTERS[key];return set?set[state.grade]:null}
+      /* scoreStar — כוכב על הצלחה: מעדכן את הפרק, פותח את הבא כשמגיעים ל-3, ומעניק מטבע ואנרגיה */
+      function scoreStar(origin,base){const key=state.active,c=chapOf(key),i=c.cur;state.stars++;state.totalCorrect++;c.stars[i]=Math.min(GOAL,c.stars[i]+1)
+let chapterDone=false,stationDone=false
+if(c.stars[i]>=GOAL&&c.open<=i){chapterDone=true;if(i<CH-1)c.open=i+1;else{c.open=CH;stationDone=true;state.completed[key]=true}}
+state.progress[key]=c.stars.filter(function(x){return x>=GOAL}).length
+reward(origin,chapterDone,base);save();chrome();return{chapterDone:chapterDone,stationDone:stationDone,index:i}}
+      /* praise — משפטי עידוד מתחלפים */
+      const PRAISE=['כל הכבוד!','מעולה!','יופי אלה!','גיבורה!','וואו!','איזו אלופה!','בול!','מדהים!']
+      function praise(){return random(PRAISE)}
+      /* renderChapters — שורת 5 הפרקים: ✓ הושלם, מספר פתוח, 🔒 נעול */
+      function renderChapters(){const strip=document.getElementById('chapterStrip'),list=chapterList(state.active);if(!strip)return;strip.innerHTML='';if(!list)return
+const c=chapOf(state.active)
+list.forEach(function(ch,i){const b=document.createElement('button');b.type='button';const done=c.stars[i]>=GOAL,locked=i>c.open
+b.className='chapter'+(i===c.cur?' cur':'')+(done?' done':'')+(locked?' locked':'')
+b.title=ch.n;b.setAttribute('aria-label','פרק '+(i+1)+': '+ch.n)
+b.innerHTML='<b>'+(locked?'🔒':done?'✓':(i+1))+'</b><small>'+ch.n+'</small>'
+b.addEventListener('click',function(){if(locked){sound('sad');say('צריך לסיים את הפרק הקודם!');return}c.cur=i;save();sound('bubble');round()})
+strip.appendChild(b)})}
       /* api — הכלים שהדף מעביר ל-js/academy-modules.js */
       const api={el:el,answer:answer,setRound:function(r){currentRound=r},random:random,shuffle:shuffle,choicesFor:choicesFor,big:big,
+        chapter:function(){return chapOf(state.active).cur},read:function(parts){readParts(parts)},
         win:function(origin,text,speech){finishCustom(origin,text,speech)},
         feedback:function(cls,text){el.feedback.className='feedback'+(cls?' '+cls:'');el.feedback.textContent=text},
         say:say,sound:sound}
@@ -274,28 +358,19 @@
       /* reward — מטבע לארנק + אנרגיית גיבורה (בסיס + 3 בונוס כשתחנה הושלמה) */
       function reward(origin,justCompleted,base){if(window.Wallet)Wallet.add(1);heroJump();if(window.HeroRewards)HeroRewards.award(base+(justCompleted?3:0),origin);if(window.HeroRewards)HeroRewards.refresh()}
       /* finishCustom — סיום משימה מיוחדת מתוך מודול (למשל סיימון במוזיקה) */
-      function finishCustom(origin,text,speech){if(locked)return
-locked=true
-const key=state.active
-state.stars++
-state.totalCorrect++
-state.progress[key]=Math.min(GOAL,state.progress[key]+1)
-let justCompleted=false
-if(state.progress[key]>=GOAL&&!state.completed[key]){state.completed[key]=true
-justCompleted=true}reward(origin,justCompleted,2)
-save()
-chrome()
-el.feedback.className='feedback good'
-el.feedback.textContent=justCompleted?'וואו! התחנה הושלמה!':text
-el.next.disabled=false
-el.next.textContent='עוד אחד ←'
-say(justCompleted?'וואו, סיימת את התחנה!':speech)
-sound('happy')
-burst(origin)
-if(justCompleted)setTimeout(function(){celebrate(key)},430)}
+      function finishCustom(origin,text,speech){if(locked)return;locked=true
+const r=scoreStar(origin,2)
+el.feedback.className='feedback good';el.feedback.textContent=r.chapterDone?'וואו! הפרק הושלם!':text
+el.next.disabled=false;el.next.textContent='עוד אחד ←'
+say(r.chapterDone?'וואו, סיימת את הפרק!':speech);sound('happy');burst(origin)
+if(r.chapterDone)setTimeout(function(){celebrate(state.active,r)},430)}
       function round(){locked=false;resetMessage();el.target.innerHTML='';el.answers.innerHTML='';el.answers.className='answer-grid';
 /* תחנות חדשות ורמת 7–8 מגיעות מהמודול החיצוני; זיכרון ופאזלים מטפלים ברמה בעצמם */
-if(window.AcademyModules){const M=AcademyModules;if(M.rounds[state.active])return M.rounds[state.active](api);if(big()&&M.bigRounds[state.active])return M.bigRounds[state.active](api)}
+document.querySelector('.prompt-card').classList.remove('pz-mode');el.answers.style.gridTemplateColumns=''
+/* כל התחנות רצות לפי פרקים מתוך js/academy-modules.js; הקוד הישן למטה נשאר כגיבוי בלבד */
+{const list=chapterList(state.active);if(list){const c=chapOf(state.active);renderChapters();chrome();list[c.cur].f(api)
+/* הקראה אוטומטית של כל שאלה חדשה (במוזיקה לא — שם הצלילים הם השאלה) */
+if(state.active!=='music')speakPrompt(true);return}}
 if(state.active==='numbers')numberRound();if(state.active==='colors')colorRound();if(state.active==='shapes')shapeRound();if(state.active==='patterns')patternRound();if(state.active==='letters')letterRound();if(state.active==='english')englishRound();if(state.active==='animals')wordRound(animals,'חיה');if(state.active==='food')wordRound(foods,'מאכל');if(state.active==='size')sizeRound();if(state.active==='memory')memoryRound();if(state.active==='puzzles')puzzleRound()}
       function answer(label,correct,extraClass,color){const button=document.createElement('button');button.type='button';button.className='answer'+(extraClass?' '+extraClass:'');if(color)button.style.setProperty('--answer-color',color);button.innerHTML=label;button.addEventListener('click',function(){choose(button,correct)});el.answers.appendChild(button)}
       function numberRound(){const kind=random(['count','count','count','sequence','compare']);if(kind==='sequence')return numberSequenceRound();if(kind==='compare')return numberCompareRound();return numberCountRound()}
@@ -317,15 +392,26 @@ if(state.active==='numbers')numberRound();if(state.active==='colors')colorRound(
       function renderPuzzle(){const puzzle=currentRound;if(!puzzle||!puzzle.board)return;el.answers.innerHTML='';puzzle.board.forEach(function(piece,index){const row=Math.floor(piece/3),col=piece%3,button=document.createElement('button');button.type='button';button.className='answer puzzle-piece'+(puzzle.selected===index?' selected':'');button.setAttribute('aria-label','חתיכת פאזל '+(index+1));button.innerHTML='<span class="puzzle-picture" style="background:'+puzzle.scene.background+';height:'+(puzzle.rows*100)+'%;transform:translate(-'+(col*100/3)+'%,-'+(row*100/puzzle.rows)+'%)"><span>'+puzzle.scene.emoji+'</span></span>';button.addEventListener('click',function(){choosePuzzlePiece(index,button)});el.answers.appendChild(button)})}
       function choosePuzzlePiece(index,button){const puzzle=currentRound;if(locked||!puzzle)return;sound('tap');if(puzzle.selected===null){puzzle.selected=index;el.feedback.className='feedback';el.feedback.textContent='מעולה. עכשיו בחרו חתיכה נוספת כדי להחליף ביניהן.';renderPuzzle();return}if(puzzle.selected===index){puzzle.selected=null;renderPuzzle();return}const first=puzzle.selected;[puzzle.board[first],puzzle.board[index]]=[puzzle.board[index],puzzle.board[first]];puzzle.selected=null;renderPuzzle();if(puzzle.board.every(function(value,place){return value===place}))setTimeout(function(){finishPuzzle(el.answers.children[index])},120);else{el.feedback.className='feedback';el.feedback.textContent='יפה! המשיכו להחליף חתיכות עד שהתמונה תהיה שלמה.'}}
       function finishPuzzle(origin){if(locked)return;locked=true;state.stars++;state.totalCorrect++;state.progress.puzzles=Math.min(GOAL,state.progress.puzzles+1);let justCompleted=false;if(state.progress.puzzles>=GOAL&&!state.completed.puzzles){state.completed.puzzles=true;justCompleted=true}reward(origin,justCompleted,2);save();chrome();el.feedback.className='feedback good';el.feedback.textContent=justCompleted?'איזו אליפות! תחנת הפאזלים הושלמה!':'הפאזל הושלם! קיבלתם כוכב חדש.';el.next.disabled=false;el.next.textContent='פאזל חדש ←';say(justCompleted?'וואו, סיימתם את תחנת הפאזלים!':'כל הכבוד, הפאזל הושלם!');sound('happy');burst(origin);if(justCompleted)setTimeout(function(){celebrate('puzzles')},430)}
-      function choose(button,correct){if(locked||button.classList.contains('wrong'))return;sound('tap');if(!correct){button.classList.add('wrong');el.feedback.className='feedback try';el.feedback.textContent='כמעט! הסתכלו שוב — אפשר לנסות תשובה אחרת.';say('כמעט, נסו שוב.');sound('sad');return}locked=true;Array.from(el.answers.children).forEach(function(item){item.classList.add('disabled')});button.classList.add('correct');state.stars++;state.totalCorrect++;state.progress[state.active]=Math.min(GOAL,state.progress[state.active]+1);let justCompleted=false;if(state.progress[state.active]>=GOAL&&!state.completed[state.active]){state.completed[state.active]=true;justCompleted=true}reward(button,justCompleted,1);save();chrome();el.feedback.className='feedback good';el.feedback.textContent=justCompleted?'וואו! התחנה הושלמה — פתחתם כוכב גדול!':(currentRound.success||'כל הכבוד! מצאתם את התשובה הנכונה!');el.next.disabled=false;el.next.textContent='ממשיכים הלאה ←';if(currentRound.read)readParts(currentRound.read);else say(justCompleted?'וואו, סיימתם את התחנה!':'כל הכבוד!');sound('happy');burst(button);if(justCompleted)setTimeout(function(){celebrate(state.active)},430)}
-      function celebrate(key){const done=completedCount(),allDone=done===Object.keys(modules).length;el.celebrationTitle.textContent=allDone?'כל המסע הושלם! 🌟':modules[key].name+' הושלמו!';el.celebrationText.textContent=allDone?'כל '+Object.keys(modules).length+' התחנות נוצצות. איזו גיבורה!':'אספתם 3 כוכבים בתחנת '+modules[key].name+'. התחנה הבאה כבר מחכה לכם.';el.celebration.classList.add('visible')}
+      function choose(button,correct){if(locked||button.classList.contains('wrong'))return;sound('tap');if(!correct){button.classList.add('wrong');el.feedback.className='feedback try';el.feedback.textContent='כמעט! הסתכלו שוב — אפשר לנסות תשובה אחרת.';say('כמעט! נסו תשובה אחרת.');sound('sad');return}locked=true;Array.from(el.answers.children).forEach(function(item){item.classList.add('disabled')});button.classList.add('correct')
+const r=scoreStar(button,1)
+el.feedback.className='feedback good';el.feedback.textContent=r.chapterDone?'וואו! הפרק הושלם!':(currentRound.success||praise())
+el.next.disabled=false;el.next.textContent='ממשיכים הלאה ←'
+/* מקריאים את אותו משפט שמוצג (או את ההסבר המלא, read, כשיש בו אנגלית/הגייה) */
+if(r.chapterDone)say('וואו! הפרק הושלם!',{interrupt:true});else if(currentRound.read)readParts([{text:(currentRound.success&&/^[\u0590-\u05FF]/.test(currentRound.success))?currentRound.success.split('!')[0]+'!':praise(),lang:'he-IL'}].concat(currentRound.read),{interrupt:true});else say(el.feedback.textContent,{interrupt:true})
+sound('happy');burst(button)
+if(r.chapterDone)setTimeout(function(){celebrate(state.active,r)},430)}
+      /* celebrate — חגיגת פרק: מציג איזה פרק הושלם ואיזה נפתח, ומעביר לפרק הבא */
+      function celebrate(key,r){const list=chapterList(key)||[],c=chapOf(key),i=r?r.index:0
+if(r&&r.stationDone){el.celebrationTitle.textContent=modules[key].name+': כל '+CH+' הפרקים! 🏆';el.celebrationText.textContent='סיימת את כל התחנה! אפשר לעבור לתחנה אחרת או לנסות את רמת '+(big()?'הקטנים':'הגדולים')+'.'}
+else{el.celebrationTitle.textContent='פרק '+(i+1)+' הושלם! 🎉';el.celebrationText.textContent=list[i+1]?'נפתח פרק '+(i+2)+': '+list[i+1].n+' 🔓':'כל הכבוד!';if(i+1<CH)c.cur=i+1;save()}
+el.celebration.classList.add('visible')}
       function burst(origin){const rect=origin.getBoundingClientRect(),palette=['#ffd34e','#ff83b2','#76dcae','#75c4ff','#a98eff'];for(let i=0;i<18;i++){const dot=document.createElement('i');dot.className='particle';dot.style.background=palette[i%palette.length];dot.style.left=rect.left+rect.width/2-5+'px';dot.style.top=rect.top+rect.height/2-5+'px';document.body.appendChild(dot);const angle=Math.PI*2*i/18,distance=75+Math.random()*110;dot.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+Math.cos(angle)*distance+'px,'+Math.sin(angle)*distance+'px) scale(.2)',opacity:0}],{duration:650,easing:'cubic-bezier(.2,.85,.3,1)'});setTimeout(function(){dot.remove()},700)}}
-      el.next.addEventListener('click',function(){if(!el.next.disabled)round()});el.listen.addEventListener('click',function(){if(currentRound&&currentRound.replay){currentRound.replay();sound('bubble');return}if(currentRound){if(currentRound.read)readParts(currentRound.read);else say(currentRound.speak);sound('bubble')}});el.sound.addEventListener('click',function(){if(window.Sound&&Sound.toggle){const on=Sound.toggle();el.sound.textContent=on?'🔊':'🔇';el.sound.classList.toggle('off',!on)}});document.getElementById('celebrationClose').addEventListener('click',function(){el.celebration.classList.remove('visible');round()});document.addEventListener('pointerdown',function(){if(window.Sound)Sound.unlock()},{once:true});if(window.KidsUI&&KidsUI.HomeButton)KidsUI.HomeButton.attach()
+      el.next.addEventListener('click',function(){if(!el.next.disabled)round()});el.listen.addEventListener('click',function(){if(currentRound&&currentRound.replay){speakPrompt(true);setTimeout(currentRound.replay,1200);sound('bubble');return}if(currentRound){speakPrompt(true);sound('bubble');return}if(currentRound){if(currentRound.read)readParts(currentRound.read);else say(currentRound.speak);sound('bubble')}});el.sound.addEventListener('click',function(){if(window.Sound&&Sound.toggle){const on=Sound.toggle();el.sound.textContent=on?'🔊':'🔇';el.sound.classList.toggle('off',!on)}});document.getElementById('celebrationClose').addEventListener('click',function(){el.celebration.classList.remove('visible');round()});document.addEventListener('pointerdown',function(){if(window.Sound)Sound.unlock()},{once:true});if(window.KidsUI&&KidsUI.HomeButton)KidsUI.HomeButton.attach()
 /* בורר רמת קושי: 🌱 קטנים 5–6 / 🚀 גדולים 7–8 (נשמר במכשיר) */
 const gradeBtn=document.getElementById('gradeButton')
 function gradeUI(){gradeBtn.innerHTML=big()?'🚀 גדולים <bdi dir="ltr">7–8</bdi>':'🌱 קטנים <bdi dir="ltr">5–6</bdi>';gradeBtn.classList.toggle('big',big())}
 gradeUI()
-gradeBtn.addEventListener('click',function(){state.grade=big()?'young':'big';save();gradeUI();sound('bubble');say(big()?'רמת גדולים! אתגר של גיבורות!':'רמת קטנים!');round()})
+gradeBtn.addEventListener('click',function(){state.grade=big()?'young':'big';save();gradeUI();updateCourseList();sound('bubble');say(big()?'רמת גדולים! אתגר של גיבורות!':'רמת קטנים!');round()})
 /* אלה גיבורת-העל: במיתוג, בכרטיס השאלה ובחלון החגיגה — מתעדכנת כשמחליפים תחפושת */
 function drawHeroes(){if(!window.HeroAvatar||!window.HeroRewards)return;const o=HeroRewards.outfit;document.getElementById('brandHero').innerHTML=HeroAvatar.svg(o);document.getElementById('mascotHero').innerHTML=HeroAvatar.svg(o);document.getElementById('celebrationHero').innerHTML=HeroAvatar.svg(o)}
 drawHeroes()

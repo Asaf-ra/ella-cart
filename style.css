@@ -18,7 +18,8 @@ html,body{
   width:100%; height:100%; overflow:hidden;
   font-family:"Varela Round","Heebo","Arial Rounded MT Bold",system-ui,sans-serif;
   color:var(--ink);
-  background:linear-gradient(180deg,#8fd4ff 0%, #b7e6ff 32%, var(--sky2) 68%, #d2f6e2 100%);
+  /* שמיים של שקיעה בעיר הגיבורים (ערכות נושא מהחנות דורסות למטה) */
+  background:linear-gradient(180deg,#2a1260 0%, #6a1b8f 30%, #ff5d8f 62%, #ffb36b 82%, #b9e8a8 95%, #1d0b4a 95.2%);
   touch-action:none; overscroll-behavior:none; position:fixed;
 }
 #game{ position:absolute; inset:0; }

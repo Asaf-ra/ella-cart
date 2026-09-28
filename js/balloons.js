@@ -132,6 +132,11 @@ class BalloonScene extends Phaser.Scene {
       }
     }
 
+    // עיר הגיבורים בשקיעה (כשאין "שמיים קסומים"): כוכבים וקו רקיע עם חלונות מוארים
+    if (!this.upg.sky) this.buildHeroCity(W, H);
+    // אלה גיבורת-העל טסה מדי פעם בשמיים
+    this.setupFlyingHero(W);
+
     // עננים רכים ברקע
     for (let i = 0; i < 3; i++) {
       const c = this.add.image(Phaser.Math.Between(0, W), 90 + i * 85, 'cloud')
@@ -142,12 +147,15 @@ class BalloonScene extends Phaser.Scene {
 
     // מונה פיצוצים חגיגי (לא ניקוד — רק שמחה)
     this.counter = this.add.text(W/2, 54, '🎈 0', {
-      fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '46px',
-      color: '#ffffff', fontStyle: 'bold'
+      fontFamily: 'Rubik, Varela Round, Heebo, sans-serif', fontSize: '50px',
+      color: '#ffffff', fontStyle: '900'
     }).setOrigin(0.5).setDepth(50);
-    this.counter.setShadow(0, 3, 'rgba(90,61,92,0.4)', 6);
+    this.counter.setStroke('#1b1036', 9); this.counter.setShadow(3, 4, '#ff2e93', 0, true, true);   // סגנון קומיקס
 
     // ארנק — המטבעות משותפים לכל המשחקים
+    const pill = this.add.graphics().setDepth(49);                     // כדור-מטבעות בסגנון קומיקס
+    pill.fillStyle(0x1b1036, 1); pill.fillRoundedRect(W - 236, 18, 200, 80, 40);
+    pill.fillStyle(0xfffaf0, 1); pill.fillRoundedRect(W - 231, 17, 190, 68, 34);
     this.add.image(W - 200, 54, 'coin').setDepth(50);
     this.coinText = this.add.text(W - 172, 54, '' + (typeof Wallet !== 'undefined' ? Wallet.coins : 0), {
       fontFamily: 'Varela Round, Heebo, sans-serif', fontSize: '40px', color: '#e09b00', fontStyle: 'bold'
@@ -186,6 +194,52 @@ class BalloonScene extends Phaser.Scene {
 
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('gesturestart', e => e.preventDefault());
+  }
+
+  /* buildHeroCity — כוכבים מנצנצים וקו רקיע סגול עם חלונות צהובים בתחתית המסך */
+  buildHeroCity(W, H) {
+    const stars = this.add.graphics().setDepth(0);
+    for (let i = 0; i < 40; i++) { stars.fillStyle(0xffffff, 0.4 + Math.random() * 0.6); stars.fillCircle(Math.random() * W, Math.random() * 260, Math.random() < 0.2 ? 2.6 : 1.5); }
+    this.tweens.add({ targets: stars, alpha: 0.5, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    const city = this.add.graphics().setDepth(1);
+    for (let x = 0, i = 0; x < W; i++) {
+      const w = 60 + (i * 37) % 50, h = 90 + (i * 71) % 170;
+      city.fillStyle(i % 2 ? 0x3b1a6e : 0x2a1260, 1); city.fillRect(x, H - h, w, h);
+      city.fillStyle(0xffd95a, 0.7);
+      for (let wy = H - h + 12; wy < H - 14; wy += 24) for (let wx = x + 9; wx < x + w - 10; wx += 18) if (Math.random() < 0.33) city.fillRect(wx, wy, 7, 10);
+      x += w;
+    }
+  }
+
+  /* setupFlyingHero — טקסטורה של אלה בתחפושת השמורה; כל ~16 שניות היא חוצה את השמיים.
+     נגיעה בה: ניצוצות + משפט עידוד (בלי השפעה על המשחק) */
+  setupFlyingHero(W) {
+    if (!window.HeroAvatar) return;
+    const img = new Image();
+    img.onload = () => {
+      if (!this.textures.exists('hero_fly')) this.textures.addImage('hero_fly', img);
+      const fly = () => {
+        const dir = Math.random() < 0.5 ? 1 : -1, y = Phaser.Math.Between(120, 300);
+        const h = this.add.image(dir > 0 ? -120 : W + 120, y, 'hero_fly').setDepth(5).setScale(0.36).setAngle(dir * 18);
+        h.setFlipX(dir < 0);
+        h.setInteractive();
+        h.once('pointerdown', () => { Sound.sparkle && Sound.sparkle(); Voice.say('אני אלה גיבורת-העל!'); this.sparkBurst.explode(20, h.x, h.y); this.heroPow(h.x, h.y, 'היי!'); });
+        this.tweens.add({ targets: h, y: y - 40, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+        this.tweens.add({ targets: h, x: dir > 0 ? W + 140 : -140, duration: 7000, onComplete: () => h.destroy() });
+      };
+      this.time.delayedCall(2500, fly);
+      this.time.addEvent({ delay: 16000, loop: true, callback: fly });
+    };
+    const outfit = window.HeroRewards ? HeroRewards.outfit : null;
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(HeroAvatar.svg(outfit).replace('<svg ', '<svg width="360" height="450" '));
+  }
+
+  /* heroPow — פיצוץ קומיקס (hero-rewards) במיקום משחקי: המרה מקואורדינטות משחק למסך */
+  heroPow(x, y, word) {
+    if (!window.HeroRewards) return;
+    const r = this.game.canvas.getBoundingClientRect(), k = r.width / DESIGN.w;
+    const px = r.left + x * k, py = r.top + y * k;
+    HeroRewards.pow({ getBoundingClientRect: () => ({ left: px, top: py, width: 0, height: 0 }) }, word);
   }
 
   /* קצב מסתגל: יותר פיצוצים ב-10 שניות האחרונות ⇒ בלונים מגיעים מהר יותר */
@@ -279,7 +333,7 @@ class BalloonScene extends Phaser.Scene {
     this.sparkBurst.explode(isMagic ? 26 : 12, c.x, c.y);
     this.cameras.main.shake(90, isMagic ? 0.007 : 0.004);
 
-    if (isMagic) { Voice.praise(); this.earnCoin(c.x, c.y); }            // בלון קסם — מטבע בונוס!
+    if (isMagic) { Voice.praise(); this.earnCoin(c.x, c.y); this.heroPow(c.x, c.y, 'קסם!'); }   // בלון קסם — מטבע בונוס + POW!
     else if (labelText) Voice.say(NUMBER_NAMES[labelText] || labelText); // מספר
     else Voice.say(col.name);                                            // שם הצבע
 

@@ -79,6 +79,11 @@
   /* ---------- פרק 5 — סרגל עליון ---------- */
   HeroRewards.mountHUD($('hudSlot'));
 
+  /* 5.0 תיבת הפתעה יומית — מופיעה רק אם עוד לא נפתחה היום */
+  var giftBtn = $('giftBtn');
+  if (HeroRewards.giftAvailable()) giftBtn.hidden = false;
+  giftBtn.addEventListener('click', function () { if (HeroRewards.claimGift(giftBtn)) giftBtn.hidden = true; });
+
   $('wardrobeBtn').addEventListener('click', function () {
     Sound.tap(); Voice.say('ארון התחפושות!');
     HeroRewards.openWardrobe();

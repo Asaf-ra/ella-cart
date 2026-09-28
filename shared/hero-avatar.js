@@ -6,6 +6,7 @@
    פרק 2 — שכבות הציור (מאחור לפנים): כוח → גלימה → רגליים → גוף →
            ידיים → סמל → ראש → מסכה → ניצוצות קדמיים.
    פרק 3 — HeroAvatar.svg(outfit) מחזיר מחרוזת SVG מוכנה להזרקה.
+   פריטים עם free:true פתוחים מההתחלה; צבעי סטודיו נשמרים ב-outfit.colors.
    הדמות מקורית לגמרי (לא דמות מוגנת); עוצבה בקווי דיו עבים כמו קומיקס.
    ===================================================================== */
 (function () {
@@ -18,41 +19,64 @@
       { id: 'cape_pink',    name: 'גלימה ורודה',    ico: '🩷', a: '#ff5fb0', b: '#c2187a' },
       { id: 'cape_galaxy',  name: 'גלימת גלקסיה',   ico: '🌌', a: '#6b3fe0', b: '#1d0b4a', stars: true },
       { id: 'cape_gold',    name: 'גלימת זהב',      ico: '👑', a: '#ffd95a', b: '#e08a00' },
-      { id: 'cape_rainbow', name: 'גלימת קשת',      ico: '🌈', rainbow: true }
+      { id: 'cape_rainbow', name: 'גלימת קשת',      ico: '🌈', rainbow: true },
+      { id: 'cape_sky',     name: 'גלימת שמיים',    ico: '☁️', a: '#5cc8ff', b: '#1a6fd6', free: true },
+      { id: 'cape_hearts',  name: 'גלימת לבבות',    ico: '💕', a: '#ff8fc4', b: '#e0418a', hearts: true, free: true }
     ],
     suit: [
       { id: 'suit_magenta', name: 'חליפת מג׳נטה',  ico: '💗', a: '#ff4fa3', b: '#b3126b', boot: '#ffc93c' },
       { id: 'suit_cyan',    name: 'חליפת אוקיינוס', ico: '🌊', a: '#3fd8ff', b: '#1673c9', boot: '#ffffff' },
       { id: 'suit_night',   name: 'חליפת לילה',    ico: '🌙', a: '#8b5cff', b: '#3a1177', boot: '#ffc93c' },
-      { id: 'suit_mint',    name: 'חליפת טבע',     ico: '🍀', a: '#3ff2b0', b: '#139b6c', boot: '#ff7ec2' }
+      { id: 'suit_mint',    name: 'חליפת טבע',     ico: '🍀', a: '#3ff2b0', b: '#139b6c', boot: '#ff7ec2' },
+      { id: 'suit_sun',     name: 'חליפת שמש',     ico: '🌞', a: '#ffd95a', b: '#ff9f1c', boot: '#ff2e93', free: true },
+      { id: 'suit_berry',   name: 'חליפת פטל',     ico: '🍒', a: '#ff5a6e', b: '#9b1d5a', boot: '#ffffff', free: true }
     ],
     mask: [
       { id: 'mask_classic',   name: 'מסכה קלאסית',   ico: '🎭', color: '#ff2e93' },
       { id: 'mask_star',      name: 'מסכת כוכב',     ico: '⭐', color: '#ffc93c', star: true },
       { id: 'mask_butterfly', name: 'מסכת פרפר',     ico: '🦋', color: '#8b5cff', butterfly: true },
-      { id: 'mask_cat',       name: 'מסכת חתולה',    ico: '🐱', color: '#29c5ff', cat: true }
+      { id: 'mask_cat',       name: 'מסכת חתולה',    ico: '🐱', color: '#29c5ff', cat: true },
+      { id: 'mask_heart',     name: 'מסכת לבבות',    ico: '💖', color: '#ff5a6e', heart: true, free: true },
+      { id: 'mask_none',      name: 'בלי מסכה',      ico: '😊', none: true, free: true }
     ],
     emblem: [
       { id: 'emb_heart',     name: 'סמל הלב',     ico: '❤️', kind: 'heart' },
       { id: 'emb_star',      name: 'סמל הכוכב',   ico: '🌟', kind: 'star' },
       { id: 'emb_bolt',      name: 'סמל הברק',    ico: '⚡', kind: 'bolt' },
-      { id: 'emb_butterfly', name: 'סמל הפרפר',   ico: '🦋', kind: 'butterfly' }
+      { id: 'emb_butterfly', name: 'סמל הפרפר',   ico: '🦋', kind: 'butterfly' },
+      { id: 'emb_flower',    name: 'סמל הפרח',    ico: '🌸', kind: 'flower', free: true },
+      { id: 'emb_moon',      name: 'סמל הירח',    ico: '🌙', kind: 'moon', free: true }
     ],
     aura: [
       { id: 'aura_none',    name: 'בלי כוח',          ico: '✖️', kind: 'none' },
       { id: 'aura_sparkle', name: 'כוח הנצנוץ',       ico: '✨', kind: 'sparkle' },
       { id: 'aura_bolt',    name: 'כוח הברק',         ico: '🌩️', kind: 'bolt' },
       { id: 'aura_wings',   name: 'כנפי קשת — טיסה',  ico: '🪽', kind: 'wings' },
-      { id: 'aura_shield',  name: 'מגן הכוכבים',      ico: '🛡️', kind: 'shield' }
+      { id: 'aura_shield',  name: 'מגן הכוכבים',      ico: '🛡️', kind: 'shield' },
+      { id: 'aura_hearts',  name: 'כוח הלבבות',       ico: '💗', kind: 'hearts', free: true },
+      { id: 'aura_bubbles', name: 'כוח הבועות',       ico: '🫧', kind: 'bubbles', free: true }
+    ],
+    /* אביזרים — חלקם חופשיים מההתחלה */
+    acc: [
+      { id: 'acc_none',       name: 'בלי אביזר',   ico: '✖️', kind: 'none', free: true },
+      { id: 'acc_crown',      name: 'כתר',         ico: '👑', kind: 'crown', free: true },
+      { id: 'acc_bow',        name: 'סרט לשיער',   ico: '🎀', kind: 'bow', free: true },
+      { id: 'acc_glasses',    name: 'משקפי כוכב',  ico: '🤩', kind: 'glasses', free: true },
+      { id: 'acc_flower',     name: 'פרח בשיער',   ico: '🌺', kind: 'flower', free: true },
+      { id: 'acc_tiara',      name: 'נזר יהלומים', ico: '💎', kind: 'tiara' },
+      { id: 'acc_headphones', name: 'אוזניות DJ',  ico: '🎧', kind: 'headphones' }
     ]
   };
 
+  /* צבעי סטודיו — בחירה חופשית בלי נעילה */
+  var STUDIO = ['#ff2e93', '#ff5a6e', '#ff9f1c', '#ffd95a', '#3ff2b0', '#29c5ff', '#3d6bff', '#8b5cff', '#1b1036', '#ffffff'];
+
   /* שמות החריצים בעברית — לארון התחפושות */
-  var SLOT_NAMES = { cape: 'גלימות', suit: 'חליפות', mask: 'מסכות', emblem: 'סמלים', aura: 'כוחות' };
+  var SLOT_NAMES = { cape: 'גלימות', suit: 'חליפות', mask: 'מסכות', emblem: 'סמלים', aura: 'כוחות', acc: 'אביזרים' };
 
   /* ברירת מחדל: הפריט הראשון בכל חריץ */
   function defaultOutfit() {
-    return { cape: 'cape_pink', suit: 'suit_magenta', mask: 'mask_classic', emblem: 'emb_heart', aura: 'aura_none' };
+    return { cape: 'cape_pink', suit: 'suit_magenta', mask: 'mask_classic', emblem: 'emb_heart', aura: 'aura_none', acc: 'acc_none', colors: {} };
   }
 
   /* מחפש פריט לפי id בתוך חריץ; אם לא נמצא — מחזיר את ברירת המחדל */
@@ -60,6 +84,23 @@
     var list = CATALOG[slot];
     for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
     return list[0];
+  }
+
+  /* shade — מבהיר/מכהה צבע hex (amt שלילי = כהה יותר) */
+  function shade(hex, amt) {
+    var n = parseInt(hex.slice(1), 16), r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
+    var c = function (v) { return Math.max(0, Math.min(255, v)); };
+    return '#' + ((1 << 24) + (c(r) << 16) + (c(g) << 8) + c(b)).toString(16).slice(1);
+  }
+  /* resolve — פריט לחריץ, כולל צבע סטודיו חופשי (id מסוג cape_custom) */
+  function resolve(outfit, slot) {
+    var id = outfit[slot], col = outfit.colors && outfit.colors[slot];
+    if (id === slot + '_custom' && col) {
+      if (slot === 'cape') return { id: id, a: col, b: shade(col, -60) };
+      if (slot === 'suit') return { id: id, a: col, b: shade(col, -70), boot: '#ffc93c' };
+      if (slot === 'mask') return { id: id, color: col };
+    }
+    return item(slot, id);
   }
 
   /* מונה ייחודי למזהי גרדיאנטים — כדי שכמה דמויות באותו דף לא יתנגשו */
@@ -103,6 +144,16 @@
       }
       return s;
     }
+    if (a.kind === 'hearts') { /* לבבות מרחפים */
+      var h = '', pts = [[40, 90], [200, 80], [28, 200], [212, 190], [70, 40], [170, 36]];
+      pts.forEach(function (p, i) { h += '<path d="M' + p[0] + ' ' + (p[1] + 10) + ' C' + (p[0] - 14) + ' ' + p[1] + ' ' + (p[0] - 8) + ' ' + (p[1] - 10) + ' ' + p[0] + ' ' + (p[1] - 3) + ' C' + (p[0] + 8) + ' ' + (p[1] - 10) + ' ' + (p[0] + 14) + ' ' + p[1] + ' ' + p[0] + ' ' + (p[1] + 10) + 'Z" fill="' + (i % 2 ? '#ff5fb0' : '#ff9ecb') + '" stroke="' + INK + '" stroke-width="2" class="h-av-spark" style="animation-delay:' + (i * .3) + 's"/>'; });
+      return '<circle cx="120" cy="160" r="112" fill="url(#' + id + 'glow)" opacity=".55"/>' + h;
+    }
+    if (a.kind === 'bubbles') { /* בועות סבון */
+      var bb = '', bp = [[36, 110, 14], [206, 100, 18], [24, 220, 10], [214, 216, 12], [60, 50, 9], [186, 44, 11], [44, 160, 7], [200, 150, 8]];
+      bp.forEach(function (p, i) { bb += '<g class="h-av-spark" style="animation-delay:' + (i * .25) + 's"><circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + p[2] + '" fill="rgba(180,240,255,.35)" stroke="#8fe9ff" stroke-width="2.5"/><circle cx="' + (p[0] - p[2] * .35) + '" cy="' + (p[1] - p[2] * .35) + '" r="' + (p[2] * .25) + '" fill="#fff"/></g>'; });
+      return bb;
+    }
     return '';
   }
 
@@ -122,6 +173,9 @@
     var s = '<path d="M90 148 Q120 138 150 148 L204 276 Q180 292 158 280 Q140 296 120 284 Q100 296 82 280 Q60 292 36 276 Z" fill="' + fill + '" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round"/>';
     /* קפל אור בגלימה */
     s += '<path d="M100 160 L70 270" stroke="rgba(255,255,255,.35)" stroke-width="6" stroke-linecap="round"/>';
+    if (c.hearts) {
+      [[80, 230], [150, 250], [118, 200], [172, 212], [98, 262]].forEach(function (p) { s += '<path d="M' + p[0] + ' ' + (p[1] + 7) + ' C' + (p[0] - 10) + ' ' + p[1] + ' ' + (p[0] - 6) + ' ' + (p[1] - 7) + ' ' + p[0] + ' ' + (p[1] - 2) + ' C' + (p[0] + 6) + ' ' + (p[1] - 7) + ' ' + (p[0] + 10) + ' ' + p[1] + ' ' + p[0] + ' ' + (p[1] + 7) + 'Z" fill="#fff" opacity=".75"/>'; });
+    }
     if (c.stars) {
       s += '<circle cx="70" cy="250" r="2.5" fill="#fff"/><circle cx="170" cy="236" r="3" fill="#fff"/><circle cx="150" cy="268" r="2" fill="#fff"/><circle cx="90" cy="210" r="2" fill="#fff"/><circle cx="182" cy="262" r="2" fill="#fff"/>';
     }
@@ -163,6 +217,8 @@
     if (e.kind === 'star') s += starPath(cx, cy + 1, 12, 5, '#ffc93c');
     if (e.kind === 'bolt') s += '<path d="M123 168 L111 185 L119 185 L115 197 L130 178 L122 178 Z" fill="#ffe14d" stroke="' + INK + '" stroke-width="2" stroke-linejoin="round"/>';
     if (e.kind === 'butterfly') s += '<path d="M120 182 C112 170 104 172 106 180 C107 186 114 186 120 183 C114 186 108 192 112 195 C116 197 119 190 120 186 C121 190 124 197 128 195 C132 192 126 186 120 183 C126 186 133 186 134 180 C136 172 128 170 120 182 Z" fill="#8b5cff" stroke="' + INK + '" stroke-width="2"/>';
+    if (e.kind === 'flower') { for (var k = 0; k < 5; k++) { var an = k * Math.PI * 2 / 5; s += '<circle cx="' + (cx + Math.cos(an) * 7).toFixed(1) + '" cy="' + (cy + Math.sin(an) * 7).toFixed(1) + '" r="6" fill="#ff8fc4" stroke="' + INK + '" stroke-width="1.5"/>'; } s += '<circle cx="' + cx + '" cy="' + cy + '" r="4.5" fill="#ffd95a" stroke="' + INK + '" stroke-width="1.5"/>'; }
+    if (e.kind === 'moon') s += '<path d="M126 170 A13 13 0 1 0 126 194 A10 10 0 1 1 126 170 Z" fill="#ffd95a" stroke="' + INK + '" stroke-width="2"/>';
     return s;
   }
 
@@ -192,10 +248,14 @@
       s += '<path d="M156 66 L160 36 L136 54 Z" fill="' + m.color + '" stroke="' + INK + '" stroke-width="3.5" stroke-linejoin="round"/>';
       s += '<path d="M86 58 L84 44 L96 54 Z" fill="#ffb3d4"/><path d="M154 58 L156 44 L144 54 Z" fill="#ffb3d4"/>';
     }
-    if (m.butterfly) { /* כנפי פרפר גדולות במקום מסכה */
+    if (m.none) { /* בלי מסכה — רק עיניים */ }
+    else if (m.butterfly) { /* כנפי פרפר גדולות במקום מסכה */
       s += '<path d="M120 100 C104 78 70 72 72 96 C74 114 100 114 120 106 C140 114 166 114 168 96 C170 72 136 78 120 100 Z" fill="' + m.color + '" stroke="' + INK + '" stroke-width="3.5" stroke-linejoin="round"/>';
     } else {
       s += '<path d="M76 96 Q84 84 104 88 Q120 94 136 88 Q156 84 164 96 Q160 112 140 112 Q126 110 120 104 Q114 110 100 112 Q80 112 76 96 Z" fill="' + m.color + '" stroke="' + INK + '" stroke-width="3.5" stroke-linejoin="round"/>';
+    }
+    if (m.heart) { /* לבבות בצדי המסכה */
+      [[70, 94], [170, 94]].forEach(function (p) { s += '<path d="M' + p[0] + ' ' + (p[1] + 10) + ' C' + (p[0] - 14) + ' ' + p[1] + ' ' + (p[0] - 8) + ' ' + (p[1] - 11) + ' ' + p[0] + ' ' + (p[1] - 4) + ' C' + (p[0] + 8) + ' ' + (p[1] - 11) + ' ' + (p[0] + 14) + ' ' + p[1] + ' ' + p[0] + ' ' + (p[1] + 10) + 'Z" fill="' + m.color + '" stroke="' + INK + '" stroke-width="3"/>'; });
     }
     if (m.star) { /* קצוות כוכב בצדי המסכה */
       s += starPath(72, 92, 11, 5, m.color) + starPath(168, 92, 11, 5, m.color);
@@ -208,7 +268,19 @@
     return s;
   }
 
-  /* 2.7 ניצוצות קדמיים לכוח הנצנוץ */
+  /* 2.7 אביזר על הראש (מצויר מעל המסכה) */
+  function accLayer(ac) {
+    var k = ac.kind;
+    if (k === 'crown') return '<path d="M92 58 L96 30 L110 46 L120 24 L130 46 L144 30 L148 58 Z" fill="#ffc93c" stroke="' + INK + '" stroke-width="3.5" stroke-linejoin="round"/><circle cx="120" cy="46" r="4" fill="#ff2e93"/><circle cx="104" cy="50" r="3" fill="#29c5ff"/><circle cx="136" cy="50" r="3" fill="#3ff2b0"/>';
+    if (k === 'tiara') return '<path d="M86 66 Q120 40 154 66 Q120 54 86 66 Z" fill="#e8f7ff" stroke="' + INK + '" stroke-width="3"/><path d="M120 36 L127 50 L120 58 L113 50 Z" fill="#8fe9ff" stroke="' + INK + '" stroke-width="2.5"/><circle cx="100" cy="56" r="3.5" fill="#ff8fc4" stroke="' + INK + '" stroke-width="1.5"/><circle cx="140" cy="56" r="3.5" fill="#ff8fc4" stroke="' + INK + '" stroke-width="1.5"/>';
+    if (k === 'bow') return '<g transform="translate(152 60) rotate(20)"><path d="M0 0 L-22 -14 L-22 14 Z M0 0 L22 -14 L22 14 Z" fill="#ff5fb0" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/><circle r="6" fill="#ff2e93" stroke="' + INK + '" stroke-width="3"/></g>';
+    if (k === 'flower') { var f = '<g transform="translate(88 62)">'; for (var i = 0; i < 5; i++) { var a = i * Math.PI * 2 / 5; f += '<circle cx="' + (Math.cos(a) * 9).toFixed(1) + '" cy="' + (Math.sin(a) * 9).toFixed(1) + '" r="8" fill="#ff6fa8" stroke="' + INK + '" stroke-width="2.5"/>'; } return f + '<circle r="6" fill="#ffd95a" stroke="' + INK + '" stroke-width="2.5"/></g>'; }
+    if (k === 'glasses') return starPath(104, 99, 17, 9, 'rgba(255,217,90,.55)') + starPath(136, 99, 17, 9, 'rgba(255,217,90,.55)') + '<path d="M117 96 Q120 92 123 96" stroke="' + INK + '" stroke-width="3" fill="none"/>';
+    if (k === 'headphones') return '<path d="M74 100 Q74 44 120 44 Q166 44 166 100" fill="none" stroke="' + INK + '" stroke-width="9"/><path d="M74 100 Q74 44 120 44 Q166 44 166 100" fill="none" stroke="#8b5cff" stroke-width="5"/><rect x="62" y="88" width="18" height="30" rx="8" fill="#ff2e93" stroke="' + INK + '" stroke-width="3"/><rect x="160" y="88" width="18" height="30" rx="8" fill="#ff2e93" stroke="' + INK + '" stroke-width="3"/>';
+    return '';
+  }
+
+  /* 2.8 ניצוצות קדמיים לכוח הנצנוץ */
   function frontSparkles(a) {
     if (a.kind !== 'sparkle' && a.kind !== 'wings') return '';
     var pts = [[42, 70], [200, 60], [30, 200], [212, 196], [188, 262], [56, 258]], s = '';
@@ -223,8 +295,8 @@
   function svg(outfit, opts) {
     outfit = outfit || defaultOutfit(); opts = opts || {};
     var id = 'hav' + (++uid) + '_';
-    var cape = item('cape', outfit.cape), suit = item('suit', outfit.suit), mask = item('mask', outfit.mask),
-        emb = item('emblem', outfit.emblem), aura = item('aura', outfit.aura);
+    var cape = resolve(outfit, 'cape'), suit = resolve(outfit, 'suit'), mask = resolve(outfit, 'mask'),
+        emb = item('emblem', outfit.emblem), aura = item('aura', outfit.aura), acc = item('acc', outfit.acc || 'acc_none');
     var capeA = cape.a || '#ff5fb0', capeB = cape.b || '#c2187a';
 
     var defs = '<defs>' +
@@ -245,6 +317,7 @@
       emblemLayer(emb) +
       headFront(id) +
       maskLayer(mask) +
+      accLayer(acc) +
       frontSparkles(aura) +
       '</svg>';
   }
@@ -257,5 +330,5 @@
   document.head.appendChild(st);
 
   /* ---------- ייצוא ---------- */
-  window.HeroAvatar = { CATALOG: CATALOG, SLOT_NAMES: SLOT_NAMES, defaultOutfit: defaultOutfit, item: item, svg: svg };
+  window.HeroAvatar = { CATALOG: CATALOG, SLOT_NAMES: SLOT_NAMES, STUDIO: STUDIO, defaultOutfit: defaultOutfit, item: item, svg: svg, shade: shade };
 })();
