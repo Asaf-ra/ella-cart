@@ -8,6 +8,8 @@
    פרק 4 — PROCS: טיפולים. כל צעד: כלי, פעולה (tap = נוגעים בדרקון, rub = משפשפים),
            הוראה בעברית, ומה קורה (fx: heart / temp / plaster / blanket / sparkle / spoon)
            checkup = בדיקה שגרתית (אפשר תמיד); cold / bump / tooth / tummy = כשהדרקון לא מרגיש טוב
+   פרק 4.5 — מעבדת התרופות של הרופאה: BOTTLES (צבעים ודבש), POTIONS (מתכון תרופה לכל טיפול — כמה טיפות מכל צבע),
+             FUNNY (תגובות מצחיקות של הדרקון אחרי שבולע תרופה)
    פרק 5 — englishLines(): כל המילים באנגלית, ל-tools/gen_voice.py (הקלטה רגילה + איטית)
    ===================================================================== */
 (function (root) {
@@ -71,9 +73,30 @@
       { t: 'blanket', a: 'tap', he: 'נחים קצת', fx: 'blanket', sayHe: 'מנוחה, ומחר אוכלים פירות וירקות!' } ] }
   };
 
+  /* ---------- פרק 4.5 — מעבדת התרופות ---------- */
+  const BOTTLES = { blue: ['#3d8bff', 'blue', 'כחול'], pink: ['#ff5fd2', 'pink', 'ורוד'], yellow: ['#ffd95a', 'yellow', 'צהוב'],
+                    green: ['#3ff2b0', 'green', 'ירוק'], purple: ['#9b6bff', 'purple', 'סגול'], honey: ['#ffb13b', 'honey', 'דבש'] };
+  const POTIONS = {
+    checkup: { he: 'ויטמין כוח 💪', drops: { pink: 1, yellow: 1, green: 1 } },
+    cold: { he: 'סירופ קסם נגד הצטננות', drops: { blue: 2, pink: 1, honey: 1 } },
+    bump: { he: 'משחת קרח ירוקה', drops: { green: 2, blue: 1 } },
+    tooth: { he: 'שטיפת פה בטעם מנטה', drops: { green: 1, yellow: 1, blue: 1 } },
+    tummy: { he: 'תה מרגיע לבטן', drops: { yellow: 2, honey: 1 } }
+  };
+  /* תגובות מצחיקות אחרי התרופה (אחת בהגרלה) */
+  const FUNNY = [
+    { id: 'rainbow', he: 'וואו! הדרקון הפך לקשת! 🌈', en: 'rainbow' },
+    { id: 'hiccup', he: 'היק! היק! שיהוקים של בועות! 🫧', en: 'hiccup' },
+    { id: 'smoke', he: 'פוף! עשן יוצא לו מהאוזניים! 💨', en: 'Achoo!' },
+    { id: 'fire', he: 'אפצ׳י של אש קטנה! 🔥', en: 'Achoo!' },
+    { id: 'burp', he: 'בורפ! סליחה! 😅', en: 'Yummy!' }
+  ];
+
   /* ---------- פרק 5 — שורות לקול ---------- */
   function englishLines() {
-    const out = ["Let's cook!", 'mix', 'cook', 'doctor', 'healthy', 'Open wide!', 'Say ah!', 'Good job, doctor!', 'kiss'];
+    const out = ["Let's cook!", 'mix', 'cook', 'doctor', 'healthy', 'Open wide!', 'Say ah!', 'Good job, doctor!', 'kiss',
+      'drop', 'shake', 'spoon', 'Here comes the airplane!', 'No, thank you!', 'Yuck!', 'bath', 'bubbles', 'duck', 'Quack!', 'towel', 'Achoo!', 'hiccup', 'rainbow', 'Yummy!'];
+    Object.keys(BOTTLES).forEach(k => out.push(BOTTLES[k][1]));
     Object.keys(ING).forEach(k => out.push(ING[k][1]));
     RECIPES.forEach(r => out.push(r.en));
     Object.keys(TOOLS).forEach(k => out.push(TOOLS[k][1]));
@@ -81,5 +104,5 @@
     return out;
   }
 
-  root.CareData = { ING, RECIPES, TOOLS, PROCS, englishLines };
+  root.CareData = { ING, RECIPES, TOOLS, PROCS, BOTTLES, POTIONS, FUNNY, englishLines };
 })(typeof window !== 'undefined' ? window : this);
