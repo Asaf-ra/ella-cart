@@ -780,10 +780,10 @@
     places: [['🏫', 'בית ספר', 'School'], ['🏠', 'בית', 'Home'], ['🏥', 'בית חולים', 'Hospital'], ['🏖️', 'חוף', 'Beach'], ['🌳', 'פארק', 'Park'], ['🛒', 'סופרמרקט', 'Supermarket']]
   };
   var TALK = [
-    ['How are you?', "I'm fine, thank you!", ['My name is Ella', 'I am six', 'Good night!']],
-    ["What's your name?", 'My name is Ella', ["I'm fine", 'Yes, please', 'Blue']],
+    ['How are you?', "I'm fine, thank you!", ['I like pink!', 'I am six', 'Good night!']],
+    ['What color do you like?', 'I like pink!', ["I'm fine", 'Yes, please', 'Good night!']],
     ['How old are you?', 'I am seven', ['I am happy', 'Thank you', 'Hello']],
-    ['Do you like pizza?', 'Yes, I do!', ['My name is Ella', 'Good morning', 'I am seven']],
+    ['Do you like pizza?', 'Yes, I do!', ['I like pink!', 'Good morning', 'I am seven']],
     ['Good morning!', 'Good morning!', ['Good night!', 'Goodbye!', 'I am fine']],
     ['What color is the sky?', 'It is blue', ['It is red', 'I am blue', 'Yes, I do']]
   ];

@@ -5,8 +5,9 @@
            יש רשימת פריטים. הפריט הראשון בכל חריץ הוא ברירת המחדל.
    פרק 2 — שכבות הציור (מאחור לפנים): כוח → גלימה → רגליים → גוף →
            ידיים → סמל → ראש → מסכה → ניצוצות קדמיים.
-   פרק 1.5 — צוות הגיבורים: 7 דמויות (אלה, נועה, בן, מיצי החתולה, רובי הרובוט, קשתית החד-קרן,
+   פרק 1.5 — צוות הגיבורים: 7 דמויות (הילדה עצמה, נועה, מאיה, מיצי החתולה, רובי הרובוט, קשתית החד-קרן,
            בובו הדובי) — כולן לובשות את אותן תחפושות; outfit.hero קובע מי הדמות.
+           הדמות הראשונה = הילדה: שם ומראה (5 תסרוקות, 5 צבעי שיער, 4 גווני עור) מהפרופיל שלה.
    פרק 3 — HeroAvatar.svg(outfit) מחזיר מחרוזת SVG מוכנה להזרקה.
    פריטים עם free:true פתוחים מההתחלה; צבעי סטודיו נשמרים ב-outfit.colors.
    הדמות מקורית לגמרי (לא דמות מוגנת); עוצבה בקווי דיו עבים כמו קומיקס.
@@ -66,7 +67,15 @@
       { id: 'acc_glasses',    name: 'משקפי כוכב',  ico: '🤩', kind: 'glasses', free: true },
       { id: 'acc_flower',     name: 'פרח בשיער',   ico: '🌺', kind: 'flower', free: true },
       { id: 'acc_tiara',      name: 'נזר יהלומים', ico: '💎', kind: 'tiara' },
-      { id: 'acc_headphones', name: 'אוזניות DJ',  ico: '🎧', kind: 'headphones' }
+      { id: 'acc_headphones', name: 'אוזניות DJ',  ico: '🎧', kind: 'headphones' },
+      /* אביזרי חג ויום הולדת — מתנה שנפתחת בתקופת החג (shared/seasons.js) */
+      { id: 'acc_honey',   name: 'סרט תפוח ודבש', ico: '🍎', kind: 'honey',   season: 'rosh' },
+      { id: 'acc_leaves',  name: 'כתר עלים',      ico: '🌿', kind: 'leaves',  season: 'sukkot' },
+      { id: 'acc_candles', name: 'כתר נרות',      ico: '🕎', kind: 'candles', season: 'hanukkah' },
+      { id: 'acc_jester',  name: 'כובע ליצן',      ico: '🃏', kind: 'jester',  season: 'purim' },
+      { id: 'acc_wreath',  name: 'זר פרחים',      ico: '🌸', kind: 'wreath',  season: 'pesach' },
+      { id: 'acc_flagbow', name: 'פפיון כחול-לבן', ico: '💙', kind: 'flagbow', season: 'atzmaut' },
+      { id: 'acc_party',   name: 'כובע יום הולדת', ico: '🎉', kind: 'party',   season: 'bday' }
     ]
   };
 
@@ -82,14 +91,22 @@
   var HEROES = [
     { id: 'ella', g: 'f',   name: 'אלה',   ico: '🦸‍♀️', level: 1,  style: 'pony',    skin: '#ffd9b3', skinD: '#f5c193', hair: '#ffcf5a', hairD: '#f0a92a', say: 'אני אלה גיבורת-העל!' },
     { id: 'noa', g: 'f',    name: 'נועה',  ico: '👧🏽', level: 1,  style: 'buns',    skin: '#c68a5c', skinD: '#a86f45', hair: '#3a2217', hairD: '#1f110a', say: 'אני נועה! כוח-העל שלי הוא סקרנות!' },
-    { id: 'ben', g: 'm',    name: 'בן',    ico: '👦', level: 3,  style: 'short',   skin: '#ffe2c6', skinD: '#f2c49d', hair: '#8a4b22', hairD: '#5e3014', say: 'אני בן! בואו נציל את העיר!' },
+    { id: 'maya', g: 'f',   name: 'מאיה',  ico: '👧', level: 3,  style: 'curly',   skin: '#ffe2c6', skinD: '#f2c49d', hair: '#e2572b', hairD: '#b33d17', say: 'אני מאיה! כוח-העל שלי הוא דמיון!' },
     { id: 'mitzi', g: 'f',  name: 'מיצי',  ico: '🐱', level: 6,  style: 'cat',     skin: '#ffb04a', skinD: '#f08a1c', say: 'מיאו! אני מיצי, החתולה הכי מהירה!' },
     { id: 'robi', g: 'm',   name: 'רובי',  ico: '🤖', level: 9,  style: 'robot',   skin: '#d5e0ee', skinD: '#9fb0c8', say: 'ביפ בופ! אני רובי, הרובוט החכם!' },
     { id: 'keshet', g: 'f', name: 'קשתית', ico: '🦄', level: 12, style: 'unicorn', skin: '#fff4fb', skinD: '#f3d9ec', say: 'אני קשתית! יש לי כוחות של קשת!' },
     { id: 'bubu', g: 'm',   name: 'בובו',  ico: '🐻', level: 15, style: 'bear',    skin: '#c98b56', skinD: '#a26a3a', say: 'אני בובו הדובי! חיבוק של גיבורים!' }
   ];
-  /* hero(id) — הגדרת דמות לפי מזהה (ברירת מחדל: אלה) */
-  function hero(id) { for (var i = 0; i < HEROES.length; i++) if (HEROES[i].id === id) return HEROES[i]; return HEROES[0]; }
+  /* hero(id) — הגדרת דמות לפי מזהה (ברירת מחדל: הדמות של הילדה עצמה — "אני").
+     הדמות הראשונה היא הילדה: השם והמראה (עור, תסרוקת, צבע שיער) מגיעים מהפרופיל שלה (shared/profile.js) */
+  function hero(id) {
+    var h = HEROES[0];
+    for (var i = 0; i < HEROES.length; i++) if (HEROES[i].id === id) h = HEROES[i];
+    if (h.id === 'ella' && window.Profile) return Object.assign({}, h, Profile.lookFor(), { name: Profile.name });
+    /* חברה עם אותו שם כמו הילדה — מקבלת שם חלופי */
+    if (window.Profile && Profile.friendName(h.name) !== h.name) return Object.assign({}, h, { name: Profile.friendName(h.name), say: Profile.friendFix(h.say) });
+    return h;
+  }
 
   /* ברירת מחדל: הפריט הראשון בכל חריץ */
   function defaultOutfit() {
@@ -250,6 +267,13 @@
       '<path d="M74 70 Q60 60 66 48 M166 70 Q180 60 174 48" stroke="' + h.hairD + '" stroke-width="3" fill="none" stroke-linecap="round"/>' +
       '<circle cx="80" cy="58" r="8" fill="none" stroke="' + h.hairD + '" stroke-width="2.5"/><circle cx="160" cy="58" r="8" fill="none" stroke="' + h.hairD + '" stroke-width="2.5"/>';
     if (st === 'short') return '';
+    /* קארה: שיער שיורד משני צדי הפנים עד הסנטר */
+    if (st === 'bob') return '<path d="M68 98 Q62 60 96 48 Q120 40 144 48 Q178 60 172 98 L172 142 Q160 152 146 146 L94 146 Q80 152 68 142 Z" fill="' + hair + '"' + o + '/>';
+    /* תלתלים: ענן של סלסולים מסביב לראש */
+    if (st === 'curly') return [[78, 66, 22], [98, 48, 22], [122, 42, 22], [146, 48, 22], [164, 66, 22], [70, 96, 20], [170, 96, 20], [74, 124, 18], [166, 124, 18]]
+      .map(function (c) { return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + c[2] + '" fill="' + hair + '"' + o + '/>'; }).join('');
+    /* צמה: שיער אסוף מאחור (הצמה עצמה מצוירת מקדימה) */
+    if (st === 'braid') return '<path d="M72 96 Q70 50 120 48 Q170 50 168 96 L168 128 Q150 138 120 136 Q90 138 72 128 Z" fill="' + hair + '"' + o + '/>';
     if (st === 'cat') return '<path d="M150 240 C200 230 214 190 200 170 C194 162 184 168 190 178 C198 196 186 222 150 226 Z" fill="' + h.skin + '"' + o + '/>' +
       '<path d="M82 74 L76 30 L112 56 Z" fill="' + h.skin + '"' + o + '/><path d="M158 74 L164 30 L128 56 Z" fill="' + h.skin + '"' + o + '/>' +
       '<path d="M86 64 L83 42 L102 56 Z M154 64 L157 42 L138 56 Z" fill="#ffb3d4"/>';
@@ -268,13 +292,23 @@
                         : '<circle cx="120" cy="98" r="46" fill="url(#' + id + 'skin)" stroke="' + INK + '" stroke-width="4"/>';
     if (st === 'pony') {
       s += '<path d="M74 96 Q70 50 120 48 Q170 50 166 96 Q160 74 138 70 Q128 82 110 78 Q96 74 88 80 Q78 86 74 96 Z" fill="' + h.hair + '"' + o + '/>';
-      s += '<path d="M96 60 Q110 54 126 56" stroke="#fff3c4" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/>';
+      s += '<path d="M96 60 Q110 54 126 56" stroke="rgba(255,255,255,.5)" stroke-width="4" fill="none" stroke-linecap="round"/>';
     } else if (st === 'buns') {
       s += '<path d="M74 98 Q70 50 120 48 Q170 50 166 98 Q164 80 152 74 Q146 84 134 78 Q126 86 114 80 Q102 86 94 78 Q80 82 74 98 Z" fill="' + h.hair + '"' + o + '/>';
       s += '<path d="M98 60 Q112 55 128 57" stroke="#7a5238" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/>';
     } else if (st === 'short') {
       s += '<path d="M76 86 Q70 46 120 44 Q170 46 164 86 Q160 68 148 62 L144 72 Q136 62 128 70 L122 60 Q114 70 104 64 L100 74 Q92 64 84 70 Q78 74 76 86 Z" fill="' + h.hair + '"' + o + '/>';
       s += '<path d="M100 56 Q114 50 130 53" stroke="#c07a45" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/>';
+    } else if (st === 'bob') {
+      s += '<path d="M74 92 Q70 48 120 46 Q170 48 166 92 Q164 74 150 70 Q138 78 120 72 Q102 78 90 70 Q76 74 74 92 Z" fill="' + h.hair + '"' + o + '/>';
+      s += '<path d="M98 58 Q112 52 128 54" stroke="rgba(255,255,255,.45)" stroke-width="4" fill="none" stroke-linecap="round"/>';
+    } else if (st === 'curly') {
+      [[92, 62, 12], [108, 54, 13], [124, 52, 13], [140, 56, 12], [153, 66, 10]].forEach(function (c) { s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + c[2] + '" fill="' + h.hair + '"' + o + '/>'; });
+    } else if (st === 'braid') {
+      /* צמה שיורדת על הכתף + פוני הצידה */
+      for (var bi = 0; bi < 6; bi++) s += '<ellipse cx="' + (158 + bi * 3) + '" cy="' + (124 + bi * 15) + '" rx="11" ry="10" fill="' + h.hair + '"' + o + '/>';
+      s += '<circle cx="176" cy="212" r="6" fill="#ff2e93" stroke="' + INK + '" stroke-width="2.5"/>';
+      s += '<path d="M74 94 Q70 48 122 46 Q168 48 166 90 Q150 64 118 66 Q96 70 86 84 Q80 90 74 94 Z" fill="' + h.hair + '"' + o + '/>';
     } else if (st === 'cat') {
       s += '<path d="M108 58 L112 72 M120 55 L120 70 M132 58 L128 72" stroke="' + h.skinD + '" stroke-width="5" stroke-linecap="round"/>';
       s += '<ellipse cx="120" cy="122" rx="24" ry="15" fill="#fff6ea"/><path d="M114 112 L126 112 L120 119 Z" fill="#ff7aa8" stroke="' + INK + '" stroke-width="2" stroke-linejoin="round"/>';
@@ -331,6 +365,16 @@
     if (k === 'bow') return '<g transform="translate(152 60) rotate(20)"><path d="M0 0 L-22 -14 L-22 14 Z M0 0 L22 -14 L22 14 Z" fill="#ff5fb0" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/><circle r="6" fill="#ff2e93" stroke="' + INK + '" stroke-width="3"/></g>';
     if (k === 'flower') { var f = '<g transform="translate(88 62)">'; for (var i = 0; i < 5; i++) { var a = i * Math.PI * 2 / 5; f += '<circle cx="' + (Math.cos(a) * 9).toFixed(1) + '" cy="' + (Math.sin(a) * 9).toFixed(1) + '" r="8" fill="#ff6fa8" stroke="' + INK + '" stroke-width="2.5"/>'; } return f + '<circle r="6" fill="#ffd95a" stroke="' + INK + '" stroke-width="2.5"/></g>'; }
     if (k === 'glasses') return starPath(104, 99, 17, 9, 'rgba(255,217,90,.55)') + starPath(136, 99, 17, 9, 'rgba(255,217,90,.55)') + '<path d="M117 96 Q120 92 123 96" stroke="' + INK + '" stroke-width="3" fill="none"/>';
+    /* אביזרי חג */
+    if (k === 'honey') return '<path d="M78 72 Q120 40 162 72" fill="none" stroke="' + INK + '" stroke-width="9" stroke-linecap="round"/><path d="M78 72 Q120 40 162 72" fill="none" stroke="#ff5a6e" stroke-width="5" stroke-linecap="round"/>' +
+      '<circle cx="148" cy="48" r="13" fill="#ff3b3b" stroke="' + INK + '" stroke-width="3"/><path d="M148 36 q2 -8 6 -9" stroke="' + INK + '" stroke-width="3" fill="none"/><path d="M152 34 q10 -6 14 2 q-8 4 -14 -2z" fill="#3fcf7a" stroke="' + INK + '" stroke-width="2"/><circle cx="143" cy="44" r="3" fill="#fff" opacity=".7"/>';
+    if (k === 'leaves') { var lv = ''; for (var li = 0; li < 9; li++) { var la = Math.PI + (li + .5) * Math.PI / 9, lx = 120 + Math.cos(la) * 50, ly = 92 + Math.sin(la) * 50; lv += '<ellipse cx="' + lx.toFixed(1) + '" cy="' + ly.toFixed(1) + '" rx="7" ry="14" transform="rotate(' + (la * 180 / Math.PI + 90).toFixed(0) + ' ' + lx.toFixed(1) + ' ' + ly.toFixed(1) + ')" fill="' + (li % 2 ? '#3fcf7a' : '#2fa85a') + '" stroke="' + INK + '" stroke-width="2.5"/>'; } return lv; }
+    if (k === 'candles') { var cd = '<path d="M88 62 Q120 50 152 62 L150 72 Q120 62 90 72 Z" fill="#ffc93c" stroke="' + INK + '" stroke-width="3"/>'; [96, 108, 120, 132, 144].forEach(function (x, ci) { var y = ci === 2 ? 30 : 38; cd += '<rect x="' + (x - 3.5) + '" y="' + y + '" width="7" height="' + (60 - y) + '" rx="2" fill="' + ['#29c5ff', '#ffffff', '#3d6bff', '#ffffff', '#29c5ff'][ci] + '" stroke="' + INK + '" stroke-width="2"/><path d="M' + x + ' ' + (y - 2) + ' q-5 -7 0 -14 q5 7 0 14z" fill="#ff9f1c" stroke="' + INK + '" stroke-width="1.5"/>'; }); return cd; }
+    if (k === 'jester') return '<path d="M84 64 Q86 28 60 22 Q90 30 104 52 Q112 18 120 12 Q128 18 136 52 Q150 30 180 22 Q154 28 156 64 Z" fill="#8b5cff" stroke="' + INK + '" stroke-width="3.5" stroke-linejoin="round"/><path d="M104 52 Q112 18 120 12 Q128 18 136 52 Z" fill="#ff2e93" stroke="' + INK + '" stroke-width="3"/><path d="M84 64 Q120 54 156 64" stroke="' + INK + '" stroke-width="7" fill="none"/><path d="M84 64 Q120 54 156 64" stroke="#ffc93c" stroke-width="4" fill="none"/>' +
+      '<circle cx="60" cy="22" r="6" fill="#ffc93c" stroke="' + INK + '" stroke-width="2.5"/><circle cx="120" cy="12" r="6" fill="#3ff2b0" stroke="' + INK + '" stroke-width="2.5"/><circle cx="180" cy="22" r="6" fill="#ffc93c" stroke="' + INK + '" stroke-width="2.5"/>';
+    if (k === 'wreath') { var wr = '<path d="M76 80 Q76 50 120 48 Q164 50 164 80" fill="none" stroke="#2fa85a" stroke-width="6"/>'; for (var wi = 0; wi < 7; wi++) { var wa = Math.PI + (wi + .5) * Math.PI / 7, wx = 120 + Math.cos(wa) * 46, wy = 84 + Math.sin(wa) * 38; wr += '<circle cx="' + wx.toFixed(1) + '" cy="' + wy.toFixed(1) + '" r="7.5" fill="' + ['#ff7ec2', '#ffd95a', '#ffffff', '#b28dff', '#ff7ec2', '#ffd95a', '#ffffff'][wi] + '" stroke="' + INK + '" stroke-width="2"/><circle cx="' + wx.toFixed(1) + '" cy="' + wy.toFixed(1) + '" r="2.5" fill="#ff9f1c"/>'; } return wr; }
+    if (k === 'flagbow') return '<g transform="translate(150 58) rotate(15)"><path d="M0 0 L-26 -16 L-26 16 Z M0 0 L26 -16 L26 16 Z" fill="#ffffff" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/><path d="M-24 -9 L-6 -3 M-24 9 L-6 3 M24 -9 L6 -3 M24 9 L6 3" stroke="#1f5fd6" stroke-width="4"/><circle r="7" fill="#1f5fd6" stroke="' + INK + '" stroke-width="3"/></g>';
+    if (k === 'party') return '<g transform="rotate(-12 120 50)"><path d="M100 60 L120 8 L140 60 Z" fill="#ff2e93" stroke="' + INK + '" stroke-width="3.5" stroke-linejoin="round"/><path d="M108 40 L132 40 M104 50 L136 50 M113 28 L127 28" stroke="#ffd95a" stroke-width="4"/><circle cx="120" cy="8" r="7" fill="#3ff2b0" stroke="' + INK + '" stroke-width="2.5"/></g>';
     if (k === 'headphones') return '<path d="M74 100 Q74 44 120 44 Q166 44 166 100" fill="none" stroke="' + INK + '" stroke-width="9"/><path d="M74 100 Q74 44 120 44 Q166 44 166 100" fill="none" stroke="#8b5cff" stroke-width="5"/><rect x="62" y="88" width="18" height="30" rx="8" fill="#ff2e93" stroke="' + INK + '" stroke-width="3"/><rect x="160" y="88" width="18" height="30" rx="8" fill="#ff2e93" stroke="' + INK + '" stroke-width="3"/>';
     return '';
   }
@@ -350,6 +394,8 @@
   function svg(outfit, opts) {
     outfit = outfit || defaultOutfit(); opts = opts || {};
     var id = 'hav' + (++uid) + '_', h = hero(outfit.hero);
+    /* opts.look — תצוגה מקדימה של מראה אחר ל"אני" (אשף הפתיחה, בחירת ילדה) */
+    if (opts.look && h.id === 'ella' && window.Profile) h = Object.assign({}, h, Profile.lookFor(opts.look));
     var cape = resolve(outfit, 'cape'), suit = resolve(outfit, 'suit'), mask = resolve(outfit, 'mask'),
         emb = item('emblem', outfit.emblem), aura = item('aura', outfit.aura), acc = item('acc', outfit.acc || 'acc_none');
     var capeA = cape.a || '#ff5fb0', capeB = cape.b || '#c2187a';

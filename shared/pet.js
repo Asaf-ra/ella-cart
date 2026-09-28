@@ -201,6 +201,8 @@
           setTimeout(function () {
             try { if (window.HeroRewards) HeroRewards.confetti(); } catch (e) {}
             snd('ding'); say(before === 0 ? 'הביצה בוקעת!' : P.name + ' גדל! עכשיו הוא ' + STAGES[after][1]);
+            /* תעודה כשהדרקון מגיע לשלב הסופר */
+            if (after === STAGES.length - 1 && window.Share) setTimeout(function () { Share.award({ key: 'pet:super', line: 'גידלה סופר-דרקון בשם ' + P.name, ico: '🐉' }); }, 1500);
             render();
           }, 900);
         } else setTimeout(render, egg ? 700 : 1300);

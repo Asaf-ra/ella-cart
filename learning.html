@@ -334,6 +334,9 @@
     .map-tip{margin:0 0 10px;padding:8px 12px;border:3px dashed #ff9f1c;border-radius:16px;background:#fff3b0;color:#1b1036;font:800 15px/1.35 var(--h-font)}
     /* חיית המחמד בפינת כרטיס השאלה */
     .mascot-wrap{position:relative}.mascot-wrap .pet-mini{left:-4px;bottom:-8px}
+    /* כפתור "התעודה שלי" בחלון החגיגה */
+    #certBtn{margin:0 0 10px;padding:12px 22px;border:4px solid #1b1036;border-radius:999px;background:linear-gradient(180deg,#ffd95a,#ff9f1c);color:#1b1036;font:900 20px/1 var(--h-font);box-shadow:0 5px 0 #1b1036;cursor:pointer}
+    #certBtn[hidden]{display:none}
   </style>
 </head>
 <body>
@@ -360,11 +363,12 @@
         <div class="gentle-tip">⚡ כל תשובה נכונה = אנרגיה + מטבע. מד מלא = <span>תחפושת או כוח חדש!</span></div>
       </section>
     </main>
-    <div class="celebration" id="celebration" role="dialog" aria-modal="true" aria-labelledby="celebrationTitle"><div class="celebration-card"><div class="celebration-burst" id="celebrationHero">🏆</div><h2 id="celebrationTitle">תחנה הושלמה!</h2><p id="celebrationText">אספת שלושה כוכבים חדשים.</p><button id="celebrationClose" type="button">ממשיכים לטוס! 🚀</button></div></div>
+    <div class="celebration" id="celebration" role="dialog" aria-modal="true" aria-labelledby="celebrationTitle"><div class="celebration-card"><div class="celebration-burst" id="celebrationHero">🏆</div><h2 id="celebrationTitle">תחנה הושלמה!</h2><p id="celebrationText">אספת שלושה כוכבים חדשים.</p><button id="certBtn" type="button" hidden>🏅 התעודה שלי</button><button id="celebrationClose" type="button">ממשיכים לטוס! 🚀</button></div></div>
     <div class="rotate-message"><div class="rotate-icon">📱</div><strong>בואו נסובב לרוחב</strong><span>אקדמיית הגיבורים נבנתה במיוחד למסך הרחב של האייפד.</span></div>
   </div>
+  <script src="shared/profile.js"></script>
   <script src="shared/kids-ui.js"></script><script src="shared/wallet.js"></script><script src="js/voice-en.js"></script><script src="js/audio.js"></script>
-  <script src="shared/hero-avatar.js"></script><script src="shared/hero-rewards.js"></script><script src="shared/progress.js"></script><script src="shared/pet.js"></script><script src="shared/voice-settings.js"></script><script src="js/academy-puzzle.js"></script><script src="js/academy-modules.js"></script>
+  <script src="shared/hero-avatar.js"></script><script src="shared/hero-rewards.js"></script><script src="shared/progress.js"></script><script src="shared/stickers.js"></script><script src="shared/pet.js"></script><script src="shared/share.js"></script><script src="shared/voice-settings.js"></script><script src="js/academy-puzzle.js"></script><script src="js/academy-modules.js"></script>
   <script>
     (function(){
       'use strict';
@@ -477,13 +481,17 @@ if(b.won&&!boss.celebrated){boss.celebrated=true;setTimeout(function(){bossWin(b
 return{chapterDone:false,stationDone:false,index:0}}
       /* bossWin — הנבל הפך לחבר! חגיגה גדולה */
       function bossWin(b){const v=b.villain;endBoss();if(window.Wallet)Wallet.add(20);if(window.HeroRewards){HeroRewards.award(5,el.mascot,{word:'ניצחון!'});HeroRewards.confetti()}
-el.celebrationTitle.textContent='ניצחת את '+v.name+'! 🏆';el.celebrationText.textContent=v.name+' הפך לחבר! 🪙 +20 מטבעות · גביע שבועי · נבל חדש בשבוע הבא';el.celebration.classList.add('visible');say('ניצחת את '+v.name+'! עכשיו הוא חבר שלך!',{interrupt:true})}
+certButton(giveCert({key:'boss:'+b.week,line:'ניצחה את '+v.name,ico:v.ico}));el.celebrationTitle.textContent='ניצחת את '+v.name+'! 🏆';el.celebrationText.textContent=v.name+' הפך לחבר! 🪙 +20 מטבעות · גביע שבועי · נבל חדש בשבוע הבא';el.celebration.classList.add('visible');say('ניצחת את '+v.name+'! עכשיו הוא חבר שלך!',{interrupt:true})}
       /* addBossCourse — כרטיס "נבל השבוע" בראש מפת התחנות */
       function addBossCourse(){if(!window.Progress)return;const b=Progress.boss();let card=document.getElementById('bossCourse');if(!card){card=document.createElement('button');card.type='button';card.id='bossCourse';el.courseList.parentNode.insertBefore(card,el.courseList);card.addEventListener('click',function(){sound('bubble');startBoss()})}
 card.className='boss-course'+(b.won?' won':'');card.innerHTML='<span class="bc-ico">'+b.villain.ico+'</span><span><b>⚔️ נבל השבוע: '+b.villain.name+'</b><small>'+(b.won?'🏆 ניצחת השבוע! נבל חדש בשבוע הבא':'❤️ '+b.hp+'/'+b.max+' · '+b.villain.line)+'</small></span><span class="bc-go">'+(b.won?'✓':'לקרב!')+'</span>'}
       /* markWeak — "💪 כדאי לתרגל" על תחנות עם דיוק נמוך (לפי shared/progress.js) + טיפ בראש המפה */
       function markWeak(){if(!window.Progress)return;const weak=Progress.weakStations();Array.from(el.courseList.children).forEach(function(item){const w=weak.indexOf(item.dataset.key)>=0;let bd=item.querySelector('.practice-badge');if(w&&!bd){bd=document.createElement('span');bd.className='practice-badge';bd.textContent='💪 כדאי לתרגל';item.appendChild(bd)}if(!w&&bd)bd.remove()});
 let tip=document.getElementById('mapTip');if(weak.length){if(!tip){tip=document.createElement('p');tip.id='mapTip';tip.className='map-tip';el.courseList.parentNode.insertBefore(tip,el.courseList)}tip.textContent='💡 הצעה: עוד קצת תרגול ב'+weak.map(function(k){return modules[k]?modules[k].name:k}).join(' וב')+' — וזה יהיה קל!'}else if(tip)tip.remove()}
+      /* ===== תעודות גיבורה (shared/share.js) =====
+         giveCert — שומרת תעודה (פעם אחת לכל הישג) ומחזירה אותה; certButton — כפתור "🏅 התעודה שלי" בחלון החגיגה */
+      function giveCert(c){if(!window.Share)return null;return Share.award(c,false)||Share.certs().filter(function(x){return x.key===c.key})[0]||null}
+      function certButton(cert){const b=document.getElementById('certBtn');if(!b)return;b.hidden=!cert;b.onclick=cert?function(){sound('ding');Share.showCert(cert,true)}:null}
       function reward(origin,justCompleted,base){if(window.Wallet)Wallet.add(1);heroJump();if(window.HeroRewards)HeroRewards.award(base+(justCompleted?3:0),origin);if(window.HeroRewards)HeroRewards.refresh()}
       /* finishCustom — סיום משימה מיוחדת מתוך מודול (למשל סיימון במוזיקה) */
       function finishCustom(origin,text,speech){if(locked)return;locked=true
@@ -530,8 +538,10 @@ if(r.chapterDone)say('וואו! הפרק הושלם!',{interrupt:true});else if(
 sound('happy');burst(button)
 if(r.chapterDone)setTimeout(function(){celebrate(state.active,r)},430)}
       /* celebrate — חגיגת פרק: מציג איזה פרק הושלם ואיזה נפתח, ומעביר לפרק הבא */
-      function celebrate(key,r){const list=chapterList(key)||[],c=chapOf(key),i=r?r.index:0
-if(r&&r.stationDone){el.celebrationTitle.textContent=modules[key].name+': כל '+CH+' הפרקים! 🏆';el.celebrationText.textContent='סיימת את כל התחנה! אפשר לעבור לתחנה אחרת או לנסות את רמת '+(big()?'הקטנים':'הגדולים')+'.'}
+      function celebrate(key,r){const list=chapterList(key)||[],c=chapOf(key),i=r?r.index:0;certButton(null)
+if(r&&r.stationDone){el.celebrationTitle.textContent=modules[key].name+': כל '+CH+' הפרקים! 🏆';el.celebrationText.textContent='סיימת את כל התחנה! אפשר לעבור לתחנה אחרת או לנסות את רמת '+(big()?'הקטנים':'הגדולים')+'.';
+/* תעודת גיבורה על סיום תחנה (shared/share.js) */
+certButton(giveCert({key:'st:'+state.grade+':'+key,line:'סיימה את תחנת '+modules[key].name+(big()?' ברמת הגדולים':' ברמת הקטנים'),ico:modules[key].icon}))}
 else{el.celebrationTitle.textContent='פרק '+(i+1)+' הושלם! 🎉';el.celebrationText.textContent=list[i+1]?'נפתח פרק '+(i+2)+': '+list[i+1].n+' 🔓':'כל הכבוד!';if(i+1<CH)c.cur=i+1;save()}
 el.celebration.classList.add('visible')}
       function burst(origin){const rect=origin.getBoundingClientRect(),palette=['#ffd34e','#ff83b2','#76dcae','#75c4ff','#a98eff'];for(let i=0;i<18;i++){const dot=document.createElement('i');dot.className='particle';dot.style.background=palette[i%palette.length];dot.style.left=rect.left+rect.width/2-5+'px';dot.style.top=rect.top+rect.height/2-5+'px';document.body.appendChild(dot);const angle=Math.PI*2*i/18,distance=75+Math.random()*110;dot.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+Math.cos(angle)*distance+'px,'+Math.sin(angle)*distance+'px) scale(.2)',opacity:0}],{duration:650,easing:'cubic-bezier(.2,.85,.3,1)'});setTimeout(function(){dot.remove()},700)}}

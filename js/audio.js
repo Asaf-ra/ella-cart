@@ -194,6 +194,8 @@ const Voice = (function () {
     if (EMOJI) t = t.replace(EMOJI, ' ');
     t = t.replace(/[←→⟵⟶➜✓✔✖✦★☆●▲■◆♥·•]/g, ' ');
     if (!lang || /^he/i.test(lang)) {
+      /* השם של הילדה שמשחקת (shared/profile.js) במקום "אלה" — הקול פונה אליה בשמה */
+      if (window.Profile && Profile.fix) t = Profile.fix(t);
       t = t.replace(/(\d+)\s*\/\s*(\d+)/g, '$1 מתוך $2')     // 3/3 → 3 מתוך 3
            .replace(/\s*\+\s*/g, ' ועוד ')
            .replace(/\s*[−–]\s*(?=\d)/g, ' פחות ')

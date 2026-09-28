@@ -773,6 +773,9 @@
       if (typeof Wallet !== 'undefined') Wallet.add(2);
       award(1, btn, 'נשמר!'); track('art:save');
       toast('🖼️ נשמר בגלריה · 🪙 +2');
+      /* תעודת ציירת ב-5, 10, 20, 30 ציורים (shared/share.js) */
+      S.saved = (S.saved || 0) + 1; saveState();
+      if (window.Share && [5, 10, 20, 30].indexOf(S.saved) >= 0) setTimeout(function () { Share.award({ key: 'art:' + S.saved, line: 'ציירה ' + S.saved + ' ציורים', ico: '🎨' }); }, 1200);
     }
     if (S.mode === 'draw') { if (!strokes.length) { toast('קודם מציירים משהו 🎨'); return; } composite(function (d) { done({ type: 'img', data: d }); }); return; }
     if (!curSvg) return;
@@ -797,6 +800,8 @@
     if (it.type === 'svg') big.innerHTML = it.data; else { var im = new Image(); im.src = it.data; big.appendChild(im); }
     function act(txt, cls, fn) { var b = el('button', 'h-btn ' + cls, txt); b.type = 'button'; b.addEventListener('click', fn); acts.appendChild(b); return b; }
     if (it.key && it.work) act('🖍️ להמשיך לצבוע', 'gold', function () { work[it.key] = Object.assign({}, it.work); saveWork(); closeOv('galView'); closeOv('galOv'); setMode('color', it.key); });
+    /* שליחת הציור (וואטסאפ / שמירה לתמונות) עם מסגרת ושם הציירת */
+    if (window.Share) act('📤 לשלוח', 'cyan', function () { tap(); Share.shareDrawing(it); });
     var del = act('🗑️ למחוק', 'violet', function () {
       if (!del.dataset.sure) { del.dataset.sure = 1; del.textContent = 'בטוח? לגעת שוב למחיקה'; return; }
       list.splice(idx, 1); saveGallery(list); closeOv('galView'); openGallery(); snd('pop');

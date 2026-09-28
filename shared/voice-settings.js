@@ -11,8 +11,8 @@
 (function () {
   'use strict';
 
-  var SAMPLE_HE = 'שלום אלה! איזה כיף ללמוד איתך היום. בואי נספור יחד: אחת, שתיים, שלוש!';
-  var SAMPLE_EN = 'Hello Ella! You are a super hero. Let us learn some English words together!';
+  var SAMPLE_HE = 'שלום אלה! איזה כיף ללמוד איתך היום. בואי נספור יחד: אחת, שתיים, שלוש!';   // "אלה" מתחלף אוטומטית בשם הילדה
+  var SAMPLE_EN = 'Hello! You are a super hero. Let us learn some English words together!';
 
   /* האם שם הקול מרמז על איכות גבוהה */
   function isGood(v) { return /premium|enhanced|siri|neural|natural|google|משופר/i.test(v.name + ' ' + (v.voiceURI || '')); }
