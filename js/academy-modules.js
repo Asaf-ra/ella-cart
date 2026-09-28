@@ -727,6 +727,240 @@
     };
   }
 
+  /* =====================================================================
+     פרק 4.5 — תחנות שפה ואנגלית (קפיצת מדרגה)
+     4.5.1 מאגרים: מילים מנוקדות, משפטים, סיפורים, הפכים, חרוזים, אוצר מילים באנגלית
+     4.5.2 בונה מילים אינטראקטיבי (אריחי אותיות) — עברית ואנגלית
+     4.5.3 מחוללי שאלות לתחנות: קריאה, בונים מילים, שפה, אוצר מילים באנגלית, איות
+     ===================================================================== */
+
+  /* ---------- 4.5.1 מאגרים ---------- */
+  /* מילים מנוקדות לפי אורך: [מנוקד, אימוג'י] */
+  var R2 = [['דָּג', '🐟'], ['יָד', '✋'], ['הַר', '⛰️'], ['לֵב', '❤️'], ['עֵץ', '🌳'], ['סַל', '🧺'], ['נֵר', '🕯️'], ['תֵּה', '🍵']];
+  var R3 = [['פִּיל', '🐘'], ['סוּס', '🐴'], ['דֹּב', '🐻'], ['קוֹף', '🐒'], ['תּוּת', '🍓'], ['כֶּלֶב', '🐶'], ['שֶׁמֶשׁ', '☀️'], ['בַּיִת', '🏠'], ['יֶלֶד', '🧒'], ['גֶּשֶׁם', '🌧️'], ['דֶּגֶל', '🚩'], ['כּוֹס', '🥛']];
+  var R4 = [['חָתוּל', '🐱'], ['אַרְיֵה', '🦁'], ['בָּלוֹן', '🎈'], ['פַּרְפַּר', '🦋'], ['תַּפּוּחַ', '🍎'], ['מַטְרִיָּה', '☂️'], ['רַכֶּבֶת', '🚂'], ['כַּדּוּר', '⚽'], ['עוּגָה', '🎂'], ['פֶּרַח', '🌸'], ['צְפַרְדֵּעַ', '🐸'], ['סֵפֶר', '📖']];
+  /* הסרת ניקוד — לקריאה מתקדמת בלי ניקוד */
+  function plain(w) { return w.replace(/[֑-ׇ]/g, ''); }
+  var FILL = [
+    ['הַחָתוּל שׁוֹתֶה ___', 'חָלָב', ['סֵפֶר', 'כִּסֵּא', 'נַעַל'], '🐱🥛'], ['בַּלַּיְלָה רוֹאִים אֶת הַ___', 'יָרֵחַ', ['שֶׁמֶשׁ', 'כֶּלֶב', 'תַּפּוּחַ'], '🌙'],
+    ['אֲנִי כּוֹתֶבֶת בְּ___', 'עִפָּרוֹן', ['מַזְלֵג', 'כּוֹבַע', 'כַּדּוּר'], '✏️'], ['הַדָּג שׂוֹחֶה בַּ___', 'מַיִם', ['שָׁמַיִם', 'מִטָּה', 'גַּן'], '🐟'],
+    ['בַּחֹרֶף יוֹרֵד ___', 'גֶּשֶׁם', ['תּוּת', 'שִׁיר', 'לֶחֶם'], '🌧️'], ['הַצִּפּוֹר עָפָה בַּ___', 'שָׁמַיִם', ['מְקָרֵר', 'סֵפֶר', 'נַעַל'], '🐦'],
+    ['בַּבֹּקֶר אֲנִי מְצַחְצַחַת ___', 'שִׁנַּיִם', ['עֲנָנִים', 'כִּסְאוֹת', 'תַּפּוּזִים'], '🪥']
+  ];
+  var TF = [['הַכֶּלֶב יָשֵׁן', '😴🐶', true], ['הַתַּפּוּחַ כָּחֹל', '🍎', false], ['הַשֶּׁמֶשׁ זוֹרַחַת', '☀️', true], ['הַפִּיל קָטָן מְאוֹד', '🐘', false],
+            ['הַדָּג עָף בַּשָּׁמַיִם', '🐟', false], ['הַיַּלְדָּה אוֹכֶלֶת גְּלִידָה', '👧🍦', true], ['לֶחָתוּל יֵשׁ זָנָב', '🐱', true], ['הַשֶּׁלֶג חַם', '❄️', false]];
+  var STORIES = [
+    ['דָּנָה הָלְכָה לַגַּן. בַּגַּן הִיא רָאֲתָה פַּרְפַּר צָהֹב.', 'מָה דָּנָה רָאֲתָה?', '🦋', ['🐶', '🍎', '🚗']],
+    ['יוֹסִי אָכַל תַּפּוּחַ אָדֹם. אַחַר כָּךְ הוּא שָׁתָה מַיִם.', 'מָה יוֹסִי אָכַל?', '🍎', ['🍌', '🍕', '🍪']],
+    ['בַּבֹּקֶר יָרַד גֶּשֶׁם. אֱלָה לָקְחָה מַטְרִיָּה.', 'מָה אֱלָה לָקְחָה?', '☂️', ['🕶️', '⚽', '🎈']],
+    ['לְסָבְתָא יֵשׁ חָתוּל. הֶחָתוּל אוֹהֵב לִישֹׁן עַל הַסַּפָּה.', 'מִי אוֹהֵב לִישֹׁן?', '🐱', ['🐶', '🐰', '🐦']],
+    ['נוֹעָה בָּנְתָה אַרְמוֹן בַּחוֹל. הַיָּם הָיָה כָּחֹל.', 'אֵיפֹה נוֹעָה הָיְתָה?', '🏖️', ['🏔️', '🏫', '🌳']]
+  ];
+  /* שפה: הפכים, חרוזים, קטגוריות, פעולות, יחיד/רבים, זמנים */
+  var OPP = [['גָּדוֹל', '🐘', 'קָטָן', '🐭'], ['חַם', '🔥', 'קַר', '🧊'], ['יוֹם', '☀️', 'לַיְלָה', '🌙'], ['שָׂמֵחַ', '😀', 'עָצוּב', '😢'],
+             ['מָהִיר', '🐇', 'אִטִּי', '🐢'], ['גָּבוֹהַּ', '🦒', 'נָמוּךְ', '🐧'], ['מָלֵא', '🥛', 'רֵיק', '🫙'], ['פָּתוּחַ', '📖', 'סָגוּר', '📕']];
+  var RHYME = [['סוּס', '🐴', 'כּוֹס', '🥛'], ['תּוּת', '🍓', 'חוּט', '🧵'], ['דֹּב', '🐻', 'טוֹב', '👍'], ['גַּן', '🌷', 'עָנָן', '☁️'], ['שִׁיר', '🎵', 'עִיר', '🏙️'],
+               ['מַיִם', '💧', 'שָׁמַיִם', '🌌'], ['לֵב', '❤️', 'זְאֵב', '🐺'], ['כּוֹבַע', '🎩', 'אֶצְבַּע', '☝️'], ['פֶּרַח', '🌸', 'קֶרַח', '🧊'], ['חַלּוֹן', '🪟', 'בָּלוֹן', '🎈'], ['דָּג', '🐟', 'חַג', '🎉']];
+  var CATS = { 'פֵּרוֹת': ['🍎', '🍌', '🍇', '🍓', '🍉', '🍐'], 'חַיּוֹת': ['🐶', '🐱', '🦁', '🐘', '🐰', '🐸'], 'כְּלֵי רֶכֶב': ['🚗', '🚌', '🚂', '✈️', '🚲', '🚀'], 'בְּגָדִים': ['👕', '👖', '👗', '🧦', '🧢', '🧥'] };
+  var ACTS = [['✂️', 'מִסְפָּרַיִם', 'גּוֹזְרִים'], ['🖍️', 'צֶבַע', 'מְצַיְּרִים'], ['🥄', 'כַּף', 'אוֹכְלִים'], ['🛏️', 'מִטָּה', 'יְשֵׁנִים'], ['📖', 'סֵפֶר', 'קוֹרְאִים'], ['🚿', 'מִקְלַחַת', 'מִתְרַחֲצִים'], ['⚽', 'כַּדּוּר', 'מְשַׂחֲקִים']];
+  var PLURAL = [['יֶלֶד', 'יְלָדִים'], ['סֵפֶר', 'סְפָרִים'], ['כֶּלֶב', 'כְּלָבִים'], ['פֶּרַח', 'פְּרָחִים'], ['עֵץ', 'עֵצִים'], ['יַלְדָּה', 'יְלָדוֹת'], ['בֻּבָּה', 'בֻּבּוֹת'], ['תַּפּוּחַ', 'תַּפּוּחִים']];
+  var TENSE = [['אֶתְמוֹל אֲנִי ___ לַגַּן', 'הָלַכְתִּי', ['הוֹלֶכֶת', 'אֵלֵךְ']], ['מָחָר אֲנִי ___ עוּגָה', 'אֹכַל', ['אָכַלְתִּי', 'אוֹכֶלֶת']], ['עַכְשָׁו אֲנִי ___ סֵפֶר', 'קוֹרֵאת', ['קָרָאתִי', 'אֶקְרָא']],
+               ['אֶתְמוֹל ___ גֶּשֶׁם', 'יָרַד', ['יוֹרֵד', 'יֵרֵד']], ['מָחָר ___ יוֹם הֻלֶּדֶת שֶׁלִּי', 'יִהְיֶה', ['הָיָה', 'הוֹוֶה']]];
+
+  /* אוצר מילים באנגלית לפי נושא: [אימוג'י, עברית, אנגלית] */
+  var ENV = {
+    colors: [['🔴', 'אדום', 'Red'], ['🔵', 'כחול', 'Blue'], ['🟡', 'צהוב', 'Yellow'], ['🟢', 'ירוק', 'Green'], ['🟠', 'כתום', 'Orange'], ['🟣', 'סגול', 'Purple'], ['⚫', 'שחור', 'Black'], ['⚪', 'לבן', 'White']],
+    numbers: [['1️⃣', 'אחת', 'One'], ['2️⃣', 'שתיים', 'Two'], ['3️⃣', 'שלוש', 'Three'], ['4️⃣', 'ארבע', 'Four'], ['5️⃣', 'חמש', 'Five'], ['6️⃣', 'שש', 'Six'], ['7️⃣', 'שבע', 'Seven'], ['8️⃣', 'שמונה', 'Eight'], ['9️⃣', 'תשע', 'Nine'], ['🔟', 'עשר', 'Ten']],
+    body: [['👁️', 'עין', 'Eye'], ['👃', 'אף', 'Nose'], ['👂', 'אוזן', 'Ear'], ['👄', 'פה', 'Mouth'], ['✋', 'יד', 'Hand'], ['🦶', 'רגל', 'Foot'], ['🦷', 'שן', 'Tooth']],
+    family: [['👩', 'אמא', 'Mom'], ['👨', 'אבא', 'Dad'], ['👶', 'תינוק', 'Baby'], ['👵', 'סבתא', 'Grandma'], ['👴', 'סבא', 'Grandpa'], ['👧', 'אחות', 'Sister'], ['👦', 'אח', 'Brother']],
+    clothes: [['👕', 'חולצה', 'Shirt'], ['👖', 'מכנסיים', 'Pants'], ['👗', 'שמלה', 'Dress'], ['👟', 'נעל', 'Shoe'], ['🧦', 'גרביים', 'Socks'], ['🧢', 'כובע', 'Hat'], ['🧥', 'מעיל', 'Coat']],
+    actions: [['🏃‍♀️', 'רצה', 'Run'], ['🍽️', 'אוכלת', 'Eat'], ['😴', 'ישנה', 'Sleep'], ['🏊‍♀️', 'שוחה', 'Swim'], ['💃', 'רוקדת', 'Dance'], ['📖', 'קוראת', 'Read'], ['✍️', 'כותבת', 'Write'], ['🎤', 'שרה', 'Sing']],
+    feelings: [['😀', 'שמחה', 'Happy'], ['😢', 'עצובה', 'Sad'], ['😠', 'כועסת', 'Angry'], ['😨', 'מפחדת', 'Scared'], ['🥱', 'עייפה', 'Tired'], ['😲', 'מופתעת', 'Surprised']],
+    weather: [['☀️', 'שמשי', 'Sunny'], ['🌧️', 'גשום', 'Rainy'], ['☁️', 'מעונן', 'Cloudy'], ['❄️', 'מושלג', 'Snowy'], ['🌬️', 'סוער', 'Windy'], ['🌈', 'קשת', 'Rainbow']],
+    places: [['🏫', 'בית ספר', 'School'], ['🏠', 'בית', 'Home'], ['🏥', 'בית חולים', 'Hospital'], ['🏖️', 'חוף', 'Beach'], ['🌳', 'פארק', 'Park'], ['🛒', 'סופרמרקט', 'Supermarket']]
+  };
+  var TALK = [
+    ['How are you?', "I'm fine, thank you!", ['My name is Ella', 'I am six', 'Good night!']],
+    ["What's your name?", 'My name is Ella', ["I'm fine", 'Yes, please', 'Blue']],
+    ['How old are you?', 'I am seven', ['I am happy', 'Thank you', 'Hello']],
+    ['Do you like pizza?', 'Yes, I do!', ['My name is Ella', 'Good morning', 'I am seven']],
+    ['Good morning!', 'Good morning!', ['Good night!', 'Goodbye!', 'I am fine']],
+    ['What color is the sky?', 'It is blue', ['It is red', 'I am blue', 'Yes, I do']]
+  ];
+  var SP3 = [['CAT', '🐱'], ['DOG', '🐶'], ['SUN', '☀️'], ['PIG', '🐷'], ['BUS', '🚌'], ['HAT', '🎩'], ['CUP', '☕'], ['BED', '🛏️'], ['FOX', '🦊'], ['EGG', '🥚']];
+  var SP4 = [['FISH', '🐟'], ['BALL', '⚽'], ['CAKE', '🎂'], ['DUCK', '🦆'], ['FROG', '🐸'], ['STAR', '⭐'], ['BOOK', '📖'], ['MOON', '🌙'], ['TREE', '🌳'], ['BEAR', '🐻']];
+  var SP5 = [['HOUSE', '🏠'], ['APPLE', '🍎'], ['TIGER', '🐯'], ['HORSE', '🐴'], ['PIZZA', '🍕'], ['TRAIN', '🚂'], ['WATER', '💧'], ['SMILE', '😊']];
+  var WB2 = [['דג', '🐟'], ['יד', '✋'], ['הר', '⛰️'], ['לב', '❤️'], ['סל', '🧺'], ['נר', '🕯️']];
+  var WB3 = [['פיל', '🐘'], ['סוס', '🐴'], ['דוב', '🐻'], ['קוף', '🐒'], ['תות', '🍓'], ['כלב', '🐶'], ['שמש', '☀️'], ['בית', '🏠'], ['ילד', '🧒'], ['כוס', '🥛']];
+  var WB4 = [['חתול', '🐱'], ['אריה', '🦁'], ['בלון', '🎈'], ['פרפר', '🦋'], ['תפוח', '🍎'], ['כדור', '⚽'], ['עוגה', '🎂'], ['פרח', '🌸'], ['ספר', '📖'], ['רכבת', '🚂']];
+  var WB5 = [['צפרדע', '🐸'], ['מטריה', '☂️'], ['שולחן', '🍽️'], ['מספריים', '✂️'], ['פינגווין', '🐧']];
+  var WBF = [['ענן', '☁️'], ['שעון', '⏰'], ['גשם', '🌧️'], ['מים', '💧'], ['כף', '🥄'], ['עוף', '🐔'], ['עץ', '🌳'], ['ארץ', '🌍'], ['מלך', '🤴']];
+  var HE_ABC = 'אבגדהוזחטיכלמנסעפצקרשת'.split(''), EN_ABC = 'ABCDEFGHIJKLMNOPRSTUVWY'.split('');
+  var HE_NAME = {}; HE.forEach(function (x) { HE_NAME[x[0]] = x[1]; });
+  HE_NAME['ן'] = 'נוּן סוֹפִית'; HE_NAME['ם'] = 'מֵם סוֹפִית'; HE_NAME['ף'] = 'פֵּא סוֹפִית'; HE_NAME['ץ'] = 'צָדִי סוֹפִית'; HE_NAME['ך'] = 'כַּף סוֹפִית';
+
+  /* ---------- 4.5.2 בונה מילים ----------
+     cfg: { word, emoji, lang:'he'|'en', extra: מספר מסיחים, hide: להסתיר תמונה (שמיעה בלבד), prefill: אותיות ראשונות שכבר במקום }
+     הילדה לוחצת על אריחי אותיות לפי הסדר; אות נכונה נכנסת למשבצת הבאה, אות לא נכונה — ניעור עדין. */
+  function builder(api, cfg) {
+    var el = api.el, isHe = cfg.lang === 'he', letters = cfg.word.split(''), pos = cfg.prefill || 0, wrong = 0;
+    var abc = isHe ? HE_ABC : EN_ABC;
+    var pool = letters.slice(pos);
+    for (var i = 0; i < (cfg.extra || 0); i++) { var d = pick(abc); if (letters.indexOf(d) < 0 && pool.indexOf(d) < 0) pool.push(d); else i--; }
+    pool = mix(pool);
+    var speakWord = function () { api.read([{ text: cfg.word, lang: isHe ? 'he-IL' : 'en-US' }], { interrupt: true }); };
+    api.setRound({ speak: isHe ? 'בונים את המילה! לחצו על האותיות לפי הסדר.' : 'בונים מילה באנגלית! לחצו על האותיות לפי הסדר.', replay: cfg.hide ? speakWord : null, q: cfg.hide ? [{ text: cfg.word, lang: isHe ? 'he-IL' : 'en-US' }] : [] });
+    el.instruction.textContent = cfg.hide ? 'הקשיבו ובנו את המילה' : (isHe ? 'בונים את המילה' : 'בונים מילה באנגלית');
+    el.helper.textContent = isHe ? 'לחצו על האותיות לפי הסדר — מימין לשמאל.' : 'לחצו על האותיות לפי הסדר — משמאל לימין.';
+    el.target.className = 'target wb-target';
+    el.target.innerHTML = (cfg.hide ? '<button type="button" class="music-stage wb-hear" aria-label="השמעה">🔊</button>' : '<div class="wb-pic">' + cfg.emoji + '</div>') +
+      '<div class="wb-slots" dir="' + (isHe ? 'rtl' : 'ltr') + '">' + letters.map(function (l, i) { return '<span class="wb-slot' + (i < pos ? ' filled' : '') + '">' + (i < pos ? l : '') + '</span>'; }).join('') + '</div>';
+    if (cfg.hide) { el.target.querySelector('.wb-hear').addEventListener('click', speakWord); setTimeout(speakWord, 900); }
+    el.answers.className = 'answer-grid wb-tiles';
+    el.answers.style.gridTemplateColumns = 'repeat(' + Math.min(pool.length, 7) + ',minmax(0,1fr))';
+    var slots = el.target.querySelectorAll('.wb-slot');
+    pool.forEach(function (l) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'answer wb-tile'; b.textContent = l;
+      if (!isHe) b.dir = 'ltr';
+      b.addEventListener('click', function () {
+        if (b.classList.contains('used') || pos >= letters.length) return;
+        /* הקראת שם האות בכל לחיצה — לומדים את הצליל */
+        api.read([{ text: isHe ? (HE_NAME[l] || l) : l, lang: isHe ? 'he-IL' : 'en-US' }], { interrupt: true });
+        if (l === letters[pos]) {
+          slots[pos].textContent = l; slots[pos].classList.add('filled', 'pop'); b.classList.add('used'); pos++;
+          api.sound('pop');
+          if (pos === letters.length) {
+            el.target.querySelector('.wb-slots').classList.add('done');
+            if (cfg.hide) { var pic = document.createElement('div'); pic.className = 'wb-pic'; pic.textContent = cfg.emoji; el.target.insertBefore(pic, el.target.firstChild); var h = el.target.querySelector('.wb-hear'); if (h) h.remove(); }
+            setTimeout(function () { api.win(slots[slots.length - 1], 'בנית את המילה ' + cfg.word + '! ' + cfg.emoji, isHe ? 'כל הכבוד! ' + cfg.word : 'כל הכבוד!'); if (!isHe) setTimeout(speakWord, 700); }, 300);
+          }
+        } else {
+          wrong++; api.sound('sad'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+          api.feedback('try', 'כמעט! איזו אות באה עכשיו?');
+          if (wrong >= 2) { /* רמז: האריח הנכון מהבהב */ Array.prototype.forEach.call(el.answers.children, function (t) { if (!t.classList.contains('used') && t.textContent === letters[pos]) { t.classList.remove('glow'); void t.offsetWidth; t.classList.add('glow'); } }); }
+        }
+      });
+      el.answers.appendChild(b);
+    });
+  }
+  function build(list, lang, opts) { return function (api) { var w = pick(list); builder(api, Object.assign({ word: w[0], emoji: w[1], lang: lang }, opts || {})); }; }
+
+  /* ---------- 4.5.3 מחוללים ---------- */
+  /* קריאה: מילה מנוקדת (או בלי ניקוד) ← בוחרים תמונה */
+  function readPic(list, noNiqqud) {
+    return function (api) {
+      var w = pick(list), shown = noNiqqud ? plain(w[0]) : w[0];
+      Q(api, { ins: 'מה כתוב? בחרו את התמונה', help: 'קראו לאט, אות אחרי אות.', success: 'קריאה מצוינת! ' + w[0] + ' ' + w[1], read: [{ text: w[0], lang: 'he-IL' }],
+        target: '<div class="read-word big">' + shown + '</div>', opts: mix([w].concat(others(list, w, 3))).map(function (o) { return { h: BIG(o[1]), ok: o === w }; }) });
+    };
+  }
+  /* קריאה: תמונה ← בוחרים את המילה הכתובה */
+  function picWord(list, noNiqqud) {
+    return function (api) {
+      var w = pick(list);
+      Q(api, { ins: 'איזו מילה מתאימה לתמונה?', help: 'קראו כל מילה ובחרו.', success: 'נכון! ' + w[0], read: [{ text: w[0], lang: 'he-IL' }],
+        target: '<div class="nature-scene">' + w[1] + '</div>', opts: mix([w].concat(others(list, w, 3))).map(function (o) { return { h: L(noNiqqud ? plain(o[0]) : o[0], ' style="font-size:clamp(26px,3.4vw,44px)"'), ok: o === w }; }) });
+    };
+  }
+  function fillBlank(api) {
+    var f = pick(FILL);
+    Q(api, { ins: 'איזו מילה חסרה?', help: 'קראו את המשפט עם כל מילה, ובחרו את מה שמתאים.', success: 'נכון! ' + f[0].replace('___', f[1]), read: [{ text: f[0].replace('___', f[1]), lang: 'he-IL' }],
+      target: '<div class="read-word">' + f[0].replace('___', '<span class="q">____</span>') + ' ' + f[3] + '</div>',
+      opts: mix([f[1]].concat(f[2])).map(function (o) { return { h: L(o), ok: o === f[1] }; }) });
+  }
+  function trueFalse(api) {
+    var t = pick(TF);
+    Q(api, { ins: 'נכון או לא נכון?', help: 'קראו את המשפט והסתכלו בתמונה.', success: t[2] ? 'נכון! המשפט נכון' : 'נכון! המשפט לא נכון', read: [{ text: t[0], lang: 'he-IL' }], q: [{ text: t[0], lang: 'he-IL' }],
+      target: '<div class="read-word">' + t[0] + '</div><div class="nature-scene small">' + t[1] + '</div>',
+      opts: [{ h: '✅' + L('נכון'), ok: t[2] }, { h: '❌' + L('לא נכון'), ok: !t[2] }] });
+  }
+  function readStory(api) {
+    var s = pick(STORIES);
+    Q(api, { ins: s[1], help: 'קראו את הסיפור (או הקשיבו) וענו על השאלה.', success: 'הבנת הנקרא מעולה! 📖', q: [{ text: s[0], lang: 'he-IL' }],
+      target: '<div class="story-card">' + s[0] + '</div>', opts: mix([s[2]].concat(s[3])).map(function (o) { return { h: BIG(o), ok: o === s[2] }; }) });
+  }
+  /* שפה */
+  function opposite(withPics) {
+    return function (api) {
+      var o = pick(OPP), flip = Math.random() < .5, a = flip ? [o[2], o[3]] : [o[0], o[1]], b = flip ? [o[0], o[1]] : [o[2], o[3]];
+      var pool = OPP.map(function (x) { return flip ? [x[0], x[1]] : [x[2], x[3]]; });
+      Q(api, { ins: 'מה ההפך של "' + a[0] + '"?', help: 'הפך = הכי שונה, כמו יום ולילה.', success: 'נכון! ' + a[0] + ' — ' + b[0],
+        target: '<div class="bilingual-card"><span class="emoji">' + a[1] + '</span><span class="bilingual-copy"><strong class="hebrew">' + a[0] + '</strong></span></div>',
+        opts: mix([b].concat(others(pool, b, 3, function (x, y) { return x[0] === y[0]; }))).map(function (x) { return { h: (withPics ? '<span>' + x[1] + '</span>' : '') + L(x[0]), ok: x[0] === b[0] }; }) });
+    };
+  }
+  function rhyme(withPics) {
+    return function (api) {
+      var r = pick(RHYME), pool = RHYME.filter(function (x) { return x !== r; }).map(function (x) { return [x[2], x[3]]; });
+      var right = [r[2], r[3]];
+      Q(api, { ins: 'מה מתחרז עם "' + r[0] + '"?', help: 'חרוז = נגמר באותו צליל, כמו סוּס וכּוֹס.', success: 'נכון! ' + r[0] + ' — ' + r[2], q: [{ text: r[0], lang: 'he-IL' }],
+        target: '<div class="bilingual-card"><span class="emoji">' + r[1] + '</span><span class="bilingual-copy"><strong class="hebrew">' + r[0] + '</strong></span></div>',
+        opts: mix([right].concat(mix(pool).slice(0, 3))).map(function (x) { return { h: (withPics ? '<span>' + x[1] + '</span>' : '') + L(x[0]), ok: x === right }; }) });
+    };
+  }
+  function oddCat(api) {
+    var keys = Object.keys(CATS), k = pick(keys), k2 = pick(keys.filter(function (x) { return x !== k; }));
+    var three = mix(CATS[k]).slice(0, 3), odd = pick(CATS[k2]);
+    Q(api, { ins: 'מה לא שייך?', help: 'שלושה מאותה משפחה — ואחד לא.', success: 'נכון! כל השאר הם ' + k,
+      opts: mix(three.concat([odd])).map(function (e) { return { h: BIG(e), ok: e === odd }; }) });
+  }
+  function whichCat(api) {
+    var keys = Object.keys(CATS), k = pick(keys), right = pick(CATS[k]);
+    var wrongs = keys.filter(function (x) { return x !== k; }).map(function (x) { return pick(CATS[x]); });
+    Q(api, { ins: 'מה מהם שייך ל' + k + '?', help: 'חשבו לאיזו משפחה כל אחד שייך.', success: 'נכון! זה שייך ל' + k,
+      opts: mix([right].concat(wrongs)).map(function (e) { return { h: BIG(e), ok: e === right }; }) });
+  }
+  function langMix(api) { pick([opposite(true), rhyme(true), oddCat, whichCat])(api); }
+  function actions(api) {
+    var a = pick(ACTS);
+    Q(api, { ins: 'מה עושים עם ' + a[1] + '?', help: 'בחרו את הפעולה המתאימה.', success: 'נכון! עם ' + a[1] + ' ' + a[2],
+      target: '<div class="nature-scene">' + a[0] + '</div>', opts: mix([a].concat(others(ACTS, a, 3))).map(function (o) { return { h: L(o[2]), ok: o === a }; }) });
+  }
+  function plural(api) {
+    var p = pick(PLURAL), bad = p[0].replace(/[֑-ׇ]/g, '') + 'ות';
+    var opts = mix([p[1], bad].concat(others(PLURAL.map(function (x) { return x[1]; }), p[1], 2)));
+    Q(api, { ins: 'מה הרבים של "' + p[0] + '"?', help: 'אחד = יחיד, הרבה = רבים.', success: 'נכון! ' + p[0] + ' — ' + p[1],
+      target: '<div class="read-word">' + p[0] + ' ← ?</div>', opts: opts.map(function (o) { return { h: L(o), ok: o === p[1] }; }) });
+  }
+  function tense(api) {
+    var t = pick(TENSE);
+    Q(api, { ins: 'איזו מילה מתאימה?', help: 'אתמול = עבר, עכשיו = הווה, מחר = עתיד.', success: 'נכון! ' + t[0].replace('___', t[1]), read: [{ text: t[0].replace('___', t[1]), lang: 'he-IL' }],
+      target: '<div class="read-word">' + t[0].replace('___', '<span class="q">____</span>') + '</div>', opts: mix([t[1]].concat(t[2])).map(function (o) { return { h: L(o), ok: o === t[1] }; }) });
+  }
+  /* אנגלית: שיחה — שומעים שאלה ובוחרים תשובה מתאימה */
+  function talk(api) {
+    var t = pick(TALK);
+    Q(api, { ins: 'מה עונים?', help: 'הקשיבו לשאלה באנגלית ובחרו תשובה.', success: 'Great answer! 🌟', q: [{ text: t[0], lang: 'en-US' }], read: [{ text: t[1], lang: 'en-US' }],
+      target: '<div class="read-word" dir="ltr">💬 ' + t[0] + '</div>', opts: mix([t[1]].concat(t[2])).map(function (o) { return { h: L(o, ' dir="ltr" style="font-size:clamp(17px,2vw,26px)"'), ok: o === t[1] }; }) });
+  }
+  /* איות: שומעים מילה ← בוחרים אות ראשונה */
+  function hearFirst(api) {
+    var w = pick(SP3.concat(SP4)), first = w[0][0], play = function () { api.read([{ text: w[0].toLowerCase(), lang: 'en-US' }]); };
+    Q(api, { ins: 'באיזו אות מתחילה המילה?', help: 'הקשיבו למילה באנגלית והקשיבו לצליל הראשון.', success: 'נכון! ' + w[0] + ' מתחילה ב-' + first, replay: play, q: [{ text: w[0].toLowerCase(), lang: 'en-US' }],
+      target: '<div class="nature-scene">' + w[1] + '</div>', opts: mix([first].concat(others(EN_ABC, first, 3))).map(function (l) { return { h: L(l, ' dir="ltr" style="font-size:clamp(34px,4.5vw,56px)"'), ok: l === first }; }) });
+  }
+  /* איות: אות חסרה (index=0 ראשונה, 'mid' באמצע) */
+  function missingLetter(where) {
+    return function (api) {
+      var w = pick(where === 'mid' ? SP3.concat(SP4) : SP3), i = where === 'mid' ? rnd(1, w[0].length - 2) : 0, l = w[0][i];
+      var shown = w[0].slice(0, i) + '_' + w[0].slice(i + 1);
+      Q(api, { ins: 'איזו אות חסרה?', help: 'אמרו את המילה באנגלית וחשבו מה חסר.', success: 'נכון! ' + w[0], read: [{ text: w[0].toLowerCase(), lang: 'en-US' }],
+        target: '<div class="nature-scene small">' + w[1] + '</div><div class="read-word" dir="ltr">' + shown + '</div>',
+        opts: mix([l].concat(others(EN_ABC, l, 3))).map(function (x) { return { h: L(x, ' dir="ltr" style="font-size:clamp(34px,4.5vw,56px)"'), ok: x === l }; }) });
+    };
+  }
+  /* איות: איזו מילה כתובה נכון? (שיבושים: החלפת אותיות, השמטה, כפילות) */
+  function rightSpelling(api) {
+    var w = pick(SP4.concat(SP5)), word = w[0], bad = [];
+    var sw = word.split(''), i = rnd(0, word.length - 2), t = sw[i]; sw[i] = sw[i + 1]; sw[i + 1] = t; bad.push(sw.join(''));
+    var j = rnd(1, word.length - 1); bad.push(word.slice(0, j) + word.slice(j + 1));
+    var k = rnd(0, word.length - 1); bad.push(word.slice(0, k) + word[k] + word.slice(k));
+    bad = bad.filter(function (b, idx) { return b !== word && bad.indexOf(b) === idx; });
+    while (bad.length < 3) bad.push(word.slice(0, -1) + pick(EN_ABC));
+    Q(api, { ins: 'איזו מילה כתובה נכון?', help: 'הסתכלו על כל אות.', success: 'נכון! ' + word, read: [{ text: word.toLowerCase(), lang: 'en-US' }],
+      target: '<div class="nature-scene">' + w[1] + '</div>', opts: mix([word].concat(bad.slice(0, 3))).map(function (o) { return { h: L(o, ' dir="ltr" style="font-size:clamp(24px,3vw,40px);letter-spacing:2px"'), ok: o === word }; }) });
+  }
+
   /* ---------- פרק 5 — טבלת הפרקים ---------- */
   /* עוזר קצר ליצירת פרק */
   function C(n, f) { return { n: n, f: f }; }
@@ -787,6 +1021,26 @@
       young: [C('כלי נגינה', instrument), C('גבוה או נמוך', highLow), C('ארוך או קצר', longShortSound), C('מהיר או איטי', fastSlow), C('סיימון 2', simon(2))],
       big: [C('ספירת תיפופים', drums), C('סיימון 3', simon(3)), C('אותו מקצב?', sameRhythm), C('סיימון 4', simon(4)), C('סיימון 5', simon(5))]
     },
+    reading: {
+      young: [C('מילים קצרות', readPic(R2)), C('3 אותיות', readPic(R3)), C('מילים ארוכות', readPic(R4)), C('תמונה ← מילה', picWord(R2.concat(R3))), C('משפטים', readSentence)],
+      big: [C('בלי ניקוד', readPic(R3.concat(R4), true)), C('תמונה ← מילה', picWord(R3.concat(R4), true)), C('מילה חסרה', fillBlank), C('נכון או לא?', trueFalse), C('סיפור קצר', readStory)]
+    },
+    wordbuild: {
+      young: [C('2 אותיות', build(WB2, 'he')), C('3 אותיות', build(WB3, 'he', { prefill: 1 })), C('3 אותיות לבד', build(WB3, 'he')), C('עם אות מבלבלת', build(WB3, 'he', { extra: 1 })), C('4 אותיות', build(WB4, 'he'))],
+      big: [C('4 אותיות', build(WB4, 'he', { extra: 1 })), C('מילים ארוכות', build(WB5, 'he')), C('אותיות סופיות', build(WBF, 'he', { extra: 2 })), C('עם מסיחים', build(WB4.concat(WB5), 'he', { extra: 2 })), C('שמיעה בלבד', build(WB3.concat(WB4), 'he', { hide: true, extra: 1 }))]
+    },
+    language: {
+      young: [C('הפכים', opposite(true)), C('חרוזים', rhyme(true)), C('מה לא שייך?', oddCat), C('משפחות', whichCat), C('ערבוב', langMix)],
+      big: [C('הפכים במילים', opposite(false)), C('חרוזים במילים', rhyme(false)), C('יחיד ורבים', plural), C('מה עושים עם…', actions), C('אתמול, היום, מחר', tense)]
+    },
+    envocab: {
+      young: [C('Colors', listenPick(ENV.colors)), C('Numbers', listenPick(ENV.numbers)), C('Body', listenPick(ENV.body)), C('Family', listenPick(ENV.family)), C('Clothes', listenPick(ENV.clothes))],
+      big: [C('Actions', readPick(ENV.actions)), C('Feelings', readPick(ENV.feelings)), C('Weather', readPick(ENV.weather)), C('Places', readPick(ENV.places)), C('Talk', talk)]
+    },
+    enspell: {
+      young: [C('צליל ראשון', hearFirst), C('_at — מה חסר?', missingLetter(0)), C('בונים CAT', build(SP3, 'en')), C('עם אות מבלבלת', build(SP3, 'en', { extra: 2 })), C('4 אותיות', build(SP4, 'en'))],
+      big: [C('אות באמצע', missingLetter('mid')), C('בונים 4–5', build(SP4.concat(SP5), 'en')), C('איות נכון', rightSpelling), C('עם מסיחים', build(SP4.concat(SP5), 'en', { extra: 3 })), C('שמיעה בלבד', build(SP3.concat(SP4), 'en', { hide: true, extra: 2 }))]
+    },
     nature: {
       young: [C('איפה גרים?', habitat), C('מזג אוויר', weather), C('מה אוכלים?', eats), C('יום או לילה', dayNight), C('ערבוב טבע', natureMix)],
       big: [C('עונות השנה', season), C('מחזור חיים', cycle), C('עובדות מדהימות', facts(FACTS, '🌍🔍')), C('החלל', facts(SPACE, '🚀🪐')), C('כמה רגליים?', legs)]
@@ -799,6 +1053,11 @@
     meta: {
       math: { name: 'חשבון גיבורים', subtitle: 'חיבור, שעון וכסף', icon: '➕', color: '#ffc93c', title: 'חשבון של גיבורים', mascot: '🦸‍♀️' },
       music: { name: 'מוזיקה', subtitle: 'צלילים ומנגינות', icon: '🎵', color: '#ff5fb0', title: 'מעבדת הצלילים', mascot: '🎤' },
+      reading: { name: 'קריאה', subtitle: 'מילים, משפטים וסיפורים', icon: '📖', color: '#ff8fc4', title: 'קוראות כמו גיבורות', mascot: '📚' },
+      wordbuild: { name: 'בונים מילים', subtitle: 'אות אחרי אות', icon: '🧱', color: '#ffb31c', title: 'מעבדת המילים', mascot: '🔤' },
+      language: { name: 'שפה', subtitle: 'הפכים, חרוזים ועוד', icon: '💬', color: '#8b5cff', title: 'קסם השפה', mascot: '🦜' },
+      envocab: { name: 'English Words', subtitle: 'מילים באנגלית', icon: '🇬🇧', color: '#3d8bff', title: 'Hero English', mascot: '🦉' },
+      enspell: { name: 'Spelling', subtitle: 'איות באנגלית', icon: '🔠', color: '#29c5ff', title: 'Super Spelling', mascot: '🐝' },
       nature: { name: 'טבע', subtitle: 'חיות, עונות וחלל', icon: '🌿', color: '#3ff2b0', title: 'חוקרות הטבע', mascot: '🦉' }
     },
     CHAPTERS: CHAPTERS,

@@ -270,7 +270,7 @@
     @keyframes ans-in { from { opacity: 0; transform: translateY(18px) scale(.9); } to { opacity: 1; transform: none; } }
     .answer-label { font-size: clamp(20px, 2.6vw, 34px); }
     .answer.correct { animation: answer-win .5s var(--h-spring); box-shadow: 0 6px 0 var(--h-ink), 0 0 0 5px rgba(63,242,176,.6); }
-    .answer.hinted { opacity: .25; transform: scale(.94); pointer-events: none; filter: grayscale(1); }
+    .answer.hinted { animation: none; opacity: .25; transform: scale(.94); pointer-events: none; filter: grayscale(1); }
     .bottom-row { grid-template-columns: auto auto minmax(0, 1fr) auto; }
     .hint-button { min-height: 54px; padding: 6px 14px; border: 3px solid var(--h-ink); border-radius: 16px; background: linear-gradient(180deg, #fff3b0, #ffc93c); color: var(--h-ink); font: 900 clamp(15px, 1.6vw, 19px)/1 var(--h-font); box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; }
     .hint-button:active { transform: translateY(3px); }
@@ -278,6 +278,24 @@
     .streak.on { opacity: 1; }
     .streak.boom { animation: streak-boom .7s var(--h-spring); }
     @keyframes streak-boom { 40% { transform: scale(1.5) rotate(-6deg); } }
+
+    /* --- פרק יג: תחנות שפה — בונה מילים, קריאה וסיפור --- */
+    .wb-target { flex-direction: column; gap: clamp(8px, 1.4vh, 14px); }
+    .wb-pic { font-size: clamp(64px, 11vh, 110px); line-height: 1; filter: drop-shadow(0 8px 6px rgba(27,16,54,.2)); animation: color-sway 3s ease-in-out infinite alternate; }
+    .wb-slots { display: flex; gap: clamp(6px, 1vw, 12px); }
+    .wb-slot { display: grid; place-items: center; width: clamp(54px, 6.6vw, 84px); height: clamp(62px, 8vh, 92px); border: 4px dashed rgba(27,16,54,.35); border-radius: 18px; background: #fff; font: 900 clamp(34px, 4.6vw, 58px)/1 var(--h-font); color: var(--h-ink); }
+    .wb-slot.filled { border: 4px solid var(--h-ink); background: linear-gradient(180deg, #fff3b0, #ffd95a); box-shadow: 0 4px 0 var(--h-ink); }
+    .wb-slot.pop { animation: pz-snap .35s var(--h-spring); }
+    .wb-slots.done .wb-slot { background: linear-gradient(180deg, #b6ffdc, #3ff2b0); animation: answer-win .5s var(--h-spring); }
+    .wb-tiles { gap: clamp(8px, 1vw, 14px); }
+    .answer.wb-tile { min-height: clamp(76px, 12vh, 118px); font-size: clamp(38px, 5vw, 62px); background: linear-gradient(180deg, #fff, #ffe1f1); }
+    /* animation:none — אחרת אנימציית הכניסה (fill-mode both) דורסת את השקיפות */
+    .answer.wb-tile.used { animation: none; opacity: .18; transform: scale(.9); pointer-events: none; }
+    .answer.wb-tile.shake { animation: answer-no .32s ease; }
+    .answer.wb-tile.glow { animation: tile-glow .5s ease-in-out 4 alternate; }
+    @keyframes tile-glow { to { box-shadow: 0 6px 0 var(--h-ink), 0 0 0 6px var(--h-gold), 0 0 24px var(--h-gold); transform: translateY(-4px); } }
+    .read-word.big { font-size: clamp(56px, 10vh, 104px); padding: 10px 36px; }
+    .story-card { max-width: min(640px, 100%); padding: 14px 22px; border: 4px solid var(--h-ink); border-radius: 22px; background: #fff; box-shadow: 0 6px 0 var(--h-ink); font: 800 clamp(22px, 2.8vw, 34px)/1.5 var(--h-font); color: var(--h-ink); text-align: right; }
 
     /* --- פרק ח: מסכים נמוכים (אייפד מיני / טלפון לרוחב) --- */
     @media (max-width:980px) and (orientation:landscape) {
