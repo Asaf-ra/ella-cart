@@ -134,7 +134,6 @@ window.VOICE_EN = {
 "i kick the ball": "i-kick-the-ball.mp3",
 "i like all the colors": "i-like-all-the-colors.mp3",
 "i like apples": "i-like-apples.mp3",
-"i like blue": "i-like-blue.mp3",
 "i like pink": "i-like-pink.mp3",
 "i love my mom": "i-love-my-mom.mp3",
 "i love the zoo": "i-love-the-zoo.mp3",
