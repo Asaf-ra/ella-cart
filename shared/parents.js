@@ -7,6 +7,9 @@
    פרק 4 — מגבלת זמן מסך יומית (אלה "מבקשת לנוח" כשמגיעים למגבלה)
    פרק 5 — למידה לפי נושא: דיוק מהניסיון הראשון בכל תחנה, חזקות 💪 ולחיזוק 🎯
    פרק 6 — הגדרות קול (כולל הסבר על קול עברי משופר) ואיפוס נתוני מעקב
+   פרק 7 — איפוס לפי נושא: 12 נושאים (חיית מחמד, גיבורה וצוות, אקדמיה, נבל השבוע, משימות היום,
+           סיפורים, דפי צביעה, גלריה, עגלה, טיסה, מטבעות, נתוני מעקב) + תחנה אחת באקדמיה + איפוס מלא.
+           כל איפוס — אישור בנגיעה שנייה. הגדרות הקול ומגבלת זמן המסך לא נמחקים לעולם
    תלויות: shared/progress.js (חובה), shared/theme.css; אופציונלי: shared/voice-settings.js, hero-rewards.js
    ===================================================================== */
 (function () {
@@ -19,6 +22,56 @@
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function snd(n) { try { if (window.Sound && Sound[n]) Sound[n](); } catch (e) {} }
   function dayKey(d) { return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+
+  /* ---------- פרק 7 — איפוס לפי נושא ----------
+     כל נושא: מה נמחק (fn) + הסבר קצר להורה (what). אחרי איפוס הדף נטען מחדש כשסוגרים את הלוח —
+     כך כל המסכים (HUD, גיבורה, חיה, משימות) מתחילים נקי. לא נמחקים לעולם: ella-voice-v1 ומגבלת הזמן */
+  var JKEY = 'ella-learning-journey-v1', CART_KEY = 'ella_cart_save_v1';
+  function rm(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  /* editJSON — עריכה של שמירה קיימת (למשל לאפס שדרוגים ולהשאיר מטבעות) */
+  function editJSON(k, fn) { try { var o = JSON.parse(localStorage.getItem(k)); if (!o) return; fn(o); localStorage.setItem(k, JSON.stringify(o)); } catch (e) {} }
+  /* PR — מודול המעקב (shared/progress.js) */
+  function PR() { return window.Progress; }
+  var TOPICS = [
+    { id: 'pet', ico: '🐉', name: 'דרקונצ׳יק', what: 'הילדה תבחר ביצה, תחמם אותה ותיתן שם בעצמה', fn: function () { if (window.Pet && Pet.reset) Pet.reset(); rm('ella-pet-v1'); } },
+    { id: 'hero', ico: '🦸‍♀️', name: 'גיבורה וצוות', what: 'חזרה לרמה 1: תחפושות, כוחות וחברי צוות ננעלים מחדש (הפריטים החופשיים נשארים)', fn: function () { rm('ella-hero-v1'); } },
+    { id: 'academy', ico: '📚', name: 'אקדמיה — כל התחנות', what: 'כל הפרקים והכוכבים בשתי הרמות (רמת הקושי שנבחרה נשמרת)', fn: function () { editJSON(JKEY, function (j) { j.chap = { young: {}, big: {} }; j.progress = {}; j.completed = {}; j.stars = 0; j.totalCorrect = 0; }); } },
+    { id: 'boss', ico: '⚔️', name: 'נבל השבוע', what: 'הנבל חוזר עם כל נקודות החיים — אפשר להילחם בו שוב', fn: function () { PR().resetBoss(); } },
+    { id: 'quests', ico: '📜', name: 'משימות היום', what: 'משימות היום מתחילות מאפס ואפשר לזכות שוב בפרס', fn: function () { PR().resetDaily(); } },
+    { id: 'stories', ico: '📖', name: 'סיפורים', what: 'סימוני "נקרא" (הפרס הראשון חוזר), ופרקי "הרפתקאות אלה" ננעלים מחדש — חוץ מפרק 1', fn: function () { rm('ella-stories-v1'); PR().resetStories(); } },
+    { id: 'art', ico: '🖍️', name: 'דפי צביעה בתהליך', what: 'כל הדפים חוזרים ללבן (הגלריה נשמרת)', fn: function () { rm('ella-art-work-v1'); rm('ella-art-v1'); } },
+    { id: 'gallery', ico: '🖼️', name: 'גלריית הציורים', what: 'כל הציורים השמורים יימחקו', fn: function () { rm('ella-coloring-gallery'); } },
+    { id: 'cart', ico: '🍔', name: 'העגלה', what: 'שדרוגי העגלה חוזרים להתחלה (המטבעות נשמרים)', fn: function () { editJSON(CART_KEY, function (c) { c.lvls = {}; }); } },
+    { id: 'flight', ico: '🚀', name: 'טיסת גיבורה', what: 'אזורים שנפתחו, שיא וחתולים שניצלו', fn: function () { rm('ella-flight-v1'); } },
+    { id: 'coins', ico: '🪙', name: 'מטבעות ושדרוגים', what: 'מטבעות = 0, ושדרוגי הבלונים והציור מעגלת השדרוגים', fn: function () { editJSON(CART_KEY, function (c) { c.coins = 0; }); rm('ella-shop-v1'); } },
+    { id: 'stats', ico: '📊', name: 'נתוני מעקב', what: 'דקות, גרף ודיוק לפי תחנה (מגבלת הזמן נשמרת)', fn: function () { PR().reset(); } }
+  ];
+  /* resetStation — תחנה אחת באקדמיה (בשתי הרמות) + נתוני הדיוק שלה */
+  function resetStation(k) {
+    editJSON(JKEY, function (j) { ['young', 'big'].forEach(function (g) { if (j.chap && j.chap[g]) delete j.chap[g][k]; }); if (j.progress) j.progress[k] = 0; if (j.completed) j.completed[k] = false; });
+    try { PR().resetStation(k); } catch (e) {}
+  }
+  /* stationDone — כמה פרקים הושלמו בתחנה (מתוך 10: 5 לכל רמה) */
+  function stationDone(j, k) { var n = 0; ['young', 'big'].forEach(function (g) { var c = j && j.chap && j.chap[g] && j.chap[g][k]; if (c && c.stars) c.stars.forEach(function (x) { if (x >= 3) n++; }); }); return n; }
+  /* resetAll — איפוס מלא: כל הנושאים יחד + טעינה מחדש */
+  function resetAll() {
+    TOPICS.forEach(function (t) { try { t.fn(); } catch (e) {} });
+    rm(JKEY);
+    try { sessionStorage.removeItem('ella-intro-seen'); } catch (e) {}
+    location.reload();
+  }
+  /* confirmTwice — כפתור שדורש נגיעה שנייה לאישור (חוזר למצב רגיל אחרי 5 שניות) */
+  function confirmTwice(btn, askText, fn) {
+    btn.onclick = function () {
+      if (btn.disabled) return;
+      if (!btn.dataset.sure) {
+        btn.dataset.sure = 1; btn.dataset.orig = btn.innerHTML; btn.innerHTML = askText; btn.classList.add('sure'); snd('tap');
+        setTimeout(function () { if (btn.isConnected && btn.dataset.sure) { delete btn.dataset.sure; btn.innerHTML = btn.dataset.orig; btn.classList.remove('sure'); } }, 5000);
+        return;
+      }
+      delete btn.dataset.sure; btn.classList.remove('sure'); fn();
+    };
+  }
 
   var st = document.createElement('style');
   st.textContent =
@@ -35,7 +88,14 @@
     '.pa-row{display:grid;grid-template-columns:minmax(120px,1fr) 2fr 70px 60px;gap:10px;align-items:center;padding:6px 0;border-bottom:2px dashed rgba(27,16,54,.15);font:800 15px/1.2 var(--h-font)}' +
     '.pa-acc{height:14px;border:2px solid var(--h-ink);border-radius:999px;background:#eee;overflow:hidden}.pa-acc i{display:block;height:100%}' +
     '.pa-note{font:700 15px/1.5 var(--h-font);color:var(--h-text-soft)}.pa-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}' +
-    '@media (max-width:700px){.pa-row{grid-template-columns:1fr 1fr 56px 50px}}';
+    '.pa-topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;margin-top:10px}' +
+    '.pa-topic{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px;border:3px solid var(--h-ink);border-radius:16px;background:#fffaf0}' +
+    '.pa-topic .pt-ico{font-size:30px}.pa-topic b{display:block;font:900 16px/1.2 var(--h-font)}.pa-topic small{display:block;font:700 13px/1.35 var(--h-font);color:var(--h-text-soft)}' +
+    '.pt-btn,.pa-st{border:3px solid var(--h-ink);border-radius:999px;background:#fff;box-shadow:0 3px 0 var(--h-ink);font:900 14px/1.2 var(--h-font);cursor:pointer;color:var(--h-ink)}' +
+    '.pt-btn{padding:8px 14px;white-space:nowrap}.pa-st{padding:7px 12px}' +
+    '.pt-btn.sure,.pa-st.sure{background:#ff5a6e;color:#fff}.pt-btn.done,.pa-st.done{background:#b6ffdc;box-shadow:none}' +
+    '.pa-stations{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.pa-sub{font:900 17px/1.2 var(--h-font);margin-top:16px}' +
+    '@media (max-width:700px){.pa-row{grid-template-columns:1fr 1fr 56px 50px}.pa-topics{grid-template-columns:1fr}}';
   document.head.appendChild(st);
 
   /* ---------- פרק 1 — שער הורים ---------- */
@@ -69,6 +129,7 @@
       return '<div class="pa-row"><span>' + (NAMES[k] || k) + '</span><span class="pa-acc"><i style="width:' + pct + '%;background:' + col + '"></i></span><span>' + pct + '%</span><span>' + stats[k].a + '</span></div>';
     }).join('') || '<p class="pa-note">עוד אין נתונים — הנתונים יופיעו אחרי כמה תשובות באקדמיה.</p>';
     var weak = P.weakStations(), strong = P.strongStations();
+    var journey = null; try { journey = JSON.parse(localStorage.getItem(JKEY)); } catch (e) {}
     var lim = P.getLimit();
     card.innerHTML = '<button type="button" class="pa-x">✖</button><span class="h-modal-kicker">👨‍👩‍👧 לוח ההורים</span>' +
       /* פרק 2 — סיכום */
@@ -93,20 +154,42 @@
         (strong.length ? '<p class="pa-note">💪 חזקה ב: <b>' + strong.map(function (k) { return NAMES[k] || k; }).join(' · ') + '</b></p>' : '') +
         (weak.length ? '<p class="pa-note">🎯 כדאי לתרגל: <b>' + weak.map(function (k) { return NAMES[k] || k; }).join(' · ') + '</b> — התחנות האלו מסומנות לילדה באקדמיה ב"💪 כדאי לתרגל".</p>' : '') +
         '<div class="pa-row" style="font-weight:900"><span>תחנה</span><span>דיוק</span><span>%</span><span>תשובות</span></div>' + rows + '</div>' +
-      /* פרק 6 — קול ואיפוס */
+      /* פרק 6 — קול */
       '<div class="pa-sec"><h3>🔊 קול ההקראה</h3><p class="pa-note">האנגלית מוקראת בהקלטות קול טבעיות מובנות. לעברית טבעית: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← עברית ← <b>כרמית (משופר)</b> ← להוריד, ואז לבחור אותה כאן.</p>' +
-        '<div class="pa-actions">' + (window.VoiceSettings ? '<button type="button" class="h-btn cyan" id="paVoice">🔊 הגדרות קול</button>' : '') +
-        '<button type="button" class="h-btn violet" id="paReset">🗑️ איפוס נתוני מעקב</button></div></div>';
-    card.querySelector('.pa-x').onclick = function () { m.remove(); };
+        (window.VoiceSettings ? '<div class="pa-actions"><button type="button" class="h-btn cyan" id="paVoice">🔊 הגדרות קול</button></div>' : '') + '</div>' +
+      /* פרק 7 — איפוס לפי נושא */
+      '<div class="pa-sec" id="paResetSec"><h3>🧹 איפוס לפי נושא — משחקים שוב מההתחלה</h3>' +
+        '<p class="pa-note">כל כפתור מאפס רק את הנושא שלו. נגיעה ראשונה — "בטוח?", נגיעה שנייה — איפוס. הגדרות הקול ומגבלת הזמן לא נמחקים לעולם.</p>' +
+        '<div class="pa-topics">' + TOPICS.map(function (t) {
+          return '<div class="pa-topic"><span class="pt-ico">' + t.ico + '</span><div><b>' + t.name + '</b><small>' + t.what + '</small></div><button type="button" class="pt-btn" data-t="' + t.id + '">איפוס</button></div>';
+        }).join('') + '</div>' +
+        '<div class="pa-sub">📚 אקדמיה — איפוס תחנה אחת (בשתי הרמות) · פרקים שהושלמו מתוך 10</div><div class="pa-stations">' + Object.keys(NAMES).map(function (k) {
+          return '<button type="button" class="pa-st" data-st="' + k + '">' + NAMES[k] + ' · ' + stationDone(journey, k) + '/10</button>';
+        }).join('') + '</div>' +
+        '<div class="pa-sub">🔄 הכול מההתחלה</div><div class="pa-actions"><button type="button" class="h-btn violet" id="paAll">🔄 איפוס מלא של כל ההתקדמות</button></div>' +
+        '<p class="pa-note">איפוס מלא = כל הנושאים למעלה יחד — כמו אפליקציה חדשה. <b>נשמרים:</b> הגדרות הקול ומגבלת זמן המסך.</p></div>';
+    /* סגירה: אם אופס משהו — טוענים את הדף מחדש כדי שכל המסכים יתחילו נקי */
+    var dirty = false;
+    card.querySelector('.pa-x').onclick = function () { m.remove(); if (dirty) location.reload(); };
     card.querySelectorAll('[data-l]').forEach(function (b) {
       b.onclick = function () { P.setLimit(+b.dataset.l); card.querySelectorAll('[data-l]').forEach(function (x) { x.classList.toggle('on', x === b); }); snd('tap'); };
     });
     var v = card.querySelector('#paVoice'); if (v) v.onclick = function () { VoiceSettings.open(); };
-    var r = card.querySelector('#paReset');
-    r.onclick = function () {
-      if (!r.dataset.sure) { r.dataset.sure = 1; r.textContent = 'בטוח? ללחוץ שוב (הרמה והתחפושות נשמרות)'; return; }
-      P.reset(); snd('pop'); dashboard(card, m);
-    };
+    /* פרק 7 — איפוס לפי נושא (אישור בנגיעה שנייה) */
+    card.querySelectorAll('.pt-btn').forEach(function (b) {
+      var t = TOPICS.filter(function (x) { return x.id === b.dataset.t; })[0];
+      confirmTwice(b, 'בטוח? לגעת שוב', function () {
+        try { t.fn(); } catch (e) {}
+        dirty = true; snd('ding'); b.innerHTML = '✅ אופס'; b.classList.add('done'); b.disabled = true;
+      });
+    });
+    card.querySelectorAll('.pa-st').forEach(function (b) {
+      confirmTwice(b, 'לאפס את ' + NAMES[b.dataset.st] + '? לגעת שוב', function () {
+        resetStation(b.dataset.st); dirty = true; snd('ding');
+        b.innerHTML = '✅ ' + NAMES[b.dataset.st] + ' · 0/10'; b.classList.add('done'); b.disabled = true;
+      });
+    });
+    confirmTwice(card.querySelector('#paAll'), '⚠️ בטוח? הכול יימחק — לגעת שוב', resetAll);
   }
 
   window.Parents = { open: open };

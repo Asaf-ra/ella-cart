@@ -9,6 +9,7 @@
    פרק 5 — זמן מסך בריא: כשמגיעים למגבלה שההורה קבע — אלה מבקשת לנוח (הורה יכול להאריך)
    פרק 6 — משימת היום: 3 משימות קבועות לכל תאריך + פרק סיפור כפרס
    פרק 7 — אתגר שבועי (נבל השבוע): נבל מתחלף כל שבוע, 12 נקודות חיים, גביעים על ניצחון
+   ייצוא — כולל איפוס לפי נושא לאזור ההורים: resetDaily / resetBoss / resetStories / resetStation
    ===================================================================== */
 (function () {
   'use strict';
@@ -155,6 +156,11 @@
     boss: boss, bossHit: bossHit, trophies: function () { return S.trophies || 0; }, VILLAINS: VILLAINS,
     stats: function () { return S.st; }, days: function () { return S.days; },
     /* איפוס נתוני מעקב — מגבלת הזמן שההורה קבע נשמרת */
-    reset: function () { var l = S.limit; S = blank(); S.limit = l; save(); }
+    reset: function () { var l = S.limit; S = blank(); S.limit = l; save(); },
+    /* איפוס לפי נושא (מאזור ההורים — shared/parents.js) */
+    resetDaily: function () { S.daily = {}; today().ev = {}; save(); window.dispatchEvent(new CustomEvent('progress:track', { detail: { evt: 'reset' } })); },   // משימות היום מאפס
+    resetBoss: function () { S.boss = {}; save(); },                                        // נבל השבוע חוזר עם כל נקודות החיים
+    resetStories: function () { S.story = { ep: 0 }; save(); },      // פרקי "הרפתקאות אלה" ננעלים (חוץ מפרק 1)
+    resetStation: function (k) { delete S.st[k]; save(); }                                   // נתוני הדיוק של תחנה אחת
   };
 })();
