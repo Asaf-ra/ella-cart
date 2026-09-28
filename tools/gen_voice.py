@@ -37,7 +37,9 @@ LETTERS = {'A': 'Ay.', 'B': 'Bee.', 'C': 'See.', 'D': 'Dee.', 'E': 'Ee.', 'F': '
            'L': 'Ell.', 'M': 'Em.', 'N': 'En.', 'O': 'Oh.', 'P': 'Pee.', 'Q': 'Cue.', 'R': 'Are.', 'S': 'Ess.', 'T': 'Tee.', 'U': 'You.', 'V': 'Vee.',
            'W': 'Double you.', 'X': 'Ex.', 'Y': 'Why.', 'Z': 'Zee.'}
 EXTRA = ['Great answer!', 'Great job!', 'Excellent!', 'Yes!', 'Well done!', 'Hello!', 'You are a super hero.',
-         'Hello! You are a super hero. Let us learn some English words together!']
+         'Hello! You are a super hero. Let us learn some English words together!',
+         # מילות טיפול בדרקון (טמגוצ'י): אמבטיה, שינה, משחק, אוכל, אהבה
+         'bath', 'clean', 'dirty', 'wash', 'bubbles', 'play', 'yummy', 'hungry', 'I love you', 'Time for a bath!', "Let's play!", 'Good night!', 'Good morning!', 'Surprise!']
 
 def collect():
     # ---------- פרק 1 — איסוף ----------
