@@ -112,6 +112,7 @@
   .mission.cart { --c1: #ff5fb0; --c2: #b3126b; }
   .mission.color { --c1: #a98bff; --c2: #4b1fb8; }
   .mission.balloons { --c1: #3fd8ff; --c2: #1459b8; }
+  .mission.flight { --c1: #3ff2b0; --c2: #0f7a8c; }
 
   /* --- פרק ה: פתיח קולנועי ("ההשתנות") --- */
   .intro { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; cursor: pointer; background: #0b0420; overflow: hidden; }
@@ -194,8 +195,11 @@
           <button type="button" class="mission color" data-go="./coloring.html" data-say="ציור קסם!">
             <span class="m-text"><h2>ציור קסם</h2><p>צובעים דמויות</p></span><span class="m-ico">🎨</span>
           </button>
-          <button type="button" class="mission balloons" data-go="./balloons.html" data-say="בלונים!" style="grid-column:1 / -1">
-            <span class="m-text"><h2>בלונים</h2><p>מפוצצים בלונים וצוברים מטבעות</p></span><span class="m-ico">🎈</span>
+          <button type="button" class="mission balloons" data-go="./balloons.html" data-say="בלונים!">
+            <span class="m-text"><h2>בלונים</h2><p>מפוצצים וצוברים מטבעות</p></span><span class="m-ico">🎈</span>
+          </button>
+          <button type="button" class="mission flight" data-go="./flight.html" data-say="טיסת גיבורה!">
+            <span class="m-text"><span class="m-tag">חדש! 🚀</span><h2>טיסת גיבורה</h2><p>טסים ומצילים חתולים</p></span><span class="m-ico">🦸‍♀️</span>
           </button>
         </nav>
       </div>

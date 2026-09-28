@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#1d0b4a" />
+<meta name="apple-mobile-web-app-title" content="טיסת גיבורה" />
+<title>טיסת גיבורה — העולם של אלה</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<link rel="stylesheet" href="shared/theme.css" />
+<style>
+  /* ===== טיסת גיבורה — עיצוב המסך =====
+     פרק א — בסיס וקנבס | פרק ב — HUD עליון | פרק ג — מסך פתיחה ובחירת אזור
+     פרק ד — מסך תוצאות | פרק ה — סיבוב מסך */
+
+  /* --- פרק א: בסיס --- */
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  html { background: var(--h-night); }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { background: transparent; font-family: var(--h-font); color: #fff; touch-action: none; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+  #sky { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* --- פרק ב: HUD --- */
+  .hud { position: fixed; top: max(10px, env(safe-area-inset-top)); right: 14px; left: 90px; display: flex; gap: 10px; align-items: center; pointer-events: none; z-index: 10; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); color: var(--h-ink); font-weight: 900; font-size: clamp(18px, 2.2vw, 26px); box-shadow: 0 4px 0 var(--h-ink); }
+  .mission { flex: 1; min-width: 0; justify-content: center; font-size: clamp(14px, 1.7vw, 20px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mission.done { background: linear-gradient(180deg, #b6ffdc, #3ff2b0); }
+  .timebar { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 58px); right: 14px; left: 90px; height: 14px; border: 3px solid var(--h-ink); border-radius: 999px; background: #2a1a4f; overflow: hidden; z-index: 10; pointer-events: none; }
+  .timebar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--h-gold), var(--h-magenta)); transition: width .25s linear; }
+  .pause { pointer-events: auto; width: 56px; height: 56px; border: 4px solid var(--h-ink); border-radius: 50%; background: var(--h-paper); font-size: 24px; box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; }
+  .power { position: fixed; bottom: max(14px, env(safe-area-inset-bottom)); right: 14px; z-index: 10; pointer-events: none; }
+
+  /* --- פרק ג: מסך פתיחה --- */
+  .overlay { position: fixed; inset: 0; z-index: 50; display: none; place-items: center; padding: 20px; background: radial-gradient(circle at 50% 40%, rgba(58,17,119,.78), rgba(10,4,30,.9)); }
+  .overlay.show { display: grid; }
+  .card { width: min(94vw, 860px); padding: 22px 26px; text-align: center; color: var(--h-ink); }
+  .card h1 { font-size: clamp(34px, 5vw, 58px); font-weight: 900; color: #fff; -webkit-text-stroke: 4px var(--h-ink); paint-order: stroke fill; text-shadow: 4px 5px 0 var(--h-magenta); }
+  .card p { font-weight: 700; font-size: clamp(15px, 1.9vw, 20px); color: var(--h-text-soft); margin: 6px 0 12px; }
+  .zones { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 12px 0 16px; }
+  .zone { position: relative; min-height: 118px; border: 4px solid var(--h-ink); border-radius: 20px; color: #fff; font-family: var(--h-font); font-weight: 900; font-size: clamp(14px, 1.6vw, 18px); cursor: pointer; box-shadow: 0 5px 0 var(--h-ink); display: grid; place-items: center; padding: 8px 4px; transition: transform .14s var(--h-spring); text-shadow: 0 2px 0 rgba(27,16,54,.6); }
+  .zone .z-ico { font-size: 40px; line-height: 1; }
+  .zone.sel { transform: translateY(-4px) scale(1.04); box-shadow: 0 7px 0 var(--h-ink), 0 0 0 4px var(--h-gold); }
+  .zone.locked { filter: grayscale(.8) brightness(.7); cursor: default; }
+  .zone .lock { position: absolute; top: 6px; left: 8px; font-size: 18px; }
+  .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .hero-prev { width: 120px; margin: 0 auto -6px; animation: h-float 2.4s ease-in-out infinite alternate; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0; }
+  .stat { border: 4px solid var(--h-ink); border-radius: 20px; background: #fff; padding: 10px; box-shadow: 0 4px 0 var(--h-ink); }
+  .stat b { display: block; font-size: 40px; line-height: 1.1; }
+  .stat span { font-weight: 800; color: var(--h-text-soft); }
+
+  /* --- פרק ה: סיבוב מסך --- */
+  .rotate { display: none; }
+  @media (orientation: portrait) {
+    .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 12px; text-align: center; background: var(--h-night); font-size: 26px; font-weight: 900; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="sky"></canvas>
+
+  <!-- HUD: כוכבים, חתולים, מטבעות, משימה, השהיה -->
+  <div class="hud">
+    <span class="chip" id="hStars">⭐ 0</span>
+    <span class="chip" id="hCats">🐱 0</span>
+    <span class="chip" id="hCoins">🪙 0</span>
+    <span class="chip mission" id="hMission">משימה</span>
+    <button class="pause" id="pauseBtn" type="button" aria-label="השהיה">⏸</button>
+  </div>
+  <div class="timebar"><i id="timeFill"></i></div>
+  <div class="power" id="powerChip"></div>
+
+  <!-- מסך פתיחה: תצוגת הגיבורה + בחירת אזור -->
+  <div class="overlay show" id="startScreen">
+    <div class="card h-panel">
+      <div class="hero-prev" id="heroPrev"></div>
+      <h1>טיסת גיבורה</h1>
+      <p>גוררים את האצבע למעלה ולמטה — אוספים כוכבים ⭐ ומצילים חתולים 🐱. זהירות מענני סערה ⛈️!</p>
+      <div class="zones" id="zones"></div>
+      <div class="row"><button class="h-btn gold" id="goBtn" type="button">טסים! 🚀</button></div>
+    </div>
+  </div>
+
+  <!-- השהיה -->
+  <div class="overlay" id="pauseScreen">
+    <div class="card h-panel"><h1>הפסקה ⏸</h1><p>נחים רגע…</p>
+      <div class="row"><button class="h-btn gold" id="resumeBtn" type="button">ממשיכים ▶</button><button class="h-btn violet" id="quitBtn" type="button">למסך האזורים</button></div>
+    </div>
+  </div>
+
+  <!-- תוצאות -->
+  <div class="overlay" id="endScreen">
+    <div class="card h-panel">
+      <span class="h-modal-kicker" id="endKicker">הטיסה הסתיימה!</span>
+      <div class="stats">
+        <div class="stat"><b id="rStars">0</b><span>כוכבים ⭐</span></div>
+        <div class="stat"><b id="rCats">0</b><span>חתולים שניצלו 🐱</span></div>
+        <div class="stat"><b id="rCoins">0</b><span>מטבעות 🪙</span></div>
+      </div>
+      <p id="endText"></p>
+      <div class="row"><button class="h-btn gold" id="againBtn" type="button">עוד טיסה! 🚀</button><button class="h-btn violet" id="zonesBtn" type="button">בחירת אזור</button></div>
+    </div>
+  </div>
+
+  <div class="rotate"><div style="font-size:70px">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
+
+  <script src="js/audio.js"></script>
+  <script src="shared/kids-ui.js"></script>
+  <script src="shared/wallet.js"></script>
+  <script src="shared/hero-avatar.js"></script>
+  <script src="shared/hero-rewards.js"></script>
+  <script src="js/flight.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function(){}); });
+    }
+  </script>
+</body>
+</html>
