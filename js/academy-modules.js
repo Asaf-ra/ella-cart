@@ -517,7 +517,7 @@
       target: '<div class="equation" dir="ltr">' + a + ' <b>+</b> <span class="q">?</span> <b>=</b> ' + s + '</div>', opts: nums(b, 3, 0).map(function (v) { return { h: String(v), ok: v === b }; }) });
   }
   function story(api) {
-    var who = pick(['לאלה', 'לדובי', 'לחתולה', 'לגיבורה']), e = pick(['🍎', '🎈', '⭐', '🍪']), a = rnd(2, 6), b = rnd(1, 4), plus = Math.random() < .6;
+    var who = pick(['לאלה', 'לארנבת', 'לחתולה', 'לגיבורה']), e = pick(['🍎', '🎈', '⭐', '🍪']), a = rnd(2, 6), b = rnd(1, 4), plus = Math.random() < .6;
     if (!plus && b >= a) b = a - 1;
     var res = plus ? a + b : a - b;
     var text = plus ? ('היו ' + who + ' ' + a + ' ' + e + ', והיא קיבלה עוד ' + b + '. כמה יש לה עכשיו?') : ('היו ' + who + ' ' + a + ' ' + e + ', והיא נתנה ' + b + ' לחברה. כמה נשארו?');
