@@ -2,7 +2,7 @@
    פרק 1 — רשימת קבצים לשמירה מראש (דפים, קוד, גופנים, ציורים)
    פרק 2 — הקלטות הקול באנגלית: הרשימה נקראת מ-js/voice-en.js (אותו מניפסט שהאפליקציה משתמשת בו)
    פרק 3 — התקנה / ניקוי מטמונים ישנים / הגשה מהמטמון (cache-first) */
-const CACHE = 'ella-cart-v40';
+const CACHE = 'ella-cart-v41';
 const ART = [
   'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
   'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',
@@ -85,7 +85,8 @@ self.addEventListener('install', function (e) {
 self.addEventListener('activate', function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(keys.filter(function (k) { return k !== CACHE; })
+      /* מוחקים רק גרסאות ישנות של האפליקציה הזו — אפליקציות אחרות באותו אתר (למשל העולם של איתן) נשארות */
+      return Promise.all(keys.filter(function (k) { return k !== CACHE && k.indexOf('ella-cart-') === 0; })
                             .map(function (k) { return caches.delete(k); }));
     }).then(function () { return self.clients.claim(); })
   );
