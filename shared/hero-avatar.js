@@ -9,6 +9,7 @@
            בובו הדובי) — כולן לובשות את אותן תחפושות; outfit.hero קובע מי הדמות.
            הדמות הראשונה = הילדה: שם ומראה (5 תסרוקות, 5 צבעי שיער, 4 גווני עור) מהפרופיל שלה.
    פרק 3 — HeroAvatar.svg(outfit) מחזיר מחרוזת SVG מוכנה להזרקה.
+           opts.doctor — "הרופאה": חלוק לבן, מכשיר שמיעה, מראת רופא על המצח וכפפות (מרפאת הדרקון), בלי גלימה ומסכה.
    פריטים עם free:true פתוחים מההתחלה; צבעי סטודיו נשמרים ב-outfit.colors.
    הדמות מקורית לגמרי (לא דמות מוגנת); עוצבה בקווי דיו עבים כמו קומיקס.
    ===================================================================== */
@@ -409,6 +410,8 @@
       '<radialGradient id="' + id + 'glowC"><stop offset="0" stop-color="#e8fdff" stop-opacity=".95"/><stop offset=".5" stop-color="#29e0ff" stop-opacity=".45"/><stop offset="1" stop-color="#29e0ff" stop-opacity="0"/></radialGradient>' +
       '</defs>';
 
+    if (opts.doctor) return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 300" class="' + (opts.className || 'hero-avatar') + '" role="img" aria-label="' + (opts.title || 'רופאה') + '">' +
+      defs + headBack(h, id) + bodyLayer(suit, id, h) + coatLayer(h, id) + headFront(id, h) + mirrorLayer() + '</svg>';
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 300" class="' + (opts.className || 'hero-avatar') + '" role="img" aria-label="' + (opts.title || h.name + ' — גיבורת-על') + '">' +
       defs +
       auraLayer(aura, id) +
@@ -421,6 +424,28 @@
       accLayer(acc) +
       frontSparkles(aura) +
       '</svg>';
+  }
+
+  /* coatLayer — חלוק רופא לבן מעל החליפה: שרוולים, דשים, כיס עם עט, כפתורים, מכשיר שמיעה וכפפות תכולות */
+  function coatLayer(h, id) {
+    var o = ' stroke="' + INK + '" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"', s = '';
+    s += '<path d="M96 158 L70 190 L96 214 M144 158 L170 190 L144 214" fill="none" stroke="' + INK + '" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>';
+    s += '<path d="M96 158 L70 190 L96 214 M144 158 L170 190 L144 214" fill="none" stroke="#ffffff" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>';
+    s += '<path d="M86 160 Q86 143 106 141 L134 141 Q154 143 154 160 L158 252 L82 252 Z" fill="#ffffff"' + o + '/>';
+    s += '<path d="M106 141 L120 176 L134 141" fill="#e9f3ff"' + o + '/><path d="M120 176 L120 252" fill="none"' + o + '/>';
+    s += '<rect x="128" y="192" width="18" height="16" rx="3" fill="#e9f3ff"' + o + '/><path d="M132 194 L132 184" stroke="#ff5fd2" stroke-width="4" stroke-linecap="round"/>';
+    s += '<circle cx="113" cy="196" r="3" fill="' + INK + '"/><circle cx="113" cy="216" r="3" fill="' + INK + '"/><circle cx="113" cy="236" r="3" fill="' + INK + '"/>';
+    /* מכשיר שמיעה סביב הצוואר */
+    s += '<path d="M104 144 Q96 176 110 190 M136 144 Q144 176 130 190" fill="none" stroke="#3d8bff" stroke-width="5" stroke-linecap="round"/>';
+    s += '<path d="M110 190 Q120 198 130 190" fill="none" stroke="#3d8bff" stroke-width="5"/><circle cx="120" cy="200" r="8" fill="#c9d4e6"' + o + '/>';
+    /* כפפות תכולות */
+    s += '<circle cx="96" cy="214" r="10" fill="#bfe9ff"' + o + '/><circle cx="144" cy="214" r="10" fill="#bfe9ff"' + o + '/>';
+    return s;
+  }
+  /* mirrorLayer — מראת רופא עגולה ומבריקה על המצח */
+  function mirrorLayer() {
+    return '<path d="M78 70 Q120 48 162 70" fill="none" stroke="' + INK + '" stroke-width="6" stroke-linecap="round"/><path d="M78 70 Q120 48 162 70" fill="none" stroke="#ff5fd2" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="120" cy="58" r="14" fill="#dff3ff" stroke="' + INK + '" stroke-width="3.5"/><circle cx="120" cy="58" r="5" fill="#fff"/><path d="M112 52 L116 48" stroke="#fff" stroke-width="3" stroke-linecap="round"/>';
   }
 
   /* סגנון קטן לאנימציית הניצוצות — מוזרק פעם אחת */
