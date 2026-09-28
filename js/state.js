@@ -59,7 +59,7 @@ const G = (function () {
       costs:[110,110,110,110], baseVal:0, perLvl:1, themes:['default','beach','park','city','space'] }
   ];
 
-  const defaults = { coins: 0, lvls: {}, soundOn: true };
+  const defaults = { coins: 0, lvls: {}, soundOn: true, mission: 1, bossWins: 0, bestStars: {} };
 
   let state = load();
 
@@ -142,8 +142,20 @@ const G = (function () {
     return true;
   }
 
+  /* ----- משימות (עגלת הגיבורות): מספר המשימה, ניצחונות על בלגנון, כוכבים לכל משימה ----- */
+  function missionGoal(m) { return Math.min(10, 5 + Math.floor(((m || state.mission) - 1) / 2)); }   // 5..10 לקוחות
+  function completeMission(stars, beatBoss) {
+    const m = state.mission;
+    state.bestStars[m] = Math.max(state.bestStars[m] || 0, stars);
+    if (beatBoss) state.bossWins = (state.bossWins || 0) + 1;
+    state.mission = m + 1; save();
+  }
+
   return {
     FOODS, UPGRADES, MENU,
+    get mission(){ return state.mission || 1; },
+    get bossWins(){ return state.bossWins || 0; },
+    missionGoal, completeMission,
     get coins(){ return state.coins; },
     get soundOn(){ return state.soundOn; },
     set soundOn(v){ state.soundOn = v; save(); },

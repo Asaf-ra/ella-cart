@@ -246,24 +246,29 @@ class BootScene extends Phaser.Scene {
     g.generateTexture('star', 64, 64);
   }
 
-  /* create — לפני המשחק: יוצרים טקסטורה של אלה גיבורת-העל מהתחפושת השמורה (HeroAvatar),
-     ורק אז עוברים למסך הפתיחה. אם משהו נכשל — ממשיכים עם אלה הרגילה אחרי זמן קצוב. */
+  /* create — לפני המשחק טוענים טקסטורות מ-SVG (בלי קבצים נוספים):
+     hero_me — הגיבורה של הילדה בתחפושת השמורה (HeroAvatar + HeroRewards)
+     team_<id> — חברות הצוות כלקוחות-גיבורות, כל אחד בתחפושת אקראית מהקטלוג
+     villain — בלגנון הנבל (Comic.villainSVG)
+     עוברים למסך הפתיחה כשהכול נטען, או אחרי 2.5 שניות לכל היותר. */
   create() {
-    let started = false;
+    let started = false, pending = 0;
     const go = () => { if (!started) { started = true; this.scene.start('Title'); } };
+    const done = () => { if (--pending <= 0) go(); };
+    const load = (key, svg, w, h) => { pending++; Comic.loadSVG(this, key, svg, w, h, done); };
     try {
       if (window.HeroAvatar) {
-        const outfit = window.HeroRewards ? HeroRewards.outfit : null;
-        const svg = HeroAvatar.svg(outfit).replace('<svg ', '<svg width="360" height="450" ');
-        const img = new Image();
-        img.onload = () => { if (!this.textures.exists('ella_hero')) this.textures.addImage('ella_hero', img); go(); };
-        img.onerror = go;
-        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        setTimeout(go, 1500);
-        return;
+        load('hero_me', HeroAvatar.svg(window.HeroRewards ? HeroRewards.outfit : null), 360, 450);
+        const C = HeroAvatar.CATALOG, pick = (slot) => { const l = C[slot].filter(x => !x.season && x.id !== slot + '_none'); return l[(Math.random() * l.length) | 0].id; };
+        HeroAvatar.HEROES.slice(1).forEach(h => {
+          const o = { hero: h.id, cape: pick('cape'), suit: pick('suit'), mask: pick('mask'), emblem: pick('emblem'), aura: 'aura_none', acc: Math.random() < 0.4 ? pick('acc') : 'acc_none', colors: {} };
+          load('team_' + h.id, HeroAvatar.svg(o), 240, 300);
+        });
       }
-    } catch (e) {}
-    go();
+      load('villain', Comic.villainSVG(), 240, 300);
+    } catch (e) { console.warn('boot textures', e); }
+    if (!pending) go();
+    this.time.delayedCall(2500, go);
   }
 }
 

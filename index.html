@@ -108,7 +108,7 @@
   .mission p { margin-top: 5px; font-weight: 700; font-size: clamp(12px, 1.2vw, 15px); opacity: .95; }
   .mission .m-ico { position: relative; z-index: 1; font-size: clamp(38px, 4.4vw, 64px); line-height: 1; filter: drop-shadow(3px 5px 0 rgba(27,16,54,.6)); animation: bob 2.4s ease-in-out infinite alternate; }
   @keyframes bob { from { transform: translateY(-4px) rotate(-5deg); } to { transform: translateY(5px) rotate(5deg); } }
-  .mission.main { grid-column: 1 / -1; --c1: #ffd95a; --c2: #ff7a1c; color: var(--h-ink); min-height: clamp(110px, 20vh, 180px); }
+  .mission.main { grid-column: span 2; --c1: #ffd95a; --c2: #ff7a1c; color: var(--h-ink); min-height: clamp(110px, 20vh, 180px); }
   .mission.main h2 { font-size: clamp(24px, 3vw, 38px); }
   .mission.main p { font-size: clamp(13px, 1.4vw, 17px); }
   .mission.main .m-ico { font-size: clamp(54px, 6.4vw, 86px); }
@@ -117,6 +117,9 @@
   .mission.cart { --c1: #ff5fb0; --c2: #b3126b; }
   .mission.color { --c1: #a98bff; --c2: #4b1fb8; }
   .mission.balloons { --c1: #3fd8ff; --c2: #1459b8; }
+  .mission.dragon { --c1: #ffb347; --c2: #d8261c; }
+  .mission.dragon .m-ico { animation: dg-wiggle 2.2s ease-in-out infinite; }
+  @keyframes dg-wiggle { 50% { transform: rotate(-8deg) scale(1.08); } }
   .mission.flight { --c1: #3ff2b0; --c2: #0f7a8c; }
   .mission.stories { --c1: #ff9f6b; --c2: #d6336c; }
   .mission.boss { --c1: #8b5cff; --c2: #2a0b5e; }
@@ -221,6 +224,9 @@
           <button type="button" class="mission main" data-go="./learning.html" data-say="אקדמיית הגיבורים!">
             <span class="m-text"><span class="m-tag">משימה ראשית ⭐</span><h2>אקדמיית הגיבורים</h2><p>לומדים, צוברים אנרגיה ופותחים תחפושות וכוחות!</p></span>
             <span class="m-ico">📚</span>
+          </button>
+          <button type="button" class="mission dragon" data-go="./dragon.html" data-say="מאורת הדרקון!">
+            <span class="m-text"><span class="m-tag hot">חדש! 🐉</span><h2>מאורת הדרקון</h2><p>משימות אנגלית שמגדלות את הדרקון</p></span><span class="m-ico">🐉</span>
           </button>
           <button type="button" class="mission cart" data-go="./cart.html" data-say="העגלה של אלה!">
             <span class="m-text"><h2>העגלה</h2><p>מכינים אוכל ללקוחות</p></span><span class="m-ico">🍔</span>

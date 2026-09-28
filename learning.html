@@ -316,6 +316,7 @@
     /* ===== פרק יד — נבל השבוע, "כדאי לתרגל" וחיית המחמד באקדמיה ===== */
     /* כרטיס "נבל השבוע" בראש מפת התחנות */
     .boss-course{position:relative;width:100%;display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;border:4px solid var(--h-ink,#1b1036);border-radius:20px;background:linear-gradient(135deg,#8b5cff,#2a0b5e);color:#fff;font-family:var(--h-font);text-align:right;cursor:pointer;box-shadow:0 5px 0 var(--h-ink,#1b1036);animation:boss-pulse 2s ease-in-out infinite}
+    .dragon-course{background:linear-gradient(135deg,#ff7ec2,#b3126b);text-decoration:none;animation:none}
     .boss-course.won{background:linear-gradient(135deg,#ffd95a,#3ff2b0);color:#1b1036;animation:none}
     .boss-course .bc-ico{font-size:40px;line-height:1}.boss-course b{display:block;font-size:19px;font-weight:900}.boss-course small{font-size:14px;font-weight:700;opacity:.9}
     .boss-course .bc-go{padding:6px 12px;border:3px solid #1b1036;border-radius:999px;background:#ffc93c;color:#1b1036;font-weight:900}
@@ -337,6 +338,25 @@
     /* כפתור "התעודה שלי" בחלון החגיגה */
     #certBtn{margin:0 0 10px;padding:12px 22px;border:4px solid #1b1036;border-radius:999px;background:linear-gradient(180deg,#ffd95a,#ff9f1c);color:#1b1036;font:900 20px/1 var(--h-font);box-shadow:0 5px 0 #1b1036;cursor:pointer}
     #certBtn[hidden]{display:none}
+    /* ===== קוביות קטגוריה במפת התחנות ===== */
+    .course-rail .course-list { display: block; }
+    .cat { margin: 0 0 clamp(14px, 2vh, 20px); border: 4px solid var(--h-ink); border-radius: 26px; background: color-mix(in srgb, var(--cat-color) 12%, #fffaf0); box-shadow: 0 6px 0 var(--h-ink); overflow: hidden; }
+    .cat-head { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: linear-gradient(135deg, var(--cat-color), color-mix(in srgb, var(--cat-color) 70%, #fff)); border-bottom: 4px solid var(--h-ink);
+      background-image: radial-gradient(rgba(255,255,255,.35) 1.6px, transparent 1.8px), linear-gradient(135deg, var(--cat-color), color-mix(in srgb, var(--cat-color) 70%, #fff)); background-size: 12px 12px, auto; }
+    .cat-ico { width: 52px; height: 52px; display: grid; place-items: center; font-size: 32px; background: #fff; border: 3px solid var(--h-ink); border-radius: 16px; box-shadow: 0 3px 0 var(--h-ink); }
+    .cat-name { font: 900 clamp(20px, 2.3vw, 28px)/1 var(--h-font); color: var(--h-ink); -webkit-text-stroke: 0; text-shadow: 2px 2px 0 #fff; }
+    .cat-bar { flex: 1; height: 18px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff; overflow: hidden; }
+    .cat-bar span { display: block; height: 100%; background: linear-gradient(90deg, #ffc93c, #ff9f1c); border-radius: 999px; transition: width .6s var(--h-spring); }
+    .cat-num { font: 900 18px/1 var(--h-font); color: var(--h-ink); background: #fff; border: 3px solid var(--h-ink); border-radius: 999px; padding: 5px 10px; }
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(150px, 15vw, 196px), 1fr)); gap: clamp(10px, 1.3vw, 14px); padding: 12px; }
+    .ch-path { display: flex; gap: 4px; justify-content: center; direction: rtl; }
+    .ch-dot { width: 22px; height: 22px; display: grid; place-items: center; border: 2px solid var(--h-ink); border-radius: 50%; background: #fff; color: var(--h-ink); font: 900 11px/1 var(--h-font); font-style: normal; }
+    .ch-dot.done { background: #ffc93c; color: var(--h-ink); font-size: 13px; }
+    .ch-dot.cur { background: var(--course-color); color: #fff; box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--h-ink); animation: ch-pulse 1.4s ease-in-out infinite; }
+    .ch-dot.lock { background: #e3e6ef; color: #9aa3b8; }
+    .ch-lbl { display: block; margin-top: 4px; font: 800 12px/1 var(--h-font); color: var(--h-text-soft); }
+    .course-rail .course-stars { flex-direction: column; align-items: center; }
+    @keyframes ch-pulse { 50% { transform: scale(1.15); } }
   </style>
 </head>
 <body>
@@ -407,13 +427,19 @@ const young={};Object.keys(saved.progress||{}).forEach(function(k){const p=Math.
       function completedCount(){return Object.values(state.completed).filter(Boolean).length}function levelText(){const done=completedCount(),total=Object.keys(modules).length;return !done?'גיבורה מתחילה':done<3?'גיבורה בהתהוות':done<total?'גיבורת-על של למידה':'כל האקדמיה הושלמה!'}
       /* starsHTML — 5 נקודות: פרק שהושלם ברמה הנוכחית מסומן בכוכב זהוב */
       function starsHTML(key){const c=chapOf(key);return[0,1,2,3,4].map(function(i){return'<span class="'+(c.stars[i]>=GOAL?'earned':'')+'">★</span>'}).join('')}
-      function buildCourseList(){el.courseList.innerHTML='';Object.keys(modules).forEach(function(key){const info=modules[key],item=document.createElement('button');item.type='button';item.dataset.key=key;item.className='course';item.style.setProperty('--course-color',info.color);item.innerHTML='<span class="course-icon">'+info.icon+'</span><span><span class="course-name">'+info.name+'</span><span class="course-sub">'+info.subtitle+'</span></span><span class="course-stars">'+starsHTML(key)+'</span>';item.addEventListener('click',function(){select(key)});el.courseList.appendChild(item)})}
-      function updateCourseList(){Array.from(el.courseList.children).forEach(function(item){const key=item.dataset.key,active=key===state.active;item.classList.toggle('active',active);item.setAttribute('aria-pressed',active?'true':'false');item.querySelector('.course-stars').innerHTML=starsHTML(key)});markWeak()}
+      /* ===== מפת התחנות בקוביות קטגוריה (אנגלית ראשונה) — כל תחנה מראה את מסלול 5 השלבים שלה ===== */
+      const CATS=[{id:'en',name:'אנגלית',icon:'🇬🇧',color:'#29c5ff',keys:['english','envocab','enspell']},{id:'he',name:'עברית וקריאה',icon:'📖',color:'#ffc93c',keys:['letters','reading','wordbuild','language']},{id:'math',name:'חשבון ומספרים',icon:'🔢',color:'#3ff2b0',keys:['numbers','math','shapes','patterns','size']},{id:'world',name:'עולם וגילוי',icon:'🌍',color:'#ff9f7e',keys:['colors','animals','food','nature','music','memory','puzzles']}];
+      function doneCount(key){const c=chapOf(key);return c.stars.filter(function(x){return x>=GOAL}).length}
+      /* stepsHTML — 5 עיגולי שלבים: ★ = הושלם, מהבהב = השלב הנוכחי, אפור = נעול */
+      function stepsHTML(key){const c=chapOf(key),d=doneCount(key);return '<span class="ch-path">'+[0,1,2,3,4].map(function(i){const done=c.stars[i]>=GOAL,cur=!done&&i===Math.min(c.open,4);return'<i class="ch-dot'+(done?' done':cur?' cur':i>c.open?' lock':'')+'">'+(done?'★':i+1)+'</i>'}).join('')+'</span><span class="ch-lbl">'+(d>=5?'🏆 הושלם!':'שלב '+(Math.min(c.open,4)+1)+' מתוך 5')+'</span>'}
+      function catHead(cat){const keys=cat.keys.filter(function(k){return modules[k]}),tot=keys.length*5,done=keys.reduce(function(a,k){return a+doneCount(k)},0),pct=Math.round(done/Math.max(1,tot)*100);return'<span class="cat-ico">'+cat.icon+'</span><span class="cat-name">'+cat.name+'</span><span class="cat-bar"><span style="width:'+pct+'%"></span></span><span class="cat-num">'+done+'/'+tot+' ★</span>'}
+      function buildCourseList(){el.courseList.innerHTML='';const used={};CATS.concat([{id:'more',name:'עוד תחנות',icon:'✨',color:'#b28dff',keys:Object.keys(modules)}]).forEach(function(cat){const keys=cat.keys.filter(function(k){return modules[k]&&!used[k]});if(!keys.length)return;const sec=document.createElement('section');sec.className='cat';sec.dataset.cat=cat.id;sec.style.setProperty('--cat-color',cat.color);sec.innerHTML='<div class="cat-head">'+catHead(cat)+'</div><div class="cat-grid"></div>';sec._cat=cat;const grid=sec.querySelector('.cat-grid');keys.forEach(function(key){used[key]=1;const info=modules[key],item=document.createElement('button');item.type='button';item.dataset.key=key;item.className='course';item.style.setProperty('--course-color',info.color);item.innerHTML='<span class="course-icon">'+info.icon+'</span><span><span class="course-name">'+info.name+'</span><span class="course-sub">'+info.subtitle+'</span></span><span class="course-stars">'+stepsHTML(key)+'</span>';item.addEventListener('click',function(){select(key)});grid.appendChild(item)});el.courseList.appendChild(sec)})}
+      function updateCourseList(){el.courseList.querySelectorAll('.course').forEach(function(item){const key=item.dataset.key,active=key===state.active;item.classList.toggle('active',active);item.setAttribute('aria-pressed',active?'true':'false');item.querySelector('.course-stars').innerHTML=stepsHTML(key)});el.courseList.querySelectorAll('.cat').forEach(function(sec){if(sec._cat)sec.querySelector('.cat-head').innerHTML=catHead(sec._cat)});markWeak()}
       function chrome(){const progress=state.progress[state.active],module=modules[state.active],total=Object.keys(modules).length;el.journeyFill.style.width=(completedCount()/total*100)+'%';el.journeyScore.textContent=completedCount()+'/'+total;el.profileLevel.textContent=levelText()+' · ⭐ '+state.stars;{const c=chapOf(state.active),list=chapterList(state.active);el.lessonKicker.textContent='תחנה '+(Object.keys(modules).indexOf(state.active)+1)+(list?' · פרק '+(c.cur+1)+': '+list[c.cur].n+' · '+c.stars[c.cur]+'/'+GOAL+' ⭐':'')};el.lessonTitle.textContent=module.title;el.mascot.textContent=module.mascot;updateCourseList()}
       function resetMessage(){el.feedback.className='feedback';el.feedback.textContent='לחצו על התשובה שנראית לכם נכונה.';el.next.disabled=true;el.next.textContent='שאלה חדשה'}
       /* select — בחירת תחנה: סוגרת את מפת התחנות ומתחילה שאלה (אם זו אותה תחנה — רק סוגרת את המפה) */
       function select(key){if(!modules[key])return;closeMap();if(boss){endBoss();currentRound=null}if(key===state.active&&currentRound)return;state.active=key;save();chrome();round();sound('bubble')}
-      function openMap(){updateCourseList();addBossCourse();document.querySelector('.app').classList.add('map-open');say('לאן טסים היום? בחרו תחנה.',{interrupt:true})}
+      function openMap(){updateCourseList();addBossCourse();addDragonCourse();document.querySelector('.app').classList.add('map-open');say('לאן טסים היום? בחרו תחנה.',{interrupt:true})}
       function closeMap(){document.querySelector('.app').classList.remove('map-open')}
       /* ===== חיבור לאקדמיה: רמת קושי, api לתחנות החדשות, פרסי גיבורה ===== */
       /* big() — האם נבחרה רמת 7–8 */
@@ -483,10 +509,12 @@ return{chapterDone:false,stationDone:false,index:0}}
       function bossWin(b){const v=b.villain;endBoss();if(window.Wallet)Wallet.add(20);if(window.HeroRewards){HeroRewards.award(5,el.mascot,{word:'ניצחון!'});HeroRewards.confetti()}
 certButton(giveCert({key:'boss:'+b.week,line:'ניצחה את '+v.name,ico:v.ico}));el.celebrationTitle.textContent='ניצחת את '+v.name+'! 🏆';el.celebrationText.textContent=v.name+' הפך לחבר! 🪙 +20 מטבעות · גביע שבועי · נבל חדש בשבוע הבא';el.celebration.classList.add('visible');say('ניצחת את '+v.name+'! עכשיו הוא חבר שלך!',{interrupt:true})}
       /* addBossCourse — כרטיס "נבל השבוע" בראש מפת התחנות */
+      /* addDragonCourse — כרטיס קיצור למשימות הדרקון (אנגלית מאתגרת שמגדלת את הדרקונצ'יק) */
+      function addDragonCourse(){if(document.getElementById('dragonCourse'))return;const c=document.createElement('a');c.id='dragonCourse';c.className='boss-course dragon-course';c.href='./dragon.html#missions';c.innerHTML='<span class="bc-ico">🐉</span><span><b>משימות הדרקון — אנגלית ואתגרי חשבון</b><small>כל סט מגדל את הדרקונצ׳יק ופותח משחקים חדשים!</small></span><span class="bc-go">יאללה!</span>';el.courseList.parentNode.insertBefore(c,el.courseList)}
       function addBossCourse(){if(!window.Progress)return;const b=Progress.boss();let card=document.getElementById('bossCourse');if(!card){card=document.createElement('button');card.type='button';card.id='bossCourse';el.courseList.parentNode.insertBefore(card,el.courseList);card.addEventListener('click',function(){sound('bubble');startBoss()})}
 card.className='boss-course'+(b.won?' won':'');card.innerHTML='<span class="bc-ico">'+b.villain.ico+'</span><span><b>⚔️ נבל השבוע: '+b.villain.name+'</b><small>'+(b.won?'🏆 ניצחת השבוע! נבל חדש בשבוע הבא':'❤️ '+b.hp+'/'+b.max+' · '+b.villain.line)+'</small></span><span class="bc-go">'+(b.won?'✓':'לקרב!')+'</span>'}
       /* markWeak — "💪 כדאי לתרגל" על תחנות עם דיוק נמוך (לפי shared/progress.js) + טיפ בראש המפה */
-      function markWeak(){if(!window.Progress)return;const weak=Progress.weakStations();Array.from(el.courseList.children).forEach(function(item){const w=weak.indexOf(item.dataset.key)>=0;let bd=item.querySelector('.practice-badge');if(w&&!bd){bd=document.createElement('span');bd.className='practice-badge';bd.textContent='💪 כדאי לתרגל';item.appendChild(bd)}if(!w&&bd)bd.remove()});
+      function markWeak(){if(!window.Progress)return;const weak=Progress.weakStations();el.courseList.querySelectorAll('.course').forEach(function(item){const w=weak.indexOf(item.dataset.key)>=0;let bd=item.querySelector('.practice-badge');if(w&&!bd){bd=document.createElement('span');bd.className='practice-badge';bd.textContent='💪 כדאי לתרגל';item.appendChild(bd)}if(!w&&bd)bd.remove()});
 let tip=document.getElementById('mapTip');if(weak.length){if(!tip){tip=document.createElement('p');tip.id='mapTip';tip.className='map-tip';el.courseList.parentNode.insertBefore(tip,el.courseList)}tip.textContent='💡 הצעה: עוד קצת תרגול ב'+weak.map(function(k){return modules[k]?modules[k].name:k}).join(' וב')+' — וזה יהיה קל!'}else if(tip)tip.remove()}
       /* ===== תעודות גיבורה (shared/share.js) =====
          giveCert — שומרת תעודה (פעם אחת לכל הישג) ומחזירה אותה; certButton — כפתור "🏅 התעודה שלי" בחלון החגיגה */

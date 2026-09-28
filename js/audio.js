@@ -217,7 +217,7 @@ const Voice = (function () {
   let currentSrc = null;
   function clipFor(text) { const m = window.VOICE_EN; return m ? m[normEn(text)] : null; }
   /* playClip — מפענח (פעם אחת, עם מטמון) ומנגן דרך Web Audio; onDone נקרא בסוף או בכישלון (fallback) */
-  function playClip(file, rate, onDone, onFail, onStart) {
+  function playClip(file, rate, onDone, onFail, onStart, dir) {
     const ctx = (typeof Sound !== 'undefined' && Sound.getCtx) ? Sound.getCtx() : null;
     if (!ctx || !window.fetch) return onFail();
     const go = (buf) => {
@@ -230,10 +230,11 @@ const Voice = (function () {
         if (onStart) onStart(buf.duration / src.playbackRate.value);
       } catch (e) { onFail(); }
     };
-    if (clipCache[file]) return go(clipCache[file]);
-    fetch('assets/voice/en/' + file).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+    const ck = (dir || '') + file;
+    if (clipCache[ck]) return go(clipCache[ck]);
+    fetch((dir || 'assets/voice/en/') + file).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
       .then(ab => new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej)))
-      .then(buf => { clipCache[file] = buf; go(buf); })
+      .then(buf => { clipCache[ck] = buf; go(buf); })
       .catch(onFail);
   }
   function stopClip() { if (currentSrc) { try { currentSrc.onended = null; currentSrc.stop(); } catch (e) {} currentSrc = null; } }
@@ -328,6 +329,16 @@ const Voice = (function () {
     read: read,
     /* say — משפט בעברית; מילים באנגלית בתוכו מוקראות אוטומטית בקול אנגלי (פיצול לפי שפה) */
     say(text, opts) { read(splitLang(text), opts); },
+    /* en(text, {slow}) — מילה/משפט באנגלית בהגייה ברורה: הקלטה רגילה, או הקלטה איטית שהוקלטה בקצב איטי
+       (assets/voice/en-slow/, js/voice-en-slow.js) — איטית אבל בגובה קול טבעי. אין הקלטה → מנוע הדיבור בקצב איטי */
+    en(text, opts) {
+      opts = opts || {};
+      if (typeof Sound !== 'undefined' && !Sound.isOn()) return;
+      this.silence();
+      const slowFile = opts.slow && window.VOICE_EN_SLOW ? window.VOICE_EN_SLOW[normEn(text)] : null;
+      if (slowFile) { playClip(slowFile, 1, () => {}, () => read([{ text: text, lang: 'en-US' }], { rate: .65, interrupt: true }), null, 'assets/voice/en-slow/'); return; }
+      read([{ text: text, lang: 'en-US' }], { rate: opts.slow ? .65 : undefined, interrupt: true });
+    },
     praise() { const p = ['כל הכבוד!', 'מעולה!', 'יופי אלה!', 'וואו!', 'איזה יופי!', 'כל הכבוד אלה!']; this.say(p[(Math.random() * p.length) | 0]); },
     silence() { queue = []; clearTimeout(watchdog); stopClip(); current = null; speaking = false; if (ok) { try { window.speechSynthesis.cancel(); } catch (e) {} } }
   };

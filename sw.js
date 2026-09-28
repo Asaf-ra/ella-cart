@@ -2,7 +2,7 @@
    פרק 1 — רשימת קבצים לשמירה מראש (דפים, קוד, גופנים, ציורים)
    פרק 2 — הקלטות הקול באנגלית: הרשימה נקראת מ-js/voice-en.js (אותו מניפסט שהאפליקציה משתמשת בו)
    פרק 3 — התקנה / ניקוי מטמונים ישנים / הגשה מהמטמון (cache-first) */
-const CACHE = 'ella-cart-v42';
+const CACHE = 'ella-cart-v44';
 const ART = [
   'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
   'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',
@@ -20,6 +20,10 @@ const ASSETS = [
   './flight.html',
   './stories.html',
   './welcome.html',
+  './dragon.html',
+  './js/dragon.js',
+  './js/dragon-data.js',
+  './js/voice-en-slow.js',
   './style.css',
   './manifest.json',
   './assets/icon.svg',
@@ -55,6 +59,7 @@ const ASSETS = [
   './js/audio.js',
   './js/state.js',
   './js/hero3d.js',
+  './js/hero-comic.js',
   './js/world.js',
   './js/minigame.js',
   './js/game.js',
@@ -70,6 +75,8 @@ try {
   importScripts('./js/voice-en.js');
   var seen = {};
   Object.keys(self.VOICE_EN || {}).forEach(function (k) { var f = self.VOICE_EN[k]; if (!seen[f]) { seen[f] = 1; VOICE.push('./assets/voice/en/' + f); } });
+  importScripts('./js/voice-en-slow.js');   // הקלטות איטיות וברורות למשימות הדרקון
+  Object.keys(self.VOICE_EN_SLOW || {}).forEach(function (k) { var f = self.VOICE_EN_SLOW[k]; if (!seen['s/' + f]) { seen['s/' + f] = 1; VOICE.push('./assets/voice/en-slow/' + f); } });
 } catch (err) {}
 
 self.addEventListener('install', function (e) {
