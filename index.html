@@ -24,7 +24,8 @@
 <style>
   /* ===== מטה הגיבורים — מסך הבית =====
      פרק א — בסיס ופריסה | פרק ב — סרגל עליון | פרק ג — הגיבורה
-     פרק ד — כרטיסי משימה | פרק ה — פתיח קולנועי | פרק ו — חנות | פרק ז — סיבוב מסך */
+     פרק ד — כרטיסי משימה | פרק ה — פתיח קולנועי | פרק ו — חנות | פרק ז — סיבוב מסך
+     פרק ח — משימות היום, חיית המחמד ואזור ההורים */
 
   /* --- פרק א: בסיס --- */
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -42,23 +43,23 @@
 
   /* --- פרק ב: סרגל עליון --- */
   .topbar { display: flex; align-items: center; gap: 14px; }
-  .topbar .h-hud { min-width: min(420px, 40vw); }
+  .topbar .h-hud { min-width: min(330px, 29vw); }
   .topbar .spacer { flex: 1; }
-  .icon-btn { min-width: 64px; padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .icon-btn { min-width: 64px; padding: 10px 14px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: clamp(16px, 1.7vw, 22px); }
   .icon-btn .ico { font-size: 28px; line-height: 1; }
   .gift-btn { animation: gift 1.2s ease-in-out infinite; }
   @keyframes gift { 0%,100% { transform: rotate(-4deg) scale(1); } 50% { transform: rotate(4deg) scale(1.08); } }
 
   /* --- פרק ג: הגיבורה + לוגו --- */
   .stage { display: grid; grid-template-columns: 1.35fr 1fr; gap: 2.5vw; align-items: center; min-height: 0; }
-  .hero-col { position: relative; display: grid; place-items: center; height: 100%; min-height: 0; }
+  .hero-col { position: relative; display: grid; grid-template-rows: auto 1fr; justify-items: center; align-items: center; gap: 1vh; height: 100%; min-height: 0; }
   .spot { /* זרקור מאחורי הגיבורה */
-    position: absolute; width: min(38vw, 58vh); aspect-ratio: 1; border-radius: 50%;
+    position: absolute; top: 18%; width: min(34vw, 52vh); aspect-ratio: 1; border-radius: 50%;
     background: radial-gradient(circle, rgba(255,201,60,.55), rgba(255,46,147,.25) 45%, transparent 70%);
     animation: pulse 3.2s ease-in-out infinite;
   }
   @keyframes pulse { 0%,100% { transform: scale(.94); opacity: .85; } 50% { transform: scale(1.06); opacity: 1; } }
-  .hero-wrap { position: relative; width: min(30vw, 50vh); cursor: pointer; animation: h-float 2.6s ease-in-out infinite alternate; }
+  .hero-wrap { position: relative; width: min(24vw, 40vh); cursor: pointer; animation: h-float 2.6s ease-in-out infinite alternate; }
   .hero-wrap svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 18px 24px rgba(0,0,0,.45)); }
   .hero-wrap.zap { animation: zap .6s var(--h-spring); }
   @keyframes zap { 30% { transform: scale(1.12) rotate(-4deg); } 60% { transform: scale(.96) rotate(3deg); } }
@@ -78,11 +79,11 @@
   .logo p { margin-top: 1vh; font-weight: 800; font-size: clamp(16px, 2vw, 24px); color: #ffd9f0; }
 
   /* --- פרק ד: כרטיסי משימה --- */
-  .missions { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(12px, 1.6vw, 22px); }
+  .missions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1.4vw, 18px); }
   .mission {
     --c1: #ff4fa3; --c2: #8b1a8f;
-    position: relative; overflow: hidden; min-height: clamp(120px, 21vh, 190px);
-    border: 5px solid var(--h-ink); border-radius: 28px; padding: 14px 16px; cursor: pointer; text-align: right;
+    position: relative; overflow: hidden; min-height: clamp(96px, 17vh, 160px);
+    border: 5px solid var(--h-ink); border-radius: 26px; padding: 12px 12px; cursor: pointer; text-align: right;
     background: linear-gradient(150deg, var(--c1), var(--c2)); color: #fff;
     box-shadow: 0 8px 0 var(--h-ink), 0 18px 30px rgba(0,0,0,.35);
     transition: transform .16s var(--h-spring);
@@ -90,6 +91,7 @@
     animation: card-in .6s var(--h-spring) both;
   }
   .mission:nth-child(2) { animation-delay: .08s; } .mission:nth-child(3) { animation-delay: .16s; } .mission:nth-child(4) { animation-delay: .24s; }
+  .mission:nth-child(5) { animation-delay: .32s; } .mission:nth-child(6) { animation-delay: .4s; } .mission:nth-child(7) { animation-delay: .48s; }
   @keyframes card-in { from { transform: translateY(40px) scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
   .mission:active { transform: translateY(5px) scale(.97); box-shadow: 0 3px 0 var(--h-ink), 0 8px 14px rgba(0,0,0,.3); }
   .mission::before { /* קווי מהירות בתוך הכרטיס */
@@ -102,17 +104,24 @@
   }
   .mission .m-text { position: relative; z-index: 1; }
   .mission .m-tag { display: inline-block; padding: 3px 12px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff; color: var(--h-ink); font-weight: 900; font-size: 14px; margin-bottom: 6px; }
-  .mission h2 { font-size: clamp(22px, 2.8vw, 34px); font-weight: 900; line-height: 1; -webkit-text-stroke: 2px var(--h-ink); paint-order: stroke fill; text-shadow: 2px 3px 0 var(--h-ink); }
-  .mission p { margin-top: 5px; font-weight: 700; font-size: clamp(13px, 1.4vw, 17px); opacity: .95; }
-  .mission .m-ico { position: relative; z-index: 1; font-size: clamp(54px, 7vw, 92px); line-height: 1; filter: drop-shadow(3px 5px 0 rgba(27,16,54,.6)); animation: bob 2.4s ease-in-out infinite alternate; }
+  .mission h2 { font-size: clamp(18px, 2.1vw, 28px); font-weight: 900; line-height: 1; -webkit-text-stroke: 2px var(--h-ink); paint-order: stroke fill; text-shadow: 2px 3px 0 var(--h-ink); }
+  .mission p { margin-top: 5px; font-weight: 700; font-size: clamp(12px, 1.2vw, 15px); opacity: .95; }
+  .mission .m-ico { position: relative; z-index: 1; font-size: clamp(38px, 4.4vw, 64px); line-height: 1; filter: drop-shadow(3px 5px 0 rgba(27,16,54,.6)); animation: bob 2.4s ease-in-out infinite alternate; }
   @keyframes bob { from { transform: translateY(-4px) rotate(-5deg); } to { transform: translateY(5px) rotate(5deg); } }
-  .mission.main { grid-column: 1 / -1; --c1: #ffd95a; --c2: #ff7a1c; color: var(--h-ink); min-height: clamp(130px, 24vh, 210px); }
+  .mission.main { grid-column: 1 / -1; --c1: #ffd95a; --c2: #ff7a1c; color: var(--h-ink); min-height: clamp(110px, 20vh, 180px); }
+  .mission.main h2 { font-size: clamp(24px, 3vw, 38px); }
+  .mission.main p { font-size: clamp(13px, 1.4vw, 17px); }
+  .mission.main .m-ico { font-size: clamp(54px, 6.4vw, 86px); }
   .mission.main h2 { color: #fff; }
   .mission.main .m-tag { background: var(--h-magenta); color: #fff; }
   .mission.cart { --c1: #ff5fb0; --c2: #b3126b; }
   .mission.color { --c1: #a98bff; --c2: #4b1fb8; }
   .mission.balloons { --c1: #3fd8ff; --c2: #1459b8; }
   .mission.flight { --c1: #3ff2b0; --c2: #0f7a8c; }
+  .mission.stories { --c1: #ff9f6b; --c2: #d6336c; }
+  .mission.boss { --c1: #8b5cff; --c2: #2a0b5e; }
+  .mission.boss.won { --c1: #ffd95a; --c2: #3ff2b0; }
+  .mission .m-tag.hot { background: var(--h-gold); }
 
   /* --- פרק ה: פתיח קולנועי ("ההשתנות") --- */
   .intro { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; cursor: pointer; background: #0b0420; overflow: hidden; }
@@ -139,6 +148,26 @@
   .shop-item .owned { font-weight: 900; color: #139b6c; font-size: 18px; padding: 10px; }
   .shop-card { width: min(96vw, 900px) !important; }
   .shop-close { position: absolute; top: 12px; left: 12px; width: 52px; height: 52px; border: 4px solid var(--h-ink); border-radius: 50%; background: var(--h-magenta); color: #fff; font: 900 22px/1 var(--h-font); box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; }
+
+  /* --- פרק ח: משימות היום, חיית המחמד, הורים --- */
+  .quest { position: relative; z-index: 3; display: grid; gap: 6px; padding: 8px 12px 10px; border: 4px solid var(--h-ink); border-radius: 20px; background: var(--h-paper); color: var(--h-ink); box-shadow: 0 5px 0 var(--h-ink); cursor: pointer; transition: transform .15s var(--h-spring); min-width: min(30vw, 360px); }
+  .quest:active { transform: scale(.97); }
+  .quest .q-title { font: 900 clamp(15px, 1.6vw, 19px)/1 var(--h-font); display: flex; justify-content: space-between; gap: 8px; }
+  .quest .q-list { display: flex; gap: 6px; justify-content: center; }
+  .quest .q-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff; font: 900 15px/1 var(--h-font); }
+  .quest .q-chip.done { background: linear-gradient(180deg, #b6ffdc, #3ff2b0); }
+  .quest.ready { animation: quest-glow 1.2s ease-in-out infinite; background: linear-gradient(180deg, #fff3b0, #ffc93c); }
+  @keyframes quest-glow { 50% { box-shadow: 0 5px 0 var(--h-ink), 0 0 0 6px rgba(255,201,60,.6), 0 0 30px rgba(255,201,60,.8); transform: scale(1.03); } }
+  .hero-stack { position: relative; }
+  .hero-stack .pet-mini { left: -18%; bottom: 8%; }
+  .q-rows { display: grid; gap: 10px; margin: 14px 0; text-align: right; }
+  .q-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border: 3px solid var(--h-ink); border-radius: 18px; background: #fff; }
+  .q-row .qi { font-size: 34px; }
+  .q-row b { font-size: 18px; }
+  .q-row .h-meter { margin-top: 6px; }
+  .q-row .h-btn { min-height: 46px; padding: 8px 14px; font-size: 16px; }
+  .q-row.done { background: #e9fff5; }
+  .icon-btn.small { min-width: 56px; padding: 10px 12px; }
 
   /* --- פרק ז: סיבוב מסך + מסכים קטנים --- */
   .rotate { display: none; }
@@ -177,7 +206,8 @@
       <button type="button" class="h-btn gold icon-btn gift-btn" id="giftBtn" hidden><span class="ico">🎁</span><span>הפתעה!</span></button>
       <button type="button" class="h-btn violet icon-btn" id="wardrobeBtn"><span class="ico">🦸‍♀️</span><span>תחפושות</span></button>
       <button type="button" class="h-btn gold icon-btn" id="shopBtn"><span class="ico">🛒</span><span>שדרוגים</span></button>
-      <button type="button" class="h-btn cyan icon-btn" id="soundBtn" aria-label="צליל"><span class="ico">🔊</span></button>
+      <button type="button" class="h-btn violet icon-btn small" id="parentsBtn" aria-label="אזור הורים"><span class="ico">👨‍👩‍👧</span></button>
+      <button type="button" class="h-btn cyan icon-btn small" id="soundBtn" aria-label="צליל"><span class="ico">🔊</span></button>
     </header>
 
     <section class="stage">
@@ -192,23 +222,31 @@
           <button type="button" class="mission cart" data-go="./cart.html" data-say="העגלה של אלה!">
             <span class="m-text"><h2>העגלה</h2><p>מכינים אוכל ללקוחות</p></span><span class="m-ico">🍔</span>
           </button>
-          <button type="button" class="mission color" data-go="./coloring.html" data-say="ציור קסם!">
-            <span class="m-text"><h2>ציור קסם</h2><p>צובעים דמויות</p></span><span class="m-ico">🎨</span>
+          <button type="button" class="mission color" data-go="./coloring.html" data-say="סטודיו הציור!">
+            <span class="m-text"><span class="m-tag hot">חדש! ✨</span><h2>סטודיו ציור</h2><p>צביעה, ציור חופשי ונקודות</p></span><span class="m-ico">🎨</span>
+          </button>
+          <button type="button" class="mission stories" data-go="./stories.html" data-say="ספריית הסיפורים!">
+            <span class="m-text"><span class="m-tag hot">חדש! 📚</span><h2>סיפורים</h2><p>שומעים, קוראים ועונים</p></span><span class="m-ico">📖</span>
           </button>
           <button type="button" class="mission balloons" data-go="./balloons.html" data-say="בלונים!">
             <span class="m-text"><h2>בלונים</h2><p>מפוצצים וצוברים מטבעות</p></span><span class="m-ico">🎈</span>
           </button>
           <button type="button" class="mission flight" data-go="./flight.html" data-say="טיסת גיבורה!">
-            <span class="m-text"><span class="m-tag">חדש! 🚀</span><h2>טיסת גיבורה</h2><p>טסים ומצילים חתולים</p></span><span class="m-ico">🦸‍♀️</span>
+            <span class="m-text"><h2>טיסת גיבורה</h2><p>טסים ומצילים חתולים</p></span><span class="m-ico">🦸‍♀️</span>
+          </button>
+          <button type="button" class="mission boss" id="bossCard" data-go="./learning.html#boss" data-say="נבל השבוע! קדימה לקרב!">
+            <span class="m-text"><span class="m-tag" id="bossTag">⚔️ השבוע</span><h2 id="bossName">נבל השבוע</h2><p id="bossText">מנצחים בעזרת תשובות</p></span><span class="m-ico" id="bossIco">🧙‍♂️</span>
           </button>
         </nav>
       </div>
       <!-- הגיבורה (בצד שמאל ב-RTL) -->
-      <div class="hero-col">
+      <div class="hero-col" id="heroCol">
         <div class="spot"></div>
-        <div>
+        <!-- משימות היום: 3 משימות קטנות; כשכולן מושלמות — פרס ופרק חדש בסיפור -->
+        <button type="button" class="quest" id="questBtn"><span class="q-title"><span>📜 משימות היום</span><span id="questCount">0/3</span></span><span class="q-list" id="questList"></span></button>
+        <div class="hero-stack" id="heroStack">
           <div class="hero-wrap" id="hero"></div>
-          <div style="text-align:center"><span class="nameplate">אלה · גיבורת-העל</span></div>
+          <div style="text-align:center"><span class="nameplate" id="nameplate">אלה · גיבורת-העל</span></div>
         </div>
       </div>
     </section>
@@ -226,10 +264,15 @@
   <div class="rotate"><div class="i">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
 
   <script src="js/audio.js"></script>
+  <script src="js/voice-en.js"></script>
   <script src="shared/kids-ui.js"></script>
   <script src="shared/wallet.js"></script>
   <script src="shared/hero-avatar.js"></script>
   <script src="shared/hero-rewards.js"></script>
+  <script src="shared/progress.js"></script>
+  <script src="shared/pet.js"></script>
+  <script src="shared/voice-settings.js"></script>
+  <script src="shared/parents.js"></script>
   <script src="js/hub.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

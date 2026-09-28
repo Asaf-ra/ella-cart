@@ -539,6 +539,8 @@ class WorldScene extends Phaser.Scene {
 
     G.addCoins(total);
     this.updateCoins();
+    /* משימת היום "הגישי הזמנות" + מעקב התקדמות */
+    try { if (window.Progress) Progress.track('cart:order'); } catch (e) {}
     const sx = c.cont.x, sy = c.cont.y;
     this.flyCoins(sx, sy, Math.min(14, 3 + (total / 5) | 0));
     this.popPraise(sx, sy - 150, '+' + total + ' 🪙' + (c.golden ? '  זהב!' : ''));

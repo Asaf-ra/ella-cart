@@ -7,144 +7,236 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#2a1260" />
-<meta name="apple-mobile-web-app-title" content="ציור קסם" />
-<title>ציור קסם — העולם של אלה</title>
+<meta name="apple-mobile-web-app-title" content="סטודיו הציור" />
+<title>סטודיו הציור — העולם של אלה</title>
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
 <link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
 <link rel="stylesheet" href="shared/theme.css" />
 <style>
+  /* ===================================================================
+     סטודיו הציור של הגיבורה — עיצוב המסך
+     פרק א — בסיס ורקע            פרק ב — סרגל עליון (מצבים + פעולות)
+     פרק ג — פלטת צבעים (שמאל)    פרק ד — לוח כלים (ימין) לפי מצב
+     פרק ה — במת הציור ושכבות      פרק ו — צבע-לפי-מספר וחבר-נקודות
+     פרק ז — חלונות: דפים, גלריה, מדבקות, רקעים, רעיון
+     פרק ח — מצב אורך (portrait) ומסכים קטנים
+     =================================================================== */
+
+  /* --- פרק א: בסיס --- */
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #1d0b4a; }
   html, body { width: 100%; height: 100%; overflow: hidden; }
   body {
-    background: linear-gradient(180deg, #cdb4ff 0%, #ffd6ec 55%, #fff3c9 100%);
-    font-family: 'Varela Round', 'Heebo', -apple-system, sans-serif;
-    user-select: none; -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: none;
-    direction: rtl;
+    background: radial-gradient(55% 60% at 85% 8%, rgba(255,46,147,.4), transparent 70%), linear-gradient(170deg, #1d0b4a, #3a1177 55%, #6a1b8f);
+    font-family: var(--h-font); color: var(--h-ink); direction: rtl;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent; touch-action: none;
   }
+  button { font-family: var(--h-font); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
-  /* ----- סרגל עליון: דמויות + כלים ----- */
-  #topbar {
-    position: fixed; top: 8px; right: 12px; left: 90px; height: 84px;
-    display: flex; align-items: center; gap: 10px; z-index: 20;
-  }
-  .char-thumb {
-    width: 76px; height: 80px; border: none; border-radius: 18px;
-    background: rgba(255,255,255,.65); padding: 6px; cursor: pointer;
-    box-shadow: 0 3px 8px rgba(90,61,92,.18);
-    transition: transform .15s;
-  }
-  .char-thumb img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-  .char-thumb.active { background: #fff; transform: scale(1.12); box-shadow: 0 0 0 4px #ffd24c, 0 4px 10px rgba(90,61,92,.25); }
-  .tool-btn {
-    width: 72px; height: 80px; border: none; border-radius: 18px;
-    background: rgba(255,255,255,.65); font-size: 40px; cursor: pointer;
-    box-shadow: 0 3px 8px rgba(90,61,92,.18); transition: transform .15s;
-  }
-  .tool-btn.active { background: #fff; transform: scale(1.1); box-shadow: 0 0 0 4px #b28dff, 0 4px 10px rgba(90,61,92,.25); }
-  .tool-btn:active { transform: scale(.9); }
-  #tools { margin-inline-start: auto; display: flex; gap: 10px; }
+  /* --- פרק ב: סרגל עליון --- */
+  #top { position: fixed; top: max(10px, env(safe-area-inset-top)); right: 12px; left: 96px; height: 70px; display: flex; align-items: center; gap: 10px; z-index: 20; }
+  .modes { display: flex; gap: 6px; padding: 5px; border: 4px solid var(--h-ink); border-radius: 22px; background: var(--h-paper); box-shadow: 0 4px 0 var(--h-ink); }
+  .mode { display: grid; place-items: center; gap: 1px; width: 74px; height: 52px; border: 0; border-radius: 15px; background: transparent; cursor: pointer; font-size: 24px; line-height: 1; transition: transform .15s var(--h-spring); }
+  .mode small { font: 800 12px/1 var(--h-font); color: var(--h-text-soft); }
+  .mode.on { background: linear-gradient(180deg, #ff7ec2, #ff2e93); box-shadow: inset 0 0 0 3px var(--h-ink); transform: scale(1.04); }
+  .mode.on small { color: #fff; }
+  .page-chip { flex: 1; min-width: 0; height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; border: 4px solid var(--h-ink); border-radius: 999px; background: linear-gradient(180deg, #fff3b0, #ffc93c); box-shadow: 0 4px 0 var(--h-ink); font: 900 clamp(15px, 1.7vw, 20px)/1 var(--h-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+  .page-chip .pc-ico { font-size: 24px; }
+  .acts { display: flex; gap: 8px; }
+  .act { width: 56px; height: 56px; border: 4px solid var(--h-ink); border-radius: 50%; background: var(--h-paper); box-shadow: 0 4px 0 var(--h-ink); font-size: 24px; cursor: pointer; transition: transform .14s var(--h-spring); }
+  .act:active, .mode:active, .tool:active, .sw:active { transform: translateY(3px) scale(.94); }
+  .act.save { background: linear-gradient(180deg, #b6ffdc, #3ff2b0); }
+  .act.on { background: linear-gradient(180deg, #ffd95a, #ff9f1c); }
 
-  /* ----- פלטת צבעים (צד שמאל, מתחת לכפתור הבית) ----- */
-  #palette {
-    position: fixed; left: 10px; top: 100px; bottom: 12px; width: 150px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-    align-content: start; z-index: 20;
-  }
-  .swatch {
-    width: 66px; height: 66px; border-radius: 50%; border: 5px solid rgba(255,255,255,.75);
-    cursor: pointer; box-shadow: 0 3px 8px rgba(90,61,92,.25);
-    transition: transform .15s;
-  }
-  .swatch.active { transform: scale(1.22); border-color: #fff; box-shadow: 0 0 0 4px #5a3d5c33, 0 4px 12px rgba(90,61,92,.35); }
+  /* --- פרק ג: פלטת צבעים --- */
+  #pal { position: fixed; left: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 84px); bottom: 10px; width: 124px; padding: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; align-content: start; overflow-y: auto; scrollbar-width: none; border: 4px solid var(--h-ink); border-radius: 24px; background: rgba(255,250,240,.12); z-index: 15; }
+  #pal::-webkit-scrollbar { display: none; }
+  .sw { position: relative; width: 48px; height: 48px; justify-self: center; border: 4px solid var(--h-ink); border-radius: 50%; cursor: pointer; box-shadow: 0 3px 0 var(--h-ink); transition: transform .15s var(--h-spring); font: 900 20px/1 var(--h-font); color: #fff; -webkit-text-stroke: 3px var(--h-ink); paint-order: stroke fill; }
+  .sw.on { transform: scale(1.18); box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--h-magenta), 0 0 18px rgba(255,255,255,.7); z-index: 1; }
+  .sw.done { opacity: .35; }
+  .sw.done::after { content: "✔"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 22px; color: #fff; }
+  .sw.nudge { animation: nudge .6s ease 2; }
+  @keyframes nudge { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3); box-shadow: 0 0 0 6px var(--h-gold); } }
 
-  /* ----- אזור העבודה ----- */
-  #stage {
-    position: fixed; top: 100px; bottom: 12px; left: 175px; right: 12px;
-    background: rgba(255,255,255,.88); border-radius: 28px;
-    box-shadow: 0 8px 30px rgba(90,61,92,.20);
-    overflow: hidden; z-index: 10;
-  }
-  #svgHolder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-  #svgHolder svg { height: 96%; width: auto; max-width: 96%; }
+  /* --- פרק ד: לוח כלים --- */
+  #tools { position: fixed; right: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 84px); bottom: 10px; width: 124px; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; scrollbar-width: none; border: 4px solid var(--h-ink); border-radius: 24px; background: rgba(255,250,240,.12); z-index: 15; }
+  #tools::-webkit-scrollbar { display: none; }
+  .tgroup { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .tlabel { grid-column: 1 / -1; font: 900 13px/1 var(--h-font); color: #fff; text-align: center; opacity: .9; margin-top: 2px; }
+  .tool { position: relative; height: 50px; border: 3px solid var(--h-ink); border-radius: 15px; background: var(--h-paper); box-shadow: 0 3px 0 var(--h-ink); font-size: 24px; cursor: pointer; display: grid; place-items: center; transition: transform .14s var(--h-spring); }
+  .tool.on { background: linear-gradient(180deg, #ffd95a, #ff9f1c); box-shadow: 0 3px 0 var(--h-ink), 0 0 0 3px #fff; }
+  .tool.wide { grid-column: 1 / -1; font: 900 15px/1 var(--h-font); gap: 4px; }
+  .tool .dot { display: block; border-radius: 50%; background: var(--h-ink); }
+  .fs { overflow: hidden; }
+  .fs i { position: absolute; inset: 6px; border-radius: 10px; border: 2px solid var(--h-ink); }
+  .progress { grid-column: 1 / -1; padding: 10px 6px; border: 3px solid var(--h-ink); border-radius: 15px; background: var(--h-paper); text-align: center; font: 900 22px/1.1 var(--h-font); }
+  .progress small { display: block; font-size: 12px; color: var(--h-text-soft); }
+
+  /* --- פרק ה: במת הציור --- */
+  #stage { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 84px); bottom: 10px; left: 146px; right: 146px; border: 5px solid var(--h-ink); border-radius: 28px; background: #fffaf0; box-shadow: 7px 8px 0 var(--h-ink), 0 20px 40px rgba(8,2,26,.45); overflow: hidden; z-index: 10; }
+  #svgHolder, #lineArt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #svgHolder svg, #lineArt svg { height: 96%; width: auto; max-width: 96%; overflow: visible; }
   #svgHolder .colorable { cursor: pointer; transition: fill .25s ease; }
-  #drawCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
-  body.draw-mode #drawCanvas { display: block; }
-  body.draw-mode #svgHolder { display: none; }
-  #fxCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+  #lineArt { pointer-events: none; display: none; z-index: 3; }
+  #bgCanvas, #drawCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+  #drawCanvas { z-index: 2; touch-action: none; }
+  #fxCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; }
+  body.m-draw #bgCanvas, body.m-draw #drawCanvas { display: block; }
+  body.m-draw #svgHolder { display: none; }
+  body.m-draw.line-on #lineArt { display: flex; }
+  .shake { animation: shake .4s ease; }
+  @keyframes shake { 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
 
-  /* ----- גלריה ----- */
-  #gallery {
-    position: fixed; inset: 0; z-index: 40; background: rgba(90,61,92,.55);
-    display: none; align-items: center; justify-content: center;
-  }
-  #gallery.open { display: flex; }
-  #galleryBox {
-    background: #fff; border-radius: 28px; padding: 24px; max-width: 84%; max-height: 82%;
-    overflow: auto; display: grid; grid-template-columns: repeat(4, 170px); gap: 16px;
-  }
-  .gal-item { width: 170px; height: 150px; border-radius: 18px; background: #f6effc;
-    display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .gal-item svg, .gal-item img { max-width: 92%; max-height: 92%; }
-  .gal-empty { grid-column: 1 / -1; font-size: 30px; color: #5a3d5c; text-align: center; padding: 30px; }
+  /* --- פרק ו: מספרים ונקודות --- */
+  .cbn-num { font: 900 20px/1 Rubik, sans-serif; fill: var(--h-ink); pointer-events: none; paint-order: stroke fill; stroke: #fff; stroke-width: 4px; transition: opacity .3s; }
+  .cbn-num.gone { opacity: 0; }
+  .cbn-glow { animation: glow 0.9s ease-in-out 3; }
+  @keyframes glow { 50% { fill: #fff3b0; } }
+  .dot-hit { fill: transparent; cursor: pointer; }
+  .dot-pt { fill: #fff; stroke: var(--h-ink); stroke-width: 3; transition: fill .2s; }
+  .dot-pt.done { fill: var(--h-magenta); }
+  .dot-pt.next { fill: var(--h-gold); animation: dotPulse .9s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes dotPulse { 50% { transform: scale(1.5); } }
+  .dot-lbl { font: 900 18px/1 Rubik, sans-serif; fill: var(--h-ink); pointer-events: none; paint-order: stroke fill; stroke: #fffaf0; stroke-width: 5px; }
+  .dot-shape { transition: opacity .8s ease; }
 
-  /* ===== סטודיו הציור של הגיבורה — שכבת עיצוב 2026 (דורסת את העיצוב הבהיר) ===== */
-  body { background: radial-gradient(55% 60% at 85% 8%, rgba(255,46,147,.4), transparent 70%), linear-gradient(170deg, #1d0b4a, #3a1177 55%, #6a1b8f); font-family: var(--h-font); }
-  .char-thumb { background: #fffaf0; border: 3px solid var(--h-ink); box-shadow: 0 4px 0 var(--h-ink); }
-  .char-thumb.active { background: #fff3b0; box-shadow: 0 4px 0 var(--h-ink), 0 0 0 4px var(--h-magenta); }
-  #chars { overflow-x: auto; scrollbar-width: none; padding: 6px 4px; max-width: calc(100vw - 600px); }
-  #chars::-webkit-scrollbar { display: none; }
-  .char-thumb { flex: 0 0 auto; }
-  .tool-btn { background: #fffaf0; border: 3px solid var(--h-ink); box-shadow: 0 4px 0 var(--h-ink); }
-  .tool-btn.active { background: linear-gradient(180deg, #ffd95a, #ff9f1c); box-shadow: 0 4px 0 var(--h-ink), 0 0 0 4px rgba(255,201,60,.5); }
-  .swatch { border: 4px solid var(--h-ink); box-shadow: 0 4px 0 var(--h-ink); }
-  .swatch.active { border-color: #fff; box-shadow: 0 0 0 4px var(--h-ink), 0 0 18px rgba(255,255,255,.7); }
-  #stage { background: #fffaf0; border: 5px solid var(--h-ink); box-shadow: 7px 8px 0 var(--h-ink), 0 20px 40px rgba(8,2,26,.45); }
-  #galleryBox { border: 5px solid var(--h-ink); box-shadow: 7px 8px 0 var(--h-ink); background: #fffaf0; }
-  #gallery { background: radial-gradient(circle, rgba(58,17,119,.8), rgba(10,4,30,.92)); }
-  .gal-item { border: 3px solid var(--h-ink); }
+  /* --- פרק ז: חלונות --- */
+  .ov { position: fixed; inset: 0; z-index: 60; display: none; place-items: center; padding: 18px; background: radial-gradient(circle at 50% 40%, rgba(58,17,119,.82), rgba(10,4,30,.93)); }
+  .ov.show { display: grid; animation: h-fade .2s ease both; }
+  .ov-card { position: relative; width: min(96vw, 1060px); max-height: 92vh; display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; }
+  .ov-head { display: flex; align-items: center; gap: 10px; }
+  .ov-head h2 { flex: 1; font: 900 clamp(22px, 3vw, 32px)/1 var(--h-font); }
+  .ov-x { width: 52px; height: 52px; border: 4px solid var(--h-ink); border-radius: 50%; background: var(--h-magenta); color: #fff; font: 900 22px/1 var(--h-font); box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; flex: 0 0 auto; }
+  .packs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 4px 2px 8px; }
+  .packs::-webkit-scrollbar { display: none; }
+  .pack { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff; box-shadow: 0 3px 0 var(--h-ink); font: 800 16px/1 var(--h-font); cursor: pointer; white-space: nowrap; }
+  .pack.on { background: linear-gradient(180deg, #ff7ec2, #ff2e93); color: #fff; }
+  .pack b { font-size: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 12px; overflow-y: auto; padding: 4px; }
+  .card { display: grid; gap: 4px; padding: 8px; border: 3px solid var(--h-ink); border-radius: 18px; background: #fff; box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; font: 800 15px/1.1 var(--h-font); text-align: center; transition: transform .14s var(--h-spring); }
+  .card:active { transform: scale(.95); }
+  .card .th { aspect-ratio: 1; display: grid; place-items: center; border-radius: 12px; background: #fffaf0; overflow: hidden; }
+  .card .th svg, .card .th img { width: 92%; height: 92%; object-fit: contain; }
+  .card.cur { box-shadow: 0 4px 0 var(--h-ink), 0 0 0 4px var(--h-gold); }
+  .card.surprise .th { font-size: 60px; background: linear-gradient(135deg, #ffd95a, #ff7ec2, #8b5cff); }
+  .gal-item { position: relative; }
+  .gal-big { display: grid; place-items: center; max-height: 62vh; overflow: hidden; border: 4px solid var(--h-ink); border-radius: 20px; background: #fffaf0; }
+  .gal-big svg, .gal-big img { max-width: 100%; max-height: 60vh; }
+  .gal-empty { grid-column: 1 / -1; font: 800 24px/1.5 var(--h-font); text-align: center; padding: 30px; color: var(--h-text-soft); }
+  .pop { position: fixed; z-index: 40; right: 146px; top: 110px; width: min(56vw, 440px); max-height: 70vh; overflow-y: auto; padding: 12px; display: none; }
+  .pop.show { display: block; animation: h-card-in .35s var(--h-spring) both; }
+  .pop h3 { font: 900 18px/1 var(--h-font); margin-bottom: 8px; }
+  .stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; }
+  .stk { height: 54px; border: 3px solid var(--h-ink); border-radius: 14px; background: #fff; font-size: 30px; cursor: pointer; }
+  .stk.on { background: #fff3b0; box-shadow: 0 0 0 3px var(--h-magenta); }
+  .bgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+  .bgc { display: grid; gap: 3px; padding: 4px; border: 3px solid var(--h-ink); border-radius: 14px; background: #fff; cursor: pointer; font: 800 13px/1 var(--h-font); }
+  .bgc canvas { width: 100%; aspect-ratio: 4/3; border-radius: 9px; border: 2px solid var(--h-ink); }
+  .bgc.on { box-shadow: 0 0 0 3px var(--h-magenta); }
+  .line-toggle { margin-top: 10px; width: 100%; }
+  #idea { position: absolute; left: 12px; bottom: 12px; width: 26%; max-width: 210px; aspect-ratio: 1; padding: 6px; border: 4px solid var(--h-ink); border-radius: 18px; background: #fff; box-shadow: 4px 5px 0 var(--h-ink); z-index: 7; display: none; pointer-events: none; }
+  #idea.show { display: block; animation: h-card-in .35s var(--h-spring) both; }
+  #idea svg, #idea img { width: 100%; height: 100%; object-fit: contain; }
+  #idea::before { content: "💡 רעיון"; position: absolute; top: -16px; right: 10px; padding: 3px 10px; border: 3px solid var(--h-ink); border-radius: 999px; background: var(--h-gold); font: 900 13px/1 var(--h-font); }
+  .toast { position: fixed; left: 50%; top: 18%; transform: translate(-50%, 0); z-index: 70; padding: 12px 22px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); box-shadow: 0 5px 0 var(--h-ink); font: 900 clamp(18px, 2.4vw, 26px)/1 var(--h-font); pointer-events: none; animation: toast 1.8s ease forwards; white-space: nowrap; }
+  @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 20px) scale(.7); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -20px); } }
+
+  /* --- פרק ח: מצב אורך ומסכים קטנים --- */
+  @media (orientation: portrait), (max-width: 860px) {
+    #top { flex-wrap: wrap; height: auto; left: 90px; }
+    .page-chip { order: 3; flex-basis: 100%; height: 44px; }
+    .mode { width: 60px; }
+    .act { width: 48px; height: 48px; font-size: 20px; }
+    #pal { top: auto; left: 10px; right: 10px; bottom: 10px; width: auto; height: 70px; display: flex; overflow-x: auto; overflow-y: hidden; padding: 6px 8px; }
+    .sw { flex: 0 0 48px; }
+    #tools { top: auto; right: 10px; left: 10px; bottom: 88px; width: auto; height: 70px; flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 6px 8px; }
+    .tgroup { display: flex; gap: 6px; }
+    .tlabel { display: none; }
+    .tool { width: 54px; flex: 0 0 54px; }
+    .tool.wide, .progress { width: auto; flex: 0 0 auto; padding: 0 10px; }
+    #stage { top: 150px; left: 10px; right: 10px; bottom: 168px; }
+    .pop { right: 10px; left: 10px; width: auto; top: auto; bottom: 170px; }
+  }
 </style>
 </head>
-<body>
+<body class="m-color">
 
-<div id="topbar">
-  <!-- דמויות לצביעה נוצרות ב-JS -->
-  <div id="chars" style="display:flex; gap:10px;"></div>
-  <div id="tools">
-    <button class="tool-btn" id="btnColorMode" title="צביעה">🖍️</button>
-    <button class="tool-btn" id="btnDrawMode"  title="ציור קסם">🪄</button>
-    <button class="tool-btn" id="btnUndo"      title="ביטול">↩️</button>
-    <button class="tool-btn" id="btnClear"     title="ניקוי">🧽</button>
-    <button class="tool-btn" id="btnSave"      title="שמירה">💾</button>
-    <button class="tool-btn" id="btnGallery"   title="גלריה">🖼️</button>
+  <!-- ===== סרגל עליון: מצבים · שם הדף · פעולות ===== -->
+  <div id="top">
+    <div class="modes" id="modes">
+      <button class="mode" data-m="color" type="button">🖍️<small>צביעה</small></button>
+      <button class="mode" data-m="draw" type="button">✏️<small>ציור חופשי</small></button>
+      <button class="mode" data-m="cbn" type="button">🔢<small>לפי מספר</small></button>
+      <button class="mode" data-m="dots" type="button">✨<small>נקודות</small></button>
+    </div>
+    <button class="page-chip" id="pageChip" type="button"><span class="pc-ico">📚</span><span id="pageName">דפי ציור</span></button>
+    <div class="acts">
+      <button class="act" id="btnIdea" type="button" aria-label="רעיון">💡</button>
+      <button class="act" id="btnUndo" type="button" aria-label="ביטול">↩️</button>
+      <button class="act" id="btnClear" type="button" aria-label="ניקוי">🗑️</button>
+      <button class="act save" id="btnSave" type="button" aria-label="שמירה">💾</button>
+      <button class="act" id="btnGallery" type="button" aria-label="גלריה">🖼️</button>
+    </div>
   </div>
-</div>
 
-<div id="palette"></div>
+  <!-- ===== פלטה (שמאל) + כלים (ימין) — נבנים ב-JS לפי המצב ===== -->
+  <div id="pal"></div>
+  <div id="tools"></div>
 
-<div id="stage">
-  <div id="svgHolder"></div>
-  <canvas id="drawCanvas"></canvas>
-  <canvas id="fxCanvas"></canvas>
-</div>
+  <!-- ===== במת הציור: שכבות ===== -->
+  <div id="stage">
+    <div id="svgHolder"></div>
+    <canvas id="bgCanvas"></canvas>
+    <canvas id="drawCanvas"></canvas>
+    <div id="lineArt"></div>
+    <canvas id="fxCanvas"></canvas>
+    <div id="idea"></div>
+  </div>
 
-<div id="gallery"><div id="galleryBox"></div></div>
+  <!-- ===== חלון בחירת דף ===== -->
+  <div class="ov" id="pagesOv">
+    <div class="ov-card h-panel">
+      <div class="ov-head"><h2 id="pagesTitle">📚 בוחרים דף</h2><button class="ov-x" type="button" data-close="pagesOv">✖</button></div>
+      <div class="packs" id="packs"></div>
+      <div class="grid" id="pagesGrid"></div>
+    </div>
+  </div>
 
-<script src="js/audio.js"></script>
-<script src="shared/kids-ui.js"></script>
-<script src="shared/wallet.js"></script>
-<script src="shared/hero-avatar.js"></script>
-<script src="shared/hero-rewards.js"></script>
-<script src="js/coloring.js"></script>
-<script>
-  window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function(){});
-    });
-  }
-</script>
+  <!-- ===== גלריה ===== -->
+  <div class="ov" id="galOv">
+    <div class="ov-card h-panel">
+      <div class="ov-head"><h2>🖼️ הגלריה שלי</h2><button class="ov-x" type="button" data-close="galOv">✖</button></div>
+      <div class="grid" id="galGrid"></div>
+    </div>
+  </div>
+  <div class="ov" id="galView">
+    <div class="ov-card h-panel">
+      <div class="ov-head"><h2>🖼️ הציור שלי</h2><button class="ov-x" type="button" data-close="galView">✖</button></div>
+      <div class="gal-big" id="galBig"></div>
+      <div class="h-modal-actions" id="galActs"></div>
+    </div>
+  </div>
+
+  <!-- ===== חלונות קופצים: מדבקות ורקעים ===== -->
+  <div class="pop h-panel" id="stkPop"><h3>⭐ מדבקות — בוחרים ונוגעים בדף</h3><div class="stickers" id="stickers"></div></div>
+  <div class="pop h-panel" id="bgPop"><h3>🖼️ רקע לציור</h3><div class="bgs" id="bgs"></div><button class="h-btn cyan line-toggle" id="lineToggle" type="button">✏️ קווי דף צביעה מעל הציור</button></div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/voice-en.js"></script>
+  <script src="shared/kids-ui.js"></script>
+  <script src="shared/wallet.js"></script>
+  <script src="shared/hero-avatar.js"></script>
+  <script src="shared/hero-rewards.js"></script>
+  <script src="shared/progress.js"></script>
+  <script src="js/art-pages.js"></script>
+  <script src="js/coloring.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function(){}); });
+    }
+  </script>
 </body>
 </html>

@@ -312,6 +312,29 @@
     }
 
   </style>
+<style>
+    /* ===== פרק יד — נבל השבוע, "כדאי לתרגל" וחיית המחמד באקדמיה ===== */
+    /* כרטיס "נבל השבוע" בראש מפת התחנות */
+    .boss-course{position:relative;width:100%;display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;border:4px solid var(--h-ink,#1b1036);border-radius:20px;background:linear-gradient(135deg,#8b5cff,#2a0b5e);color:#fff;font-family:var(--h-font);text-align:right;cursor:pointer;box-shadow:0 5px 0 var(--h-ink,#1b1036);animation:boss-pulse 2s ease-in-out infinite}
+    .boss-course.won{background:linear-gradient(135deg,#ffd95a,#3ff2b0);color:#1b1036;animation:none}
+    .boss-course .bc-ico{font-size:40px;line-height:1}.boss-course b{display:block;font-size:19px;font-weight:900}.boss-course small{font-size:14px;font-weight:700;opacity:.9}
+    .boss-course .bc-go{padding:6px 12px;border:3px solid #1b1036;border-radius:999px;background:#ffc93c;color:#1b1036;font-weight:900}
+    @keyframes boss-pulse{50%{box-shadow:0 5px 0 #1b1036,0 0 0 5px rgba(255,46,147,.45)}}
+    /* פס נקודות החיים של הנבל (במקום רצועת הפרקים) */
+    .boss-bar{display:flex;align-items:center;gap:10px;padding:6px 12px;border:4px solid #1b1036;border-radius:999px;background:#fffaf0;font-family:var(--h-font);color:#1b1036;width:min(440px,36vw);flex:0 0 auto}
+    .boss-bar .bb-ico{font-size:34px;line-height:1;display:inline-block}.boss-bar.hit .bb-ico{animation:boss-hit .5s ease}
+    .boss-bar b{font-size:16px;font-weight:900;white-space:nowrap}.boss-bar .bb-hp{flex:1;min-width:90px;height:18px;border:3px solid #1b1036;border-radius:999px;background:#2a1a4f;overflow:hidden}
+    .boss-bar .bb-hp i{display:block;height:100%;background:linear-gradient(90deg,#ff2e93,#ff9f1c);transition:width .5s cubic-bezier(.2,.85,.25,1)}
+    .boss-bar span{font-weight:900;white-space:nowrap}
+    @keyframes boss-hit{20%{transform:translateX(-8px) rotate(-12deg) scale(1.2)}50%{transform:translateX(8px) rotate(10deg)}80%{transform:translateX(-4px)}}
+    .app.boss-mode .mascot{background:linear-gradient(145deg,#b69cff,#ff7ec2)}
+    .app.boss-mode .mascot.hit{animation:boss-hit .5s ease}
+    /* תג "כדאי לתרגל" על תחנה חלשה (לפי הדיוק בניסיון הראשון) */
+    .course .practice-badge{position:absolute;top:4px;left:8px;padding:2px 8px;border:2px solid #1b1036;border-radius:999px;background:#ffc93c;color:#1b1036;font:900 12px/1.3 var(--h-font);z-index:2}
+    .map-tip{margin:0 0 10px;padding:8px 12px;border:3px dashed #ff9f1c;border-radius:16px;background:#fff3b0;color:#1b1036;font:800 15px/1.35 var(--h-font)}
+    /* חיית המחמד בפינת כרטיס השאלה */
+    .mascot-wrap{position:relative}.mascot-wrap .pet-mini{left:-4px;bottom:-8px}
+  </style>
 </head>
 <body>
   <div class="app">
@@ -340,8 +363,8 @@
     <div class="celebration" id="celebration" role="dialog" aria-modal="true" aria-labelledby="celebrationTitle"><div class="celebration-card"><div class="celebration-burst" id="celebrationHero">🏆</div><h2 id="celebrationTitle">תחנה הושלמה!</h2><p id="celebrationText">אספת שלושה כוכבים חדשים.</p><button id="celebrationClose" type="button">ממשיכים לטוס! 🚀</button></div></div>
     <div class="rotate-message"><div class="rotate-icon">📱</div><strong>בואו נסובב לרוחב</strong><span>אקדמיית הגיבורים נבנתה במיוחד למסך הרחב של האייפד.</span></div>
   </div>
-  <script src="shared/kids-ui.js"></script><script src="shared/wallet.js"></script><script src="js/audio.js"></script>
-  <script src="shared/hero-avatar.js"></script><script src="shared/hero-rewards.js"></script><script src="shared/voice-settings.js"></script><script src="js/academy-puzzle.js"></script><script src="js/academy-modules.js"></script>
+  <script src="shared/kids-ui.js"></script><script src="shared/wallet.js"></script><script src="js/voice-en.js"></script><script src="js/audio.js"></script>
+  <script src="shared/hero-avatar.js"></script><script src="shared/hero-rewards.js"></script><script src="shared/progress.js"></script><script src="shared/pet.js"></script><script src="shared/voice-settings.js"></script><script src="js/academy-puzzle.js"></script><script src="js/academy-modules.js"></script>
   <script>
     (function(){
       'use strict';
@@ -376,17 +399,17 @@ const young={};Object.keys(saved.progress||{}).forEach(function(k){const p=Math.
       function say(text,opts){if(window.Voice)Voice.say(text,Object.assign({rate:.92,pitch:1.15},opts||{}))}function sound(name){if(window.Sound&&Sound[name])Sound[name]()}
       function readParts(parts,opts){if(window.Voice&&parts&&parts.length)Voice.read(parts,opts||{})}
       /* speakPrompt — מקריא את השאלה (וגם את תוכן השאלה, q, אם יש) — בלי לגלות את התשובה */
-      function speakPrompt(interrupt){if(!currentRound)return;const parts=[{text:currentRound.speak||el.instruction.textContent,lang:'he-IL'}].concat(currentRound.q||[]);readParts(parts,{interrupt:!!interrupt})}
+      function speakPrompt(interrupt){if(!currentRound)return;const txt=currentRound.speak||el.instruction.textContent;const parts=(window.Voice&&Voice.splitLang?Voice.splitLang(txt):[{text:txt,lang:'he-IL'}]).concat(currentRound.q||[]);readParts(parts,{interrupt:!!interrupt})}
       function completedCount(){return Object.values(state.completed).filter(Boolean).length}function levelText(){const done=completedCount(),total=Object.keys(modules).length;return !done?'גיבורה מתחילה':done<3?'גיבורה בהתהוות':done<total?'גיבורת-על של למידה':'כל האקדמיה הושלמה!'}
       /* starsHTML — 5 נקודות: פרק שהושלם ברמה הנוכחית מסומן בכוכב זהוב */
       function starsHTML(key){const c=chapOf(key);return[0,1,2,3,4].map(function(i){return'<span class="'+(c.stars[i]>=GOAL?'earned':'')+'">★</span>'}).join('')}
       function buildCourseList(){el.courseList.innerHTML='';Object.keys(modules).forEach(function(key){const info=modules[key],item=document.createElement('button');item.type='button';item.dataset.key=key;item.className='course';item.style.setProperty('--course-color',info.color);item.innerHTML='<span class="course-icon">'+info.icon+'</span><span><span class="course-name">'+info.name+'</span><span class="course-sub">'+info.subtitle+'</span></span><span class="course-stars">'+starsHTML(key)+'</span>';item.addEventListener('click',function(){select(key)});el.courseList.appendChild(item)})}
-      function updateCourseList(){Array.from(el.courseList.children).forEach(function(item){const key=item.dataset.key,active=key===state.active;item.classList.toggle('active',active);item.setAttribute('aria-pressed',active?'true':'false');item.querySelector('.course-stars').innerHTML=starsHTML(key)})}
+      function updateCourseList(){Array.from(el.courseList.children).forEach(function(item){const key=item.dataset.key,active=key===state.active;item.classList.toggle('active',active);item.setAttribute('aria-pressed',active?'true':'false');item.querySelector('.course-stars').innerHTML=starsHTML(key)});markWeak()}
       function chrome(){const progress=state.progress[state.active],module=modules[state.active],total=Object.keys(modules).length;el.journeyFill.style.width=(completedCount()/total*100)+'%';el.journeyScore.textContent=completedCount()+'/'+total;el.profileLevel.textContent=levelText()+' · ⭐ '+state.stars;{const c=chapOf(state.active),list=chapterList(state.active);el.lessonKicker.textContent='תחנה '+(Object.keys(modules).indexOf(state.active)+1)+(list?' · פרק '+(c.cur+1)+': '+list[c.cur].n+' · '+c.stars[c.cur]+'/'+GOAL+' ⭐':'')};el.lessonTitle.textContent=module.title;el.mascot.textContent=module.mascot;updateCourseList()}
       function resetMessage(){el.feedback.className='feedback';el.feedback.textContent='לחצו על התשובה שנראית לכם נכונה.';el.next.disabled=true;el.next.textContent='שאלה חדשה'}
       /* select — בחירת תחנה: סוגרת את מפת התחנות ומתחילה שאלה (אם זו אותה תחנה — רק סוגרת את המפה) */
-      function select(key){if(!modules[key])return;closeMap();if(key===state.active&&currentRound)return;state.active=key;save();chrome();round();sound('bubble')}
-      function openMap(){updateCourseList();document.querySelector('.app').classList.add('map-open');say('לאן טסים היום? בחרו תחנה.',{interrupt:true})}
+      function select(key){if(!modules[key])return;closeMap();if(boss){endBoss();currentRound=null}if(key===state.active&&currentRound)return;state.active=key;save();chrome();round();sound('bubble')}
+      function openMap(){updateCourseList();addBossCourse();document.querySelector('.app').classList.add('map-open');say('לאן טסים היום? בחרו תחנה.',{interrupt:true})}
       function closeMap(){document.querySelector('.app').classList.remove('map-open')}
       /* ===== חיבור לאקדמיה: רמת קושי, api לתחנות החדשות, פרסי גיבורה ===== */
       /* big() — האם נבחרה רמת 7–8 */
@@ -397,14 +420,17 @@ const young={};Object.keys(saved.progress||{}).forEach(function(k){const p=Math.
       /* chapterList(key) — רשימת 5 הפרקים (שם + פונקציה) של התחנה ברמה הנוכחית */
       function chapterList(key){const set=window.AcademyModules&&AcademyModules.CHAPTERS[key];return set?set[state.grade]:null}
       /* scoreStar — כוכב על הצלחה: מעדכן את הפרק, פותח את הבא כשמגיעים ל-3, ומעניק מטבע ואנרגיה */
-      function scoreStar(origin,base){const key=state.active,c=chapOf(key),i=c.cur;state.stars++;state.totalCorrect++;c.stars[i]=Math.min(GOAL,c.stars[i]+1)
+      /* STATION_GROUP — לאיזו משפחה כל תחנה שייכת (למשימת היום) */
+      const STATION_GROUP={letters:'lang',reading:'lang',language:'lang',wordbuild:'lang',english:'en',envocab:'en',enspell:'en',animals:'en',food:'en',numbers:'math',math:'math'}
+      function scoreStar(origin,base){if(boss)return bossScore(origin,base);const key=state.active,c=chapOf(key),i=c.cur;
+if(window.Progress){Progress.recordAnswer(key,!roundWrong);Progress.track('answer:'+key);if(STATION_GROUP[key])Progress.track('group:'+STATION_GROUP[key])}state.stars++;state.totalCorrect++;c.stars[i]=Math.min(GOAL,c.stars[i]+1)
 let chapterDone=false,stationDone=false
 if(c.stars[i]>=GOAL&&c.open<=i){chapterDone=true;if(i<CH-1)c.open=i+1;else{c.open=CH;stationDone=true;state.completed[key]=true}}
 state.progress[key]=c.stars.filter(function(x){return x>=GOAL}).length
 reward(origin,chapterDone,base);save();chrome();return{chapterDone:chapterDone,stationDone:stationDone,index:i}}
       /* praise — משפטי עידוד מתחלפים */
       /* streak — רצף תשובות נכונות מהניסיון הראשון: 🔥 בצ'יפ, ובונוס עידוד ב-3, 5, 10 */
-      let streak=0,roundWrong=false
+      let streak=0,roundWrong=false,boss=null
       function setStreak(n){streak=n;const chip=document.getElementById('streak');if(!chip)return;chip.textContent=n>=2?'🔥 '+n+' ברצף':'';chip.classList.toggle('on',n>=2);if(n===3||n===5||n===10||(n>10&&n%5===0)){chip.classList.remove('boom');void chip.offsetWidth;chip.classList.add('boom');if(window.HeroRewards)HeroRewards.pow(chip,n+' ברצף!');setTimeout(function(){say('וואו! '+n+' תשובות ברצף!')},900)}}
       const PRAISE=['כל הכבוד!','מעולה!','יופי אלה!','גיבורה!','וואו!','איזו אלופה!','בול!','מדהים!']
       function praise(){return random(PRAISE)}
@@ -419,13 +445,45 @@ b.addEventListener('click',function(){if(locked){sound('sad');say('צריך לס
 strip.appendChild(b)})}
       /* api — הכלים שהדף מעביר ל-js/academy-modules.js */
       const api={el:el,answer:answer,setRound:function(r){currentRound=r},random:random,shuffle:shuffle,choicesFor:choicesFor,big:big,
-        chapter:function(){return chapOf(state.active).cur},read:function(parts){readParts(parts)},
+        chapter:function(){return boss?boss.chap:chapOf(state.active).cur},read:function(parts){readParts(parts)},
         win:function(origin,text,speech){finishCustom(origin,text,speech)},
         feedback:function(cls,text){el.feedback.className='feedback'+(cls?' '+cls:'');el.feedback.textContent=text},
         say:say,sound:sound}
       /* heroJump — אלה בכרטיס השאלה קופצת משמחה */
       function heroJump(){const h=document.getElementById('mascotHero');if(!h)return;h.classList.remove('zap');void h.offsetWidth;h.classList.add('zap')}
       /* reward — מטבע לארנק + אנרגיית גיבורה (בסיס + 3 בונוס כשתחנה הושלמה) */
+      /* ===== נבל השבוע =====
+         startBoss — קרב: שאלות מעורבבות מכל התחנות (בפרקים שכבר נפתחו), כל תשובה פוגעת בנבל;
+         תשובה בניסיון הראשון = מכה כפולה. ניצחון = 20 מטבעות, אנרגיה וגביע שבועי */
+      const BOSS_POOL=['numbers','math','letters','reading','wordbuild','language','english','envocab','enspell','colors','shapes','patterns','animals','food','size','nature']
+      function startBoss(){if(!window.Progress)return;closeMap();boss={station:null,chap:0,intro:true,celebrated:false};document.querySelector('.app').classList.add('boss-mode');currentRound=null;round()}
+      function endBoss(){boss=null;document.querySelector('.app').classList.remove('boss-mode');renderChapters();chrome()}
+      /* renderBossBar — פס החיים של הנבל (hit = אנימציית פגיעה) */
+      function renderBossBar(b,hit){const strip=document.getElementById('chapterStrip');if(!strip)return;strip.innerHTML='<div class="boss-bar'+(hit?' hit':'')+'"><span class="bb-ico">'+b.villain.ico+'</span><b>'+b.villain.name+'</b><div class="bb-hp"><i style="width:'+(b.hp/b.max*100)+'%"></i></div><span>❤️ '+b.hp+'/'+b.max+'</span></div>'}
+      function bossRound(){const b=Progress.boss();renderBossBar(b);
+if(b.won){const v=b.villain;endBoss();el.instruction.textContent='ניצחת את '+v.name+' השבוע! 🏆';el.helper.textContent='נבל חדש יגיע בשבוע הבא. בינתיים — ממשיכים ללמוד בתחנות!';el.target.innerHTML='<div style="font-size:90px">'+v.ico+'🤝</div>';{const mb=document.createElement('button');mb.type='button';mb.className='answer';mb.innerHTML='🗺️ לתחנות';mb.addEventListener('click',function(){openMap()});el.answers.appendChild(mb)}say('ניצחת את '+v.name+' השבוע! נבל חדש יגיע בשבוע הבא.',{interrupt:true});return}
+const pool=BOSS_POOL.filter(function(k){return modules[k]&&chapterList(k)}),key=random(pool),c=chapOf(key),list=chapterList(key);
+boss.station=key;boss.chap=Math.floor(Math.random()*(Math.min(c.open,CH-1)+1));
+list[boss.chap].f(api);
+el.lessonKicker.textContent='⚔️ קרב נגד '+b.villain.name+' · '+modules[key].icon+' '+modules[key].name;el.lessonTitle.textContent='⚔️ '+b.villain.name;el.mascot.textContent=b.villain.ico;
+if(boss.intro){boss.intro=false;say(b.villain.line+' כל תשובה נכונה פוגעת בו!',{interrupt:true});speakPrompt(false)}else speakPrompt(true)}
+      /* bossScore — במקום כוכב פרק: פגיעה בנבל + פרס רגיל לתשובה */
+      function bossScore(origin,base){const key=boss.station;
+if(window.Progress){Progress.recordAnswer(key,!roundWrong);Progress.track('answer:'+key);if(STATION_GROUP[key])Progress.track('group:'+STATION_GROUP[key])}
+state.stars++;state.totalCorrect++;reward(origin,false,base);save();
+const b=Progress.bossHit(roundWrong?1:2);renderBossBar(b,true);el.mascot.classList.remove('hit');void el.mascot.offsetWidth;el.mascot.classList.add('hit');
+if(window.HeroRewards)HeroRewards.pow(document.querySelector('.boss-bar .bb-ico')||el.mascot,roundWrong?'בום!':'מכה כפולה!');
+if(b.won&&!boss.celebrated){boss.celebrated=true;setTimeout(function(){bossWin(b)},900)}
+return{chapterDone:false,stationDone:false,index:0}}
+      /* bossWin — הנבל הפך לחבר! חגיגה גדולה */
+      function bossWin(b){const v=b.villain;endBoss();if(window.Wallet)Wallet.add(20);if(window.HeroRewards){HeroRewards.award(5,el.mascot,{word:'ניצחון!'});HeroRewards.confetti()}
+el.celebrationTitle.textContent='ניצחת את '+v.name+'! 🏆';el.celebrationText.textContent=v.name+' הפך לחבר! 🪙 +20 מטבעות · גביע שבועי · נבל חדש בשבוע הבא';el.celebration.classList.add('visible');say('ניצחת את '+v.name+'! עכשיו הוא חבר שלך!',{interrupt:true})}
+      /* addBossCourse — כרטיס "נבל השבוע" בראש מפת התחנות */
+      function addBossCourse(){if(!window.Progress)return;const b=Progress.boss();let card=document.getElementById('bossCourse');if(!card){card=document.createElement('button');card.type='button';card.id='bossCourse';el.courseList.parentNode.insertBefore(card,el.courseList);card.addEventListener('click',function(){sound('bubble');startBoss()})}
+card.className='boss-course'+(b.won?' won':'');card.innerHTML='<span class="bc-ico">'+b.villain.ico+'</span><span><b>⚔️ נבל השבוע: '+b.villain.name+'</b><small>'+(b.won?'🏆 ניצחת השבוע! נבל חדש בשבוע הבא':'❤️ '+b.hp+'/'+b.max+' · '+b.villain.line)+'</small></span><span class="bc-go">'+(b.won?'✓':'לקרב!')+'</span>'}
+      /* markWeak — "💪 כדאי לתרגל" על תחנות עם דיוק נמוך (לפי shared/progress.js) + טיפ בראש המפה */
+      function markWeak(){if(!window.Progress)return;const weak=Progress.weakStations();Array.from(el.courseList.children).forEach(function(item){const w=weak.indexOf(item.dataset.key)>=0;let bd=item.querySelector('.practice-badge');if(w&&!bd){bd=document.createElement('span');bd.className='practice-badge';bd.textContent='💪 כדאי לתרגל';item.appendChild(bd)}if(!w&&bd)bd.remove()});
+let tip=document.getElementById('mapTip');if(weak.length){if(!tip){tip=document.createElement('p');tip.id='mapTip';tip.className='map-tip';el.courseList.parentNode.insertBefore(tip,el.courseList)}tip.textContent='💡 הצעה: עוד קצת תרגול ב'+weak.map(function(k){return modules[k]?modules[k].name:k}).join(' וב')+' — וזה יהיה קל!'}else if(tip)tip.remove()}
       function reward(origin,justCompleted,base){if(window.Wallet)Wallet.add(1);heroJump();if(window.HeroRewards)HeroRewards.award(base+(justCompleted?3:0),origin);if(window.HeroRewards)HeroRewards.refresh()}
       /* finishCustom — סיום משימה מיוחדת מתוך מודול (למשל סיימון במוזיקה) */
       function finishCustom(origin,text,speech){if(locked)return;locked=true
@@ -438,7 +496,7 @@ if(r.chapterDone)setTimeout(function(){celebrate(state.active,r)},430)}
 /* תחנות חדשות ורמת 7–8 מגיעות מהמודול החיצוני; זיכרון ופאזלים מטפלים ברמה בעצמם */
 document.querySelector('.prompt-card').classList.remove('pz-mode');el.answers.style.gridTemplateColumns=''
 /* כל התחנות רצות לפי פרקים מתוך js/academy-modules.js; הקוד הישן למטה נשאר כגיבוי בלבד */
-{const list=chapterList(state.active);if(list){const c=chapOf(state.active);renderChapters();chrome();list[c.cur].f(api)
+if(boss){bossRound();return}{const list=chapterList(state.active);if(list){const c=chapOf(state.active);renderChapters();chrome();list[c.cur].f(api)
 /* הקראה אוטומטית של כל שאלה חדשה (במוזיקה לא — שם הצלילים הם השאלה) */
 if(state.active!=='music')speakPrompt(true);return}}
 if(state.active==='numbers')numberRound();if(state.active==='colors')colorRound();if(state.active==='shapes')shapeRound();if(state.active==='patterns')patternRound();if(state.active==='letters')letterRound();if(state.active==='english')englishRound();if(state.active==='animals')wordRound(animals,'חיה');if(state.active==='food')wordRound(foods,'מאכל');if(state.active==='size')sizeRound();if(state.active==='memory')memoryRound();if(state.active==='puzzles')puzzleRound()}
@@ -494,7 +552,10 @@ gradeBtn.addEventListener('click',function(){state.grade=big()?'young':'big';sav
 function drawHeroes(){if(!window.HeroAvatar||!window.HeroRewards)return;const o=HeroRewards.outfit;document.getElementById('brandHero').innerHTML=HeroAvatar.svg(o);document.getElementById('mascotHero').innerHTML=HeroAvatar.svg(o);document.getElementById('celebrationHero').innerHTML=HeroAvatar.svg(o)}
 drawHeroes()
 window.addEventListener('hero:outfit',drawHeroes)
-if(window.HeroRewards){HeroRewards.mountHUD(document.getElementById('hudSlot'));document.getElementById('hudSlot').addEventListener('click',function(){HeroRewards.openWardrobe()})};if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});buildCourseList();chrome();round();
+if(window.HeroRewards){HeroRewards.mountHUD(document.getElementById('hudSlot'));document.getElementById('hudSlot').addEventListener('click',function(){HeroRewards.openWardrobe()})};if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});buildCourseList();chrome();addBossCourse();
+/* חיית המחמד בפינת כרטיס השאלה — קופצת ומקבלת 🍎 על כל תשובה */
+if(window.Pet)Pet.mini(document.querySelector('.mascot-wrap'),{size:Math.round(Math.min(innerWidth*.07,86))});
+if(location.hash==='#boss')startBoss();else round();
     })();
   </script>
 </body>

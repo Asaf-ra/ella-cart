@@ -1,5 +1,8 @@
-/* ===== Service Worker — עבודה אופליין מלאה ===== */
-const CACHE = 'ella-cart-v37';
+/* ===== Service Worker — עבודה אופליין מלאה =====
+   פרק 1 — רשימת קבצים לשמירה מראש (דפים, קוד, גופנים, ציורים)
+   פרק 2 — הקלטות הקול באנגלית: הרשימה נקראת מ-js/voice-en.js (אותו מניפסט שהאפליקציה משתמשת בו)
+   פרק 3 — התקנה / ניקוי מטמונים ישנים / הגשה מהמטמון (cache-first) */
+const CACHE = 'ella-cart-v38';
 const ART = [
   'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
   'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',
@@ -15,6 +18,7 @@ const ASSETS = [
   './coloring.html',
   './balloons.html',
   './flight.html',
+  './stories.html',
   './style.css',
   './manifest.json',
   './assets/icon.svg',
@@ -26,6 +30,13 @@ const ASSETS = [
   './shared/hero-avatar.js',
   './shared/hero-rewards.js',
   './shared/voice-settings.js',
+  './shared/progress.js',
+  './shared/pet.js',
+  './shared/parents.js',
+  './js/art-pages.js',
+  './js/story-data.js',
+  './js/stories.js',
+  './js/voice-en.js',
   './js/academy-modules.js',
   './js/academy-puzzle.js',
   './js/flight.js',
@@ -45,9 +56,23 @@ const ASSETS = [
   './js/balloons.js'
 ].concat(ART);
 
+/* ---------- פרק 2 — הקלטות קול טבעיות באנגלית ---------- */
+var VOICE = [];
+try {
+  self.window = self;                       // voice-en.js כותב ל-window.VOICE_EN
+  importScripts('./js/voice-en.js');
+  var seen = {};
+  Object.keys(self.VOICE_EN || {}).forEach(function (k) { var f = self.VOICE_EN[k]; if (!seen[f]) { seen[f] = 1; VOICE.push('./assets/voice/en/' + f); } });
+} catch (err) {}
+
 self.addEventListener('install', function (e) {
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); }));
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    /* קודם הקבצים החיוניים; ההקלטות אחריהם — הקלטה שנכשלה לא מפילה את ההתקנה */
+    return c.addAll(ASSETS).then(function () {
+      return Promise.all(VOICE.map(function (u) { return c.add(u).catch(function () {}); }));
+    });
+  }));
 });
 
 self.addEventListener('activate', function (e) {

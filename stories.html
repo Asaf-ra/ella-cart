@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#1d0b4a" />
+<meta name="apple-mobile-web-app-title" content="ספריית הסיפורים" />
+<title>ספריית הסיפורים — העולם של אלה</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<link rel="stylesheet" href="shared/theme.css" />
+<style>
+  /* ===================================================================
+     ספריית הסיפורים — עיצוב
+     פרק א — בסיס               פרק ב — מסך הספרייה (לשוניות + כרטיסי ספרים)
+     פרק ג — מסך הקריאה: ציור הסצנה (רקעים לפי נושא) + טקסט עם הדגשת מילים
+     פרק ד — כפתורי ניווט והקראה    פרק ה — שאלת הבנה וסיום    פרק ו — מסכים צרים
+     =================================================================== */
+
+  /* --- פרק א: בסיס --- */
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  html { background: #1d0b4a; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { background: radial-gradient(60% 60% at 80% 10%, rgba(255,46,147,.35), transparent 70%), linear-gradient(170deg, #1d0b4a, #3a1177 55%, #5a1680); font-family: var(--h-font); color: var(--h-ink); direction: rtl; -webkit-tap-highlight-color: transparent; }
+  button { font-family: var(--h-font); cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .screen { position: fixed; inset: 0; display: none; padding: max(12px, env(safe-area-inset-top)) 16px 14px 16px; }
+  .screen.show { display: flex; flex-direction: column; gap: 12px; }
+
+  /* --- פרק ב: ספרייה --- */
+  .lib-head { display: flex; align-items: center; gap: 12px; padding-left: 84px; }
+  .lib-head h1 { font: 900 clamp(28px, 4vw, 46px)/1 var(--h-font); color: #fff; -webkit-text-stroke: 4px var(--h-ink); paint-order: stroke fill; text-shadow: 4px 5px 0 var(--h-magenta); }
+  .lib-head .count { margin-inline-start: auto; padding: 8px 16px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); box-shadow: 0 4px 0 var(--h-ink); font: 900 18px/1 var(--h-font); white-space: nowrap; }
+  .tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+  .tab { padding: 10px 18px; border: 4px solid var(--h-ink); border-radius: 999px; background: #fff; box-shadow: 0 4px 0 var(--h-ink); font: 900 18px/1 var(--h-font); }
+  .tab.on { background: linear-gradient(180deg, #ff7ec2, #ff2e93); color: #fff; }
+  .shelf { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; align-content: start; padding: 6px 4px 20px; scrollbar-width: none; }
+  .shelf::-webkit-scrollbar { display: none; }
+  .book { position: relative; display: grid; grid-template-rows: auto auto; border: 5px solid var(--h-ink); border-radius: 24px; background: var(--h-paper); box-shadow: 0 6px 0 var(--h-ink), 0 14px 26px rgba(0,0,0,.35); overflow: hidden; text-align: right; transition: transform .15s var(--h-spring); animation: pop-in .5s var(--h-spring) both; }
+  @keyframes pop-in { from { transform: scale(.7) translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .book:active { transform: scale(.96); }
+  .book .cover { height: 130px; display: grid; place-items: center; font-size: 70px; border-bottom: 4px solid var(--h-ink); }
+  .book .cover span { filter: drop-shadow(3px 4px 0 rgba(27,16,54,.45)); animation: bob 2.6s ease-in-out infinite alternate; }
+  @keyframes bob { from { transform: translateY(-4px) rotate(-4deg); } to { transform: translateY(4px) rotate(4deg); } }
+  .book .info { padding: 10px 12px; display: grid; gap: 6px; }
+  .book b { font: 900 19px/1.15 var(--h-font); }
+  .book .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { padding: 3px 9px; border: 2px solid var(--h-ink); border-radius: 999px; background: #fff; font: 800 12px/1.2 var(--h-font); }
+  .tag.done { background: #b6ffdc; }
+  .book.locked { filter: grayscale(.6); }
+  .book.locked .cover::after { content: "🔒"; position: absolute; top: 8px; left: 10px; font-size: 30px; }
+  .book .lock-note { font: 700 13px/1.3 var(--h-font); color: var(--h-text-soft); }
+
+  /* --- פרק ג: קריאה --- */
+  .read-top { display: flex; align-items: center; gap: 10px; padding-left: 84px; }
+  .rbtn { min-width: 56px; height: 56px; padding: 0 14px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); box-shadow: 0 4px 0 var(--h-ink); font: 900 18px/1 var(--h-font); display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: transform .14s var(--h-spring); }
+  .rbtn[hidden] { display: none; }
+  .rbtn:active { transform: translateY(3px) scale(.95); }
+  .rbtn.on { background: linear-gradient(180deg, #ffd95a, #ff9f1c); }
+  .read-title { flex: 1; min-width: 0; font: 900 clamp(18px, 2.4vw, 28px)/1.1 var(--h-font); color: #fff; -webkit-text-stroke: 3px var(--h-ink); paint-order: stroke fill; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .book-open { flex: 1; min-height: 0; display: grid; grid-template-rows: minmax(0, 1.05fr) auto; border: 6px solid var(--h-ink); border-radius: 30px; background: var(--h-paper); box-shadow: 8px 9px 0 var(--h-ink), 0 24px 40px rgba(8,2,26,.45); overflow: hidden; }
+  .scene { position: relative; overflow: hidden; border-bottom: 5px solid var(--h-ink); display: grid; place-items: center; }
+  .scene .chars { position: relative; z-index: 2; display: flex; gap: clamp(8px, 2vw, 26px); align-items: flex-end; font-size: clamp(64px, 11vh, 120px); line-height: 1; }
+  .scene .chars span { display: inline-block; filter: drop-shadow(4px 6px 0 rgba(27,16,54,.35)); animation: float 2.4s ease-in-out infinite alternate; }
+  .scene .chars span:nth-child(2) { animation-delay: .4s; } .scene .chars span:nth-child(3) { animation-delay: .8s; } .scene .chars span:nth-child(4) { animation-delay: 1.2s; }
+  @keyframes float { from { transform: translateY(-8px) rotate(-3deg); } to { transform: translateY(8px) rotate(3deg); } }
+  .scene.enter .chars { animation: scene-in .6s var(--h-spring) both; }
+  @keyframes scene-in { from { transform: scale(.5) translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .deco { position: absolute; pointer-events: none; }
+  /* רקעים לפי נושא */
+  .th-sky { background: linear-gradient(180deg, #7fd3ff, #d9f4ff); }
+  .th-home { background: linear-gradient(180deg, #ffe7c7, #ffd0e4); }
+  .th-sea { background: linear-gradient(180deg, #5fd3ff, #1a6fd6); }
+  .th-city { background: linear-gradient(180deg, #ff9ecb, #8b5cff); }
+  .th-space { background: radial-gradient(circle at 70% 30%, #4a1c8f, #120327 70%); }
+  .th-forest { background: linear-gradient(180deg, #bff0ff, #d9ffd0 60%, #7fd66b 60%); }
+  .th-night { background: linear-gradient(180deg, #0b1a4a, #3a1177); }
+  .th-party { background: repeating-conic-gradient(from 0deg at 50% 110%, #ffd95a 0 10deg, #ff7ec2 10deg 20deg); }
+  .page-text { padding: clamp(12px, 2vh, 22px) clamp(16px, 3vw, 36px); font: 800 clamp(24px, 3.4vw, 40px)/1.55 var(--h-font); text-align: center; min-height: 26vh; display: grid; align-content: center; gap: 8px; }
+  .page-text.ltr { direction: ltr; }
+  .w { display: inline-block; padding: 0 3px; border-radius: 10px; cursor: pointer; transition: background .15s, color .15s, transform .15s; }
+  .w.past { color: #6b3fe0; }
+  .w.on { background: #ffe066; box-shadow: 0 0 0 3px var(--h-ink); transform: scale(1.08); }
+  .w.tapped { background: #b6ffdc; }
+  .trans { font: 700 clamp(16px, 2vw, 22px)/1.4 var(--h-font); color: var(--h-text-soft); direction: rtl; }
+  .trans.hide { visibility: hidden; }
+
+  /* --- פרק ד: ניווט --- */
+  .nav { display: flex; align-items: center; gap: 12px; justify-content: center; }
+  .nav .h-btn { min-width: 150px; }
+  .dots { display: flex; gap: 8px; }
+  .dots i { width: 14px; height: 14px; border: 3px solid var(--h-ink); border-radius: 50%; background: #fff; }
+  .dots i.on { background: var(--h-magenta); transform: scale(1.25); }
+  .dots i.done { background: var(--h-gold); }
+
+  /* --- פרק ה: שאלת הבנה --- */
+  .quiz { position: fixed; inset: 0; z-index: 50; display: none; place-items: center; padding: 18px; background: radial-gradient(circle at 50% 40%, rgba(58,17,119,.85), rgba(10,4,30,.94)); }
+  .quiz.show { display: grid; }
+  .quiz-card { width: min(94vw, 720px); padding: 22px; text-align: center; animation: h-card-in .5s var(--h-spring) both; }
+  .quiz-card h2 { font: 900 clamp(24px, 3.4vw, 36px)/1.2 var(--h-font); margin: 12px 0; }
+  .opts { display: grid; gap: 12px; margin-top: 10px; }
+  .opt { padding: 16px; border: 4px solid var(--h-ink); border-radius: 22px; background: #fff; box-shadow: 0 5px 0 var(--h-ink); font: 900 clamp(20px, 2.6vw, 28px)/1.2 var(--h-font); transition: transform .14s var(--h-spring); }
+  .opt:active { transform: scale(.97); }
+  .opt.wrong { background: #ffd0d8; animation: shake .4s; }
+  .opt.right { background: linear-gradient(180deg, #b6ffdc, #3ff2b0); }
+  @keyframes shake { 25%,75% { transform: translateX(-8px); } 50% { transform: translateX(8px); } }
+  .end-hero { width: min(34vw, 170px); margin: 0 auto; animation: h-float 2.4s ease-in-out infinite alternate; }
+
+  /* --- פרק ו: מסכים צרים --- */
+  @media (max-width: 760px), (orientation: portrait) {
+    .nav .h-btn { min-width: 110px; padding: 10px 12px; }
+    .book-open { grid-template-rows: minmax(0, .9fr) auto; }
+  }
+</style>
+</head>
+<body>
+  <!-- ===== מסך הספרייה ===== -->
+  <section class="screen show" id="libScreen">
+    <div class="lib-head"><h1>📚 ספריית הסיפורים</h1><span class="count" id="readCount">⭐ 0</span></div>
+    <div class="tabs" id="tabs">
+      <button class="tab on" type="button" data-t="he">📖 סיפורים</button>
+      <button class="tab" type="button" data-t="ella">🦸‍♀️ הרפתקאות אלה</button>
+      <button class="tab" type="button" data-t="en">🇬🇧 English</button>
+    </div>
+    <div class="shelf" id="shelf"></div>
+  </section>
+
+  <!-- ===== מסך הקריאה ===== -->
+  <section class="screen" id="readScreen">
+    <div class="read-top">
+      <button class="rbtn" type="button" id="backBtn" aria-label="חזרה לספרייה">📚</button>
+      <div class="read-title" id="readTitle"></div>
+      <button class="rbtn" type="button" id="transBtn" hidden>🇮🇱 תרגום</button>
+      <button class="rbtn" type="button" id="autoBtn">▶ הקראה</button>
+    </div>
+    <div class="book-open">
+      <div class="scene" id="scene"><div class="chars" id="chars"></div></div>
+      <div>
+        <div class="page-text" id="pageText"></div>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="h-btn violet" type="button" id="prevBtn">→ אחורה</button>
+      <div class="dots" id="dots"></div>
+      <button class="h-btn gold" type="button" id="nextBtn">קדימה ←</button>
+    </div>
+  </section>
+
+  <!-- ===== שאלת הבנה ===== -->
+  <div class="quiz" id="quiz"><div class="quiz-card h-panel" id="quizCard"></div></div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/voice-en.js"></script>
+  <script src="shared/kids-ui.js"></script>
+  <script src="shared/wallet.js"></script>
+  <script src="shared/hero-avatar.js"></script>
+  <script src="shared/hero-rewards.js"></script>
+  <script src="shared/progress.js"></script>
+  <script src="js/story-data.js"></script>
+  <script src="js/stories.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function(){}); });
+    }
+  </script>
+</body>
+</html>
