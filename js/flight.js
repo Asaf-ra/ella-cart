@@ -70,6 +70,8 @@
   function snd(n) { try { Sound[n](); } catch (e) {} }
   function say(t) { try { Voice.say(t); } catch (e) {} }
   function sayEn(t) { try { Voice.en(t); } catch (e) {} }
+  /* readP — רצף עברית/אנגלית לפי הסדר (למשל "תפסו את" + [See]) */
+  function readP(parts) { try { Voice.read(parts, { interrupt: true }); } catch (e) {} }
 
   /* ---------- פרק 2 — קנבס ומידות ---------- */
   var cv = document.getElementById('sky'), ctx = cv.getContext('2d');
@@ -238,7 +240,7 @@
       var abc = 'abcdefghijklmnopqrstuvwxyz', bad; do { bad = abc[(Math.random() * 26) | 0]; } while (bad === ch);
       spawn('letter', { ch: bad, good: false, y: y > VH / 2 ? y - 240 : y + 240, dx: 30 });
     }
-    sayEn(ch);
+    readP([{ text: 'תפסו את האות', lang: 'he-IL' }, { text: ch, lang: 'en-US' }]);
   }
   function gotLetter(e) {
     game.wi++; addStars(1, e.x, e.y); snd('sparkle'); sayEn(e.ch);
@@ -246,8 +248,8 @@
     if (game.wi >= game.word.en.length) { /* מילה שלמה! */
       var w = game.word; game.words++; game.stars += 10; game.coins += 2; if (window.Wallet) Wallet.add(2);
       pop(VW * .5, VH * .36, w.pic + ' ' + w.en.toUpperCase() + ' = ' + w.he, '#ffd95a', 58);
-      setTimeout(function () { sayEn(w.en); }, 450);
-      setTimeout(function () { say('כל הכבוד! ' + w.he + ' באנגלית זה'); }, 1300);
+      /* סדר ברור: שבח → המילה באנגלית → הפירוש בעברית → שוב המילה לאט */
+      readP([{ text: 'כל הכבוד! בנית את המילה', lang: 'he-IL' }, { text: w.en, lang: 'en-US' }, { text: 'בעברית: ' + w.he + '.', lang: 'he-IL' }, { text: w.en, lang: 'en-US', slow: true }]);
       snd('ding'); if (window.HeroRewards) HeroRewards.confetti(); game.flash = .3;
       game.word = null; spawnT.word = 6;
       checkMission();

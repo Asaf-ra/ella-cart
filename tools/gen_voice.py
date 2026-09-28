@@ -62,9 +62,10 @@ def main():
     items = collect()
     k = Kokoro(a.model, a.voices)
     gen(k, a.voice, a.speed, items, OUT_DIR, 'voice-en.js', 'VOICE_EN', 'assets/voice/en')
-    # ---------- פרק 5 — הקלטות איטיות למשימות הדרקון ----------
+    # ---------- פרק 5 — הקלטות איטיות (לאט וברור) לכל ההקלטות ----------
     js = "global.window={};require('./js/dragon-data.js');process.stdout.write(JSON.stringify(window.DragonData.englishLines()))"
     slow = {norm(t): t for t in json.loads(subprocess.check_output(['node', '-e', js], cwd=ROOT))}
+    slow.update(items)   # גם כל המילים והמשפטים של האקדמיה והטיסה — כל "🐢 לאט" והחזרה האיטית אחרי תשובה נשמעים בהקלטה טבעית
     gen(k, a.voice, 0.68, slow, os.path.join(ROOT, 'assets', 'voice', 'en-slow'), 'voice-en-slow.js', 'VOICE_EN_SLOW', 'assets/voice/en-slow')
 
 def gen(k, voice, speed, items, out_dir, manifest_file, var, rel):

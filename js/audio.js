@@ -146,7 +146,9 @@ const Music = (function () {
    פרק 3 — תור הקראה: משפטים לא "נבלעים"; interrupt מתחיל מחדש (שאלה חדשה),
            ומשפט רגיל מחליף רק משפט שעוד ממתין (כדי שלא תיווצר ערימה)
    פרק 4 — שומר-זמן: ב-Safari לפעמים onend לא מגיע — ממשיכים לבד אחרי זמן סביר
-   API: Voice.say(text, opts) · Voice.read([{text, lang}], opts) · Voice.praise() · Voice.silence() · Voice.clean(text, lang) */
+   פרק 5 — כתוביות חיות: מה שנשמע מופיע גם כתוב (אנגלית מודגשת בזהב, החלק שמוקרא עכשיו מסומן)
+   API: Voice.say(text, opts) · Voice.read([{text, lang, slow}], opts) · Voice.teach(en, he) · Voice.en(text, {slow})
+        Voice.praise() · Voice.silence() · Voice.clean(text, lang) */
 const Voice = (function () {
   const ok = (typeof window !== 'undefined') && ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
   let he = null, en = null, voices = [];
@@ -246,14 +248,16 @@ const Voice = (function () {
     clearTimeout(watchdog);
     if (current && current.onEnd) { const f = current.onEnd; current.onEnd = null; setTimeout(f, 0); }
     const item = current = queue.shift();
-    if (!item) { speaking = false; return; }
+    if (!item) { speaking = false; capDone(); return; }
     speaking = true;
-    /* אנגלית עם הקלטה → מנגנים את ההקלטה הטבעית */
+    capShow(item);
+    /* אנגלית עם הקלטה → מנגנים את ההקלטה הטבעית (slow: ההקלטה האיטית והברורה, אם קיימת) */
     if (/^en/i.test(item.lang || '')) {
-      const file = clipFor(item.text);
+      const slowFile = item.slow && window.VOICE_EN_SLOW ? window.VOICE_EN_SLOW[normEn(item.text)] : null;
+      const file = slowFile || clipFor(item.text);
       if (file) {
-        watchdog = setTimeout(next, 8000);
-        playClip(file, prefs().rate || 1, () => { if (current === item) next(); }, () => { if (current !== item) return; clearTimeout(watchdog); speakSynth(item); }, item.onStart);
+        watchdog = setTimeout(next, 9000);
+        playClip(file, slowFile ? 1 : (prefs().rate || 1), () => { if (current === item) next(); }, () => { if (current !== item) return; clearTimeout(watchdog); speakSynth(item); }, item.onStart, slowFile ? 'assets/voice/en-slow/' : null);
         return;
       }
     }
@@ -268,7 +272,8 @@ const Voice = (function () {
     const v = isEn ? en : he; if (v) u.voice = v;
     const p = prefs(), speed = p.rate || 1;
     /* קצב וגובה טבעיים: גובה מוגזם (1.2+) הוא מה שנשמע "רובוטי/סנאי" — מגבילים ל-1.05 */
-    u.rate = Math.max(.7, Math.min(1.2, (item.rate || (isEn ? .9 : .97)) * speed));
+    /* עברית: .93 — קצת לאט מדיבור רגיל, כדי שילדים יבינו כל מילה. slow = לאט במיוחד */
+    u.rate = Math.max(.6, Math.min(1.2, (item.slow ? .65 : (item.rate || (isEn ? .9 : .93))) * speed));
     u.pitch = Math.max(.95, Math.min(1.05, item.pitch || 1.02));
     u.volume = 1;
     /* רק אם זה עדיין הפריט הנוכחי — הקראה שבוטלה (interrupt) לא "מדלגת" על המשפט החדש */
@@ -284,7 +289,7 @@ const Voice = (function () {
     if (typeof Sound !== 'undefined' && !Sound.isOn()) return;
     opts = opts || {};
     /* מסננים קטעים שנשארו רק סימני פיסוק */
-    let items = (parts || []).map(p => ({ text: clean(p.text, p.lang), lang: p.lang || 'he-IL', rate: opts.rate, pitch: opts.pitch })).filter(p => /[A-Za-z\u0590-\u05FF0-9]/.test(p.text));
+    let items = (parts || []).map(p => ({ text: clean(p.text, p.lang), lang: p.lang || 'he-IL', slow: !!p.slow, rate: opts.rate, pitch: opts.pitch })).filter(p => /[A-Za-z\u0590-\u05FF0-9]/.test(p.text));
     /* מאחדים קטעים רצופים באותה שפה למשפט אחד — פחות "קטיעות" בין מילים = דיבור זורם */
     items = items.reduce((acc, it) => {
       const last = acc[acc.length - 1];
@@ -294,6 +299,10 @@ const Voice = (function () {
       return acc;
     }, []);
     if (!items.length) { if (opts.onEnd) setTimeout(opts.onEnd, 0); return; }
+    /* כלי בדיקה: אם הוגדר window.__voiceLog (רק בבדיקות) — נרשם מה הוקרא */
+    if (window.__voiceLog) window.__voiceLog.push(items.map(it => (/^en/i.test(it.lang) ? (it.slow ? '🐢' : '') + '[' + it.text + ']' : it.text)).join(' '));
+    /* כל הקטעים של אותה קריאה = שורת כתוביות אחת */
+    if (!opts.noCaption) items.forEach(it => { it.group = items; });
     /* קריאות חוזרות (onStart / onBoundary לפריט הראשון, onEnd לאחרון) — משמשות את ספריית הסיפורים */
     if (opts.onStart) items[0].onStart = opts.onStart;
     if (opts.onBoundary) items[0].onBoundary = opts.onBoundary;
@@ -304,13 +313,43 @@ const Voice = (function () {
     if (opts.interrupt) {                                      // שאלה חדשה: מפסיקים הכול ומתחילים מחדש
       queue = []; clearTimeout(watchdog); stopClip(); current = null;
       try { if (ok) window.speechSynthesis.cancel(); } catch (e) {}
-      speaking = false;
+      speaking = false; capGroup = null;
     } else if (speaking && queue.length) {                     // משפט רגיל מחליף משפטים שעוד ממתינים
       queue = [];
     }
     queue = queue.concat(items);
     if (!speaking) next();
   }
+
+  /* ---------- פרק 5 — כתוביות חיות ----------
+     ילד ששומע קול מכונה לא תמיד מבין כל מילה. הכתובית מראה את המשפט (בלי אימוג'י),
+     המילים באנגלית בזהב ומשמאל לימין, והקטע שמוקרא עכשיו מודגש. ההורה יכול לכבות
+     (Voice.setPref('captions', false)); עמוד יכול לבטל (body data-captions="off") או להעביר למעלה ("top"). */
+  let capEl = null, capHide = null, capGroup = null;
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function capOn() { try { const b = document.body; return prefs().captions !== false && b && b.dataset.captions !== 'off'; } catch (e) { return false; } }
+  function capShow(item) {
+    if (!item.group || !capOn()) return;
+    if (!capEl) {
+      const st = document.createElement('style');
+      st.textContent = '.voice-cap{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);transform:translate(-50%,16px);max-width:min(80vw,860px);padding:5px 16px;border-radius:20px;background:rgba(16,30,54,.9);border:3px solid rgba(255,255,255,.35);box-shadow:0 6px 0 rgba(0,0,0,.25);color:#fff;font:800 clamp(15px,1.8vw,21px)/1.35 var(--h-font,system-ui,sans-serif);text-align:center;direction:rtl;z-index:9000;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s}' +
+        '.voice-cap.show{opacity:1;transform:translate(-50%,0)}body[data-captions=top] .voice-cap{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 76px)}' +
+        '.voice-cap span{transition:opacity .2s;opacity:.62}.voice-cap span.cur{opacity:1}.voice-cap .en{color:#ffd95a;font-weight:900;unicode-bidi:isolate;letter-spacing:.5px}.voice-cap .en.cur{text-decoration:underline 3px;text-underline-offset:5px}' +
+        '.voice-cap .spk{opacity:1;margin-inline-end:8px}';
+      document.head.appendChild(st);
+      capEl = document.createElement('div'); capEl.className = 'voice-cap'; capEl.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(capEl);
+    }
+    clearTimeout(capHide);
+    if (capGroup !== item.group) {
+      capGroup = item.group;
+      capEl.innerHTML = '<span class="spk">🔊</span>' + item.group.map((it, i) => { const en = /^en/i.test(it.lang); return '<span data-i="' + i + '" class="' + (en ? 'en' : 'he') + '"' + (en ? ' dir="ltr"' : '') + '>' + esc(it.text) + (it.slow ? ' 🐢' : '') + '</span>'; }).join(' ');
+    }
+    const idx = item.group.indexOf(item);
+    Array.prototype.forEach.call(capEl.querySelectorAll('span[data-i]'), s => s.classList.toggle('cur', +s.dataset.i === idx));
+    capEl.classList.add('show');
+  }
+  function capDone(now) { clearTimeout(capHide); if (!capEl) return; capHide = setTimeout(() => { capEl.classList.remove('show'); capGroup = null; }, now ? 0 : 1500); }
 
   /* splitLang — מפצל משפט לקטעי עברית וקטעי אנגלית (למשל "נכון! Apple זה תפוח") */
   function splitLang(text) {
@@ -324,7 +363,7 @@ const Voice = (function () {
     heStatus: heStatus,
     /* להגדרות הקול (shared/voice-settings.js) */
     voices() { pick(); return voices.slice(); },
-    current() { return { he: he && he.name, en: en && en.name, rate: prefs().rate || 1 }; },
+    current() { return { he: he && he.name, en: en && en.name, rate: prefs().rate || 1, captions: prefs().captions !== false }; },
     setPref(k, v) { const p = prefs(); p[k] = v; savePrefs(p); pick(); },
     read: read,
     /* say — משפט בעברית; מילים באנגלית בתוכו מוקראות אוטומטית בקול אנגלי (פיצול לפי שפה) */
@@ -333,14 +372,21 @@ const Voice = (function () {
        (assets/voice/en-slow/, js/voice-en-slow.js) — איטית אבל בגובה קול טבעי. אין הקלטה → מנוע הדיבור בקצב איטי */
     en(text, opts) {
       opts = opts || {};
-      if (typeof Sound !== 'undefined' && !Sound.isOn()) return;
-      this.silence();
-      const slowFile = opts.slow && window.VOICE_EN_SLOW ? window.VOICE_EN_SLOW[normEn(text)] : null;
-      if (slowFile) { playClip(slowFile, 1, () => {}, () => read([{ text: text, lang: 'en-US' }], { rate: .65, interrupt: true }), null, 'assets/voice/en-slow/'); return; }
-      read([{ text: text, lang: 'en-US' }], { rate: opts.slow ? .65 : undefined, interrupt: true });
+      read([{ text: text, lang: 'en-US', slow: !!opts.slow }], { interrupt: true, onEnd: opts.onEnd });
+    },
+    /* teach(en, he) — "סנדוויץ'" ללימוד מילה: אנגלית → פירוש בעברית → שוב אנגלית, לאט וברור.
+       pre: משפט פתיחה בעברית (למשל "נכון!"), post: משפט סיום (למשל טיפ) — מערך קטעים */
+    teach(en, he, opts) {
+      opts = opts || {};
+      const parts = [];
+      if (opts.pre) parts.push({ text: opts.pre, lang: 'he-IL' });
+      parts.push({ text: en, lang: 'en-US' });
+      if (he) parts.push({ text: 'בעברית: ' + he + '.', lang: 'he-IL' });
+      if (opts.repeat !== false) parts.push({ text: en, lang: 'en-US', slow: true });
+      read(parts.concat(opts.post || []), { interrupt: opts.interrupt !== false, onEnd: opts.onEnd });
     },
     praise() { const p = ['כל הכבוד!', 'מעולה!', 'יופי אלה!', 'וואו!', 'איזה יופי!', 'כל הכבוד אלה!']; this.say(p[(Math.random() * p.length) | 0]); },
-    silence() { queue = []; clearTimeout(watchdog); stopClip(); current = null; speaking = false; if (ok) { try { window.speechSynthesis.cancel(); } catch (e) {} } }
+    silence() { queue = []; clearTimeout(watchdog); stopClip(); current = null; speaking = false; capDone(true); if (ok) { try { window.speechSynthesis.cancel(); } catch (e) {} } }
   };
 })();
 
