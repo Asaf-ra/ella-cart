@@ -34,8 +34,8 @@ def slug(n):
 LETTERS = {'A': 'Ay.', 'B': 'Bee.', 'C': 'See.', 'D': 'Dee.', 'E': 'Ee.', 'F': 'Eff.', 'G': 'Gee.', 'H': 'Aitch.', 'I': 'Eye.', 'J': 'Jay.', 'K': 'Kay.',
            'L': 'Ell.', 'M': 'Em.', 'N': 'En.', 'O': 'Oh.', 'P': 'Pee.', 'Q': 'Cue.', 'R': 'Are.', 'S': 'Ess.', 'T': 'Tee.', 'U': 'You.', 'V': 'Vee.',
            'W': 'Double you.', 'X': 'Ex.', 'Y': 'Why.', 'Z': 'Zee.'}
-EXTRA = ['Great answer!', 'Great job!', 'Excellent!', 'Yes!', 'Well done!', 'Hello Ella!', 'You are a super hero.',
-         'Hello Ella! You are a super hero. Let us learn some English words together!']
+EXTRA = ['Great answer!', 'Great job!', 'Excellent!', 'Yes!', 'Well done!', 'Hello!', 'You are a super hero.',
+         'Hello! You are a super hero. Let us learn some English words together!']
 
 def collect():
     # ---------- פרק 1 — איסוף ----------

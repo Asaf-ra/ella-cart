@@ -241,7 +241,7 @@ class TitleScene extends Phaser.Scene {
     buildEnvironment(this);
     buildCart(this, DESIGN.w / 2, 450);
 
-    const t = Helper.txt(this, DESIGN.w / 2, 150, 'העגלה של אלה', 96, '#ffffff');
+    const t = Helper.txt(this, DESIGN.w / 2, 150, window.Profile ? Profile.fix('העגלה של אלה') : 'העגלה של אלה', 96, '#ffffff');   // בשם הילדה
     t.setStroke('#1b1036', 16); t.setShadow(6, 8, '#ff2e93', 0, true, true);   // כותרת קומיקס
     Helper.glow(this, t, 0xffd1ec, 5);
     this.tweens.add({ targets: t, scale: 1.04, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
@@ -616,7 +616,7 @@ class WorldScene extends Phaser.Scene {
   }
 
   popPraise(x, y, txt) {
-    const praises = ['כל הכבוד אלה!', 'מהמם!', 'יופי!', 'מעולה!', 'וואו!'];
+    const praises = [window.Profile ? Profile.fix('כל הכבוד אלה!') : 'כל הכבוד אלה!', 'מהמם!', 'יופי!', 'מעולה!', 'וואו!'];
     this.floatMsg(x, y, praises[(Math.random() * praises.length) | 0] + '  ' + txt, '#ff5ca8');
   }
 

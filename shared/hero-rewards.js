@@ -244,6 +244,12 @@
     return true;
   }
 
+  /* ---------- פרק 5.5 — מתנות חג ויום הולדת ---------- */
+  var SEASON_NAMES = { rosh: 'ראש השנה', sukkot: 'סוכות', hanukkah: 'חנוכה', purim: 'פורים', pesach: 'פסח', atzmaut: 'יום העצמאות', bday: 'יום ההולדת' };
+  /* unlockItem — פתיחת פריט במתנה (בלי רמה). מחזיר true אם הוא חדש */
+  function unlockItem(id) { if (state.unlocked.indexOf(id) >= 0) return false; state.unlocked.push(id); save(); return true; }
+  function hasItem(id) { return state.unlocked.indexOf(id) >= 0; }
+
   /* ---------- פרק 6 — צוות הגיבורים ---------- */
   /* heroUnlocked — האם הדמות כבר בצוות (לפי הרמה) */
   function heroUnlocked(id) { return HeroAvatar.hero(id).level <= state.level; }
@@ -317,7 +323,8 @@
       var html = '<button type="button" class="h-ward-close" aria-label="סגירה">✖</button>' +
         '<span class="h-modal-kicker">ארון התחפושות</span>' +
         /* שורת צוות הגיבורים: בחירת דמות (נעולה — מציגה באיזו רמה מצטרפת) */
-        '<div class="h-team">' + HeroAvatar.HEROES.map(function (h) {
+        '<div class="h-team">' + HeroAvatar.HEROES.map(function (h0) {
+          var h = HeroAvatar.hero(h0.id);        // כולל השם של הילדה (הדמות הראשונה) ושמות חלופיים
           var open = heroUnlocked(h.id), on = (state.outfit.hero || 'ella') === h.id;
           var o = on ? state.outfit : Object.assign(HeroAvatar.defaultOutfit(), state.team[h.id] || {}, { hero: h.id });
           return '<button type="button" class="h-team-hero' + (on ? ' on' : '') + (open ? '' : ' locked') + '" data-hero="' + h.id + '">' +
@@ -341,7 +348,7 @@
         var lvl = 0; for (var L = 0; L < UNLOCKS.length; L++) if (UNLOCKS[L] && UNLOCKS[L][1] === it.id) lvl = L;
         html += '<button type="button" class="h-ward-item' + (on ? ' on' : '') + (open ? '' : ' locked') + '" data-id="' + it.id + '">' +
           '<span class="ico">' + (open ? it.ico : '🔒') + '</span><span class="nm">' + it.name + '</span>' +
-          (open ? '' : '<span class="lv">נפתח ברמה ' + lvl + '</span>') + '</button>';
+          (open ? '' : '<span class="lv">' + (it.season ? 'מתנת ' + (SEASON_NAMES[it.season] || 'חג') : 'נפתח ברמה ' + lvl) + '</span>') + '</button>';
       });
       html += '</div></div></div>';
       card.innerHTML = html;
@@ -428,6 +435,8 @@
     confetti: confetti,
     wear: wear,
     switchHero: switchHero,
+    unlockItem: unlockItem,
+    hasItem: hasItem,
     heroUnlocked: heroUnlocked,
     get hero() { return HeroAvatar.hero(state.outfit.hero); },
     get state() { return state; },

@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#1d0b4a" />
-<meta name="apple-mobile-web-app-title" content="העולם של אלה" />
+<meta name="apple-mobile-web-app-title" content="עולם הגיבורות" />
 <title>העולם של אלה — גיבורת-העל</title>
 <link rel="manifest" href="manifest.json" />
 <!-- אייקון PNG ל-iPad (Safari לא תומך ב-SVG כאייקון מסך הבית) -->
@@ -43,7 +43,7 @@
 
   /* --- פרק ב: סרגל עליון --- */
   .topbar { display: flex; align-items: center; gap: 14px; }
-  .topbar .h-hud { min-width: min(330px, 29vw); }
+  .topbar .h-hud { min-width: min(290px, 25vw); }
   .topbar .spacer { flex: 1; }
   .icon-btn { min-width: 64px; padding: 10px 14px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: clamp(16px, 1.7vw, 22px); }
   .icon-btn .ico { font-size: 28px; line-height: 1; }
@@ -168,6 +168,7 @@
   .q-row .h-btn { min-height: 46px; padding: 8px 14px; font-size: 16px; }
   .q-row.done { background: #e9fff5; }
   .icon-btn.small { min-width: 56px; padding: 10px 12px; }
+  [hidden] { display: none !important; }
 
   /* --- פרק ז: סיבוב מסך + מסכים קטנים --- */
   .rotate { display: none; }
@@ -203,9 +204,11 @@
     <header class="topbar">
       <div id="hudSlot"></div>
       <div class="spacer"></div>
-      <button type="button" class="h-btn gold icon-btn gift-btn" id="giftBtn" hidden><span class="ico">🎁</span><span>הפתעה!</span></button>
+      <button type="button" class="h-btn gold icon-btn small gift-btn" id="giftBtn" aria-label="הפתעה יומית" hidden><span class="ico">🎁</span></button>
       <button type="button" class="h-btn violet icon-btn" id="wardrobeBtn"><span class="ico">🦸‍♀️</span><span>תחפושות</span></button>
       <button type="button" class="h-btn gold icon-btn" id="shopBtn"><span class="ico">🛒</span><span>שדרוגים</span></button>
+      <button type="button" class="h-btn gold icon-btn small" id="albumBtn" aria-label="אלבום המדבקות"><span class="ico">📒</span><span id="albumCount">0</span></button>
+      <button type="button" class="h-btn cyan icon-btn small" id="switchBtn" aria-label="החלפת ילדה" hidden><span class="ico">👭</span></button>
       <button type="button" class="h-btn violet icon-btn small" id="parentsBtn" aria-label="אזור הורים"><span class="ico">👨‍👩‍👧</span></button>
       <button type="button" class="h-btn cyan icon-btn small" id="soundBtn" aria-label="צליל"><span class="ico">🔊</span></button>
     </header>
@@ -263,6 +266,7 @@
 
   <div class="rotate"><div class="i">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
 
+  <script src="shared/profile.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/voice-en.js"></script>
   <script src="shared/kids-ui.js"></script>
@@ -270,9 +274,14 @@
   <script src="shared/hero-avatar.js"></script>
   <script src="shared/hero-rewards.js"></script>
   <script src="shared/progress.js"></script>
+  <script src="shared/stickers.js"></script>
   <script src="shared/pet.js"></script>
   <script src="shared/voice-settings.js"></script>
+  <script src="shared/qr.js"></script>
+  <script src="shared/share.js"></script>
   <script src="shared/parents.js"></script>
+  <script src="shared/onboarding.js"></script>
+  <script src="shared/seasons.js"></script>
   <script src="js/hub.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

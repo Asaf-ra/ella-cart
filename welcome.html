@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#1d0b4a" />
+<title>עולם הגיבורות — אפליקציית למידה לילדות, בלי פרסומות</title>
+<meta name="description" content="עולם הגיבורות: כל ילדה היא גיבורת-על. אקדמיית למידה (עברית, אנגלית, חשבון), סטודיו ציור, סיפורים עם הקראה, חיית מחמד ומשחקים — בלי פרסומות, בלי הרשמה, הכול נשמר במכשיר." />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<link rel="stylesheet" href="shared/theme.css" />
+<style>
+  /* ===================================================================
+     welcome.html — דף הסבר לחברים (אפשר לשלוח את הקישור)
+     פרק א — בסיס   פרק ב — פתיח עם הגיבורה   פרק ג — מה יש באפליקציה
+     פרק ד — בטוח לילדות   פרק ה — התקנה באייפד + QR   פרק ו — מסכים צרים
+     =================================================================== */
+  /* --- פרק א: בסיס --- */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #1d0b4a; }
+  body { font-family: var(--h-font); color: #fff; direction: rtl; line-height: 1.5;
+    background: radial-gradient(60% 50% at 80% 0%, rgba(255,46,147,.45), transparent 70%), linear-gradient(170deg, #1d0b4a, #3a1177 45%, #6a1b8f); min-height: 100vh; }
+  .wrap { width: min(1100px, 100%); margin: 0 auto; padding: 24px 18px 60px; }
+  section { margin-top: 42px; }
+  h2 { font: 900 clamp(28px, 4vw, 44px)/1.1 var(--h-font); color: #fff; -webkit-text-stroke: 3px var(--h-ink); paint-order: stroke fill; text-shadow: 3px 4px 0 var(--h-magenta); margin-bottom: 18px; text-align: center; }
+
+  /* --- פרק ב: פתיח --- */
+  .hero { display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; align-items: center; }
+  .hero h1 { font: 900 clamp(46px, 7vw, 92px)/.95 var(--h-font); -webkit-text-stroke: 5px var(--h-ink); paint-order: stroke fill; text-shadow: 5px 6px 0 var(--h-ink), 0 0 30px rgba(255,46,147,.7); }
+  .hero h1 em { font-style: normal; color: var(--h-gold); }
+  .hero p { font: 800 clamp(18px, 2.2vw, 26px)/1.4 var(--h-font); color: #ffd9f0; margin: 14px 0 22px; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .cta a, .cta button { text-decoration: none; display: inline-flex; align-items: center; }
+  .hero-fig { position: relative; display: grid; place-items: center; }
+  .hero-fig::before { content: ""; position: absolute; width: 110%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255,201,60,.55), rgba(255,46,147,.25) 45%, transparent 70%); animation: pulse 3.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(.94); } 50% { transform: scale(1.06); } }
+  #heroSvg { position: relative; width: min(80%, 340px); animation: h-float 2.6s ease-in-out infinite alternate; }
+  #heroSvg svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 18px 24px rgba(0,0,0,.45)); transition: opacity .3s; }
+
+  /* --- פרק ג: מה יש --- */
+  .feats { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .feat { padding: 18px; border: 5px solid var(--h-ink); border-radius: 26px; color: var(--h-ink); box-shadow: 0 7px 0 var(--h-ink); background: var(--h-paper); }
+  .feat .i { font-size: 48px; line-height: 1; }
+  .feat b { display: block; font: 900 22px/1.2 var(--h-font); margin: 8px 0 4px; }
+  .feat span { font: 700 16px/1.45 var(--h-font); color: var(--h-text-soft); }
+
+  /* --- פרק ד: בטוח --- */
+  .safe { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+  .safe span { padding: 12px 20px; border: 4px solid var(--h-ink); border-radius: 999px; background: linear-gradient(180deg, #b6ffdc, #3ff2b0); color: var(--h-ink); font: 900 18px/1 var(--h-font); box-shadow: 0 5px 0 var(--h-ink); }
+
+  /* --- פרק ה: התקנה --- */
+  .install { display: grid; grid-template-columns: 1.3fr .7fr; gap: 20px; align-items: center; padding: 22px; color: var(--h-ink); }
+  .steps { list-style: none; display: grid; gap: 12px; counter-reset: s; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; font: 800 clamp(17px, 2vw, 21px)/1.35 var(--h-font); }
+  .steps li::before { content: counter(s); display: grid; place-items: center; width: 52px; height: 52px; border: 4px solid var(--h-ink); border-radius: 50%; background: var(--h-gold); font: 900 24px/1 var(--h-font); box-shadow: 0 4px 0 var(--h-ink); }
+  .qr { text-align: center; font: 800 15px/1.4 var(--h-font); color: var(--h-text-soft); }
+  .qr #qr { width: min(100%, 260px); margin: 0 auto 8px; border: 5px solid var(--h-ink); border-radius: 18px; overflow: hidden; background: #fff; }
+  .qr #qr svg { display: block; width: 100%; height: auto; }
+  footer { margin-top: 50px; text-align: center; font: 800 16px/1.5 var(--h-font); color: #ffd9f0; }
+
+  /* --- פרק ו: מסכים צרים --- */
+  @media (max-width: 760px) { .hero, .install { grid-template-columns: 1fr; } .hero-fig { order: -1; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- פרק ב — פתיח -->
+    <header class="hero">
+      <div>
+        <h1>עולם <em>הגיבורות</em></h1>
+        <p>כל ילדה היא גיבורת-על! לומדות עברית, אנגלית וחשבון, מציירות, שומעות סיפורים ומגדלות דרקון — עם גיבורה בשם שלהן. 🦸‍♀️</p>
+        <div class="cta">
+          <a class="h-btn gold" href="./index.html">🚀 לפתוח את האפליקציה</a>
+          <button class="h-btn cyan" type="button" id="shareBtn">📤 לשלוח לחברים</button>
+        </div>
+      </div>
+      <div class="hero-fig"><div id="heroSvg"></div></div>
+    </header>
+
+    <!-- פרק ג — מה יש -->
+    <section>
+      <h2>מה יש בעולם הגיבורות?</h2>
+      <div class="feats">
+        <div class="feat"><div class="i">🦸‍♀️</div><b>גיבורה אישית</b><span>הבת בוחרת שם, צבע עור, תסרוקת וצבע אהוב — וכל העולם מדבר אליה בשמה, גם בקול.</span></div>
+        <div class="feat"><div class="i">📚</div><b>אקדמיית הגיבורים</b><span>19 תחנות ו-190 פרקים: אותיות, קריאה, בונים מילים, אנגלית, איות, חשבון, שעון, כסף, טבע, מוזיקה ופאזלים. שתי רמות: 5–6 ו-7–8.</span></div>
+        <div class="feat"><div class="i">🎨</div><b>סטודיו ציור</b><span>כ-150 דפי צביעה, ציור חופשי עם 9 מכחולים קסומים, צבע לפי מספר וחבר את הנקודות — ושליחת הציור לסבתא.</span></div>
+        <div class="feat"><div class="i">📖</div><b>סיפורים שמוקראים</b><span>סיפורים בעברית ובאנגלית עם הדגשת כל מילה, הרפתקאות בהמשכים ושאלת הבנה. האנגלית בקול טבעי מוקלט.</span></div>
+        <div class="feat"><div class="i">🐉</div><b>דרקונצ׳יק</b><span>ביצת קסם שבוקעת וגדלה — והאוכל שלה מגיע מלמידה: כל תשובה נכונה = תפוח.</span></div>
+        <div class="feat"><div class="i">⚔️</div><b>משימות ונבל השבוע</b><span>3 משימות קטנות ביום, נבל מצחיק שמובסים בתשובות, תעודות גיבורה לשיתוף ואלבום מדבקות.</span></div>
+        <div class="feat"><div class="i">🎮</div><b>משחקים</b><span>עגלת אוכל, בלונים וטיסת גיבורה — פרס על הלמידה, בלי "פסילות" ובלי לחץ.</span></div>
+        <div class="feat"><div class="i">👨‍👩‍👧</div><b>אזור הורים</b><span>זמן מסך בריא, מעקב לפי נושא, דוח שבועי, כמה ילדות באותו אייפד, גיבוי והעברה.</span></div>
+      </div>
+    </section>
+
+    <!-- פרק ד — בטוח -->
+    <section>
+      <h2>בטוח לילדות</h2>
+      <div class="safe"><span>🚫 בלי פרסומות</span><span>💳 בלי רכישות</span><span>🔐 בלי הרשמה</span><span>📵 שום מידע לא יוצא מהמכשיר</span><span>✈️ עובד גם בלי אינטרנט</span></div>
+    </section>
+
+    <!-- פרק ה — התקנה -->
+    <section>
+      <h2>מתקינים באייפד ב-3 צעדים</h2>
+      <div class="install h-panel">
+        <ol class="steps">
+          <li><span>פותחים את הקישור ב-<b>Safari</b> באייפד (או סורקים את הקוד)</span></li>
+          <li><span>לוחצים על כפתור השיתוף <b>⬆️</b> בסרגל העליון</span></li>
+          <li><span>בוחרים <b>"הוסף למסך הבית"</b> — ומעכשיו האפליקציה נפתחת מהאייקון, במסך מלא וגם בלי אינטרנט</span></li>
+        </ol>
+        <div class="qr"><div id="qr"></div>סורקים עם המצלמה של האייפד</div>
+      </div>
+    </section>
+
+    <footer>נבנה באהבה לילדות גיבורות 💖 · עולם הגיבורות</footer>
+  </div>
+
+  <script src="shared/hero-avatar.js"></script>
+  <script src="shared/qr.js"></script>
+  <script>
+    /* דף הסבר: גיבורה מתחלפת (מראים את כל האפשרויות), קוד QR לכתובת האפליקציה, ושיתוף הקישור */
+    (function () {
+      var appUrl = location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, '');
+      document.getElementById('qr').innerHTML = QR.svg(appUrl + 'welcome.html');
+      var looks = [
+        { hero: 'ella', o: { cape: 'cape_galaxy', suit: 'suit_cyan', mask: 'mask_star', emblem: 'emb_star', aura: 'aura_sparkle', acc: 'acc_crown' } },
+        { hero: 'noa', o: { cape: 'cape_hearts', suit: 'suit_sun', mask: 'mask_heart', emblem: 'emb_flower', aura: 'aura_hearts', acc: 'acc_bow' } },
+        { hero: 'maya', o: { cape: 'cape_rainbow', suit: 'suit_mint', mask: 'mask_butterfly', emblem: 'emb_butterfly', aura: 'aura_wings', acc: 'acc_flower' } },
+        { hero: 'keshet', o: { cape: 'cape_sky', suit: 'suit_night', mask: 'mask_cat', emblem: 'emb_moon', aura: 'aura_bubbles', acc: 'acc_tiara' } },
+        { hero: 'mitzi', o: { cape: 'cape_gold', suit: 'suit_berry', mask: 'mask_classic', emblem: 'emb_bolt', aura: 'aura_bolt', acc: 'acc_glasses' } }
+      ], i = 0, box = document.getElementById('heroSvg');
+      function show() { var l = looks[i % looks.length]; box.innerHTML = HeroAvatar.svg(Object.assign(HeroAvatar.defaultOutfit(), l.o, { hero: l.hero })); i++; }
+      show(); setInterval(show, 2600);
+      document.getElementById('shareBtn').addEventListener('click', function () {
+        var data = { title: 'עולם הגיבורות', text: 'אפליקציית למידה מהממת לילדות — בלי פרסומות ובלי הרשמה 🦸‍♀️', url: appUrl + 'welcome.html' };
+        if (navigator.share) navigator.share(data).catch(function () {});
+        else { try { navigator.clipboard.writeText(data.url); alert('הקישור הועתק!'); } catch (e) { prompt('הקישור:', data.url); } }
+      });
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+    })();
+  </script>
+</body>
+</html>

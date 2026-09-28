@@ -7,8 +7,11 @@
    פרק 4 — מגבלת זמן מסך יומית (אלה "מבקשת לנוח" כשמגיעים למגבלה)
    פרק 5 — למידה לפי נושא: דיוק מהניסיון הראשון בכל תחנה, חזקות 💪 ולחיזוק 🎯
    פרק 6 — הגדרות קול (כולל הסבר על קול עברי משופר) ואיפוס נתוני מעקב
-   פרק 7 — איפוס לפי נושא: 12 נושאים (חיית מחמד, גיבורה וצוות, אקדמיה, נבל השבוע, משימות היום,
-           סיפורים, דפי צביעה, גלריה, עגלה, טיסה, מטבעות, נתוני מעקב) + תחנה אחת באקדמיה + איפוס מלא.
+   פרק 6.5 — הילדות במכשיר (הוספה, עריכת שם ומראה, מחיקה, החלפה), שיתוף (הזמנה לחברה, דוח שבועי,
+             תעודות), וגיבוי/שחזור לקובץ — להעברה לאייפד חדש
+   פרק 7 — איפוס לפי נושא: 15 נושאים (חיית מחמד, גיבורה וצוות, אקדמיה, נבל השבוע, משימות היום,
+           סיפורים, דפי צביעה, גלריה, עגלה, טיסה, מטבעות, אלבום מדבקות, תעודות, מתנות חג, נתוני מעקב)
+           + תחנה אחת באקדמיה + איפוס מלא (של הילדה שמשחקת עכשיו).
            כל איפוס — אישור בנגיעה שנייה. הגדרות הקול ומגבלת זמן המסך לא נמחקים לעולם
    תלויות: shared/progress.js (חובה), shared/theme.css; אופציונלי: shared/voice-settings.js, hero-rewards.js
    ===================================================================== */
@@ -21,6 +24,7 @@
     language: '💬 שפה', envocab: '🇬🇧 מילים באנגלית', enspell: '🔠 איות באנגלית', nature: '🌿 טבע' };
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function snd(n) { try { if (window.Sound && Sound[n]) Sound[n](); } catch (e) {} }
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function dayKey(d) { return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
 
   /* ---------- פרק 7 — איפוס לפי נושא ----------
@@ -44,6 +48,9 @@
     { id: 'cart', ico: '🍔', name: 'העגלה', what: 'שדרוגי העגלה חוזרים להתחלה (המטבעות נשמרים)', fn: function () { editJSON(CART_KEY, function (c) { c.lvls = {}; }); } },
     { id: 'flight', ico: '🚀', name: 'טיסת גיבורה', what: 'אזורים שנפתחו, שיא וחתולים שניצלו', fn: function () { rm('ella-flight-v1'); } },
     { id: 'coins', ico: '🪙', name: 'מטבעות ושדרוגים', what: 'מטבעות = 0, ושדרוגי הבלונים והציור מעגלת השדרוגים', fn: function () { editJSON(CART_KEY, function (c) { c.coins = 0; }); rm('ella-shop-v1'); } },
+    { id: 'stickers', ico: '📒', name: 'אלבום המדבקות', what: 'כל המדבקות שנאספו — האלבום מתחיל ריק', fn: function () { rm('ella-stickers-v1'); } },
+    { id: 'certs', ico: '🏅', name: 'תעודות', what: 'כל התעודות שנשמרו (אפשר לזכות בהן שוב)', fn: function () { rm('ella-certs-v1'); } },
+    { id: 'seasons', ico: '🎁', name: 'מתנות חג ויום הולדת', what: 'מתנת החג / יום ההולדת תחכה שוב (אביזרים שכבר נפתחו נשארים)', fn: function () { rm('ella-seasons-v1'); } },
     { id: 'stats', ico: '📊', name: 'נתוני מעקב', what: 'דקות, גרף ודיוק לפי תחנה (מגבלת הזמן נשמרת)', fn: function () { PR().reset(); } }
   ];
   /* resetStation — תחנה אחת באקדמיה (בשתי הרמות) + נתוני הדיוק שלה */
@@ -94,6 +101,9 @@
     '.pt-btn,.pa-st{border:3px solid var(--h-ink);border-radius:999px;background:#fff;box-shadow:0 3px 0 var(--h-ink);font:900 14px/1.2 var(--h-font);cursor:pointer;color:var(--h-ink)}' +
     '.pt-btn{padding:8px 14px;white-space:nowrap}.pa-st{padding:7px 12px}' +
     '.pt-btn.sure,.pa-st.sure{background:#ff5a6e;color:#fff}.pt-btn.done,.pa-st.done{background:#b6ffdc;box-shadow:none}' +
+    '.pa-kids{display:grid;gap:10px}.pa-kid{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:8px 10px;border:3px solid var(--h-ink);border-radius:16px;background:#fffaf0}' +
+    '.pa-kid.me{background:linear-gradient(180deg,#fff3b0,#ffe07a)}.pk-th{width:60px;height:66px;overflow:hidden;border-radius:12px;background:radial-gradient(circle at 50% 40%,#4a1c8f,#1d0b4a)}.pk-th svg{width:100%;height:auto}' +
+    '.pa-kid b{display:block;font:900 18px/1.2 var(--h-font)}.pa-kid small{font:700 13px/1.3 var(--h-font);color:var(--h-text-soft)}' +
     '.pa-stations{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.pa-sub{font:900 17px/1.2 var(--h-font);margin-top:16px}' +
     '@media (max-width:700px){.pa-row{grid-template-columns:1fr 1fr 56px 50px}.pa-topics{grid-template-columns:1fr}}';
   document.head.appendChild(st);
@@ -154,6 +164,25 @@
         (strong.length ? '<p class="pa-note">💪 חזקה ב: <b>' + strong.map(function (k) { return NAMES[k] || k; }).join(' · ') + '</b></p>' : '') +
         (weak.length ? '<p class="pa-note">🎯 כדאי לתרגל: <b>' + weak.map(function (k) { return NAMES[k] || k; }).join(' · ') + '</b> — התחנות האלו מסומנות לילדה באקדמיה ב"💪 כדאי לתרגל".</p>' : '') +
         '<div class="pa-row" style="font-weight:900"><span>תחנה</span><span>דיוק</span><span>%</span><span>תשובות</span></div>' + rows + '</div>' +
+      /* פרק 6.5 — הילדות במכשיר */
+      '<div class="pa-sec"><h3>👧 הילדות במכשיר</h3><p class="pa-note">לכל ילדה גיבורה, התקדמות, חיית מחמד וגלריה משלה. כשיש יותר מאחת — בכל פתיחה בוחרים "מי משחקת היום?".</p>' +
+        '<div class="pa-kids">' + (window.Profile ? Profile.list : []).map(function (k) {
+          var me = Profile.active && Profile.active.id === k.id, o = Profile.readFor(k.id, 'ella-hero-v1'), ofit = Object.assign(HeroAvatar.defaultOutfit(), (o && o.outfit) || {});
+          return '<div class="pa-kid' + (me ? ' me' : '') + '" data-noname="1"><span class="pk-th">' + HeroAvatar.svg(ofit, { look: k.look }) + '</span><div><b>' + esc(k.name) + (me ? ' · משחקת עכשיו' : '') + '</b><small>' +
+            (k.bday ? '🎂 ' + k.bday.d + '/' + k.bday.m : 'בלי תאריך יום הולדת') + '</small></div>' +
+            '<button type="button" class="pt-btn" data-edit="' + k.id + '">✏️ עריכה</button><button type="button" class="pt-btn" data-del="' + k.id + '">🗑️</button></div>';
+        }).join('') + '</div>' +
+        '<div class="pa-actions"><button type="button" class="h-btn gold" id="paAddKid">➕ ילדה נוספת</button>' +
+        (window.Profile && Profile.list.length > 1 ? '<button type="button" class="h-btn cyan" id="paSwitch">👭 להחליף ילדה</button>' : '') + '</div></div>' +
+      /* שיתוף */
+      '<div class="pa-sec"><h3>💌 לשתף</h3><p class="pa-note">תמונות יפות לשליחה בוואטסאפ — לסבתא, לגננת או לחברים (הכול נוצר במכשיר, שום מידע לא נשלח לשום מקום).</p>' +
+        '<div class="pa-actions"><button type="button" class="h-btn gold" id="paInvite">💌 הזמנה לחברה (עם קוד QR)</button><button type="button" class="h-btn cyan" id="paWeekly">📊 דוח שבועי לשיתוף</button><a class="h-btn violet" href="./welcome.html" style="text-decoration:none;display:inline-flex;align-items:center">🌐 דף ההסבר לחברים</a></div>' +
+        '<div class="pa-sub">🏅 התעודות של ' + esc(window.Profile ? Profile.name : '') + '</div><div class="pa-stations" id="paCerts">' +
+        ((window.Share ? Share.certs() : []).map(function (c) { return '<button type="button" class="pa-st" data-cert="' + c.id + '">' + (c.ico || '🏅') + ' ' + esc(c.line) + '</button>'; }).join('') || '<span class="pa-note">עוד אין תעודות — הן מגיעות בסיום תחנה, ניצחון על נבל, סיפורים ועוד.</span>') + '</div></div>' +
+      /* גיבוי */
+      '<div class="pa-sec"><h3>💾 גיבוי והעברה</h3><p class="pa-note">שומרים קובץ גיבוי (למשל ב"קבצים" או בוואטסאפ לעצמכם) — ומשחזרים באייפד חדש או אחרי ניקוי הדפדפן. הגיבוי הוא של הילדה שמשחקת עכשיו.</p>' +
+        '<div class="pa-actions"><button type="button" class="h-btn gold" id="paBackup">💾 שמירת גיבוי</button><button type="button" class="h-btn violet" id="paRestore">📂 שחזור מגיבוי</button>' +
+        '<input type="file" id="paFile" accept="application/json,.json" hidden></div></div>' +
       /* פרק 6 — קול */
       '<div class="pa-sec"><h3>🔊 קול ההקראה</h3><p class="pa-note">האנגלית מוקראת בהקלטות קול טבעיות מובנות. לעברית טבעית: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← עברית ← <b>כרמית (משופר)</b> ← להוריד, ואז לבחור אותה כאן.</p>' +
         (window.VoiceSettings ? '<div class="pa-actions"><button type="button" class="h-btn cyan" id="paVoice">🔊 הגדרות קול</button></div>' : '') + '</div>' +
@@ -190,6 +219,37 @@
       });
     });
     confirmTwice(card.querySelector('#paAll'), '⚠️ בטוח? הכול יימחק — לגעת שוב', resetAll);
+    /* פרק 6.5 — הילדות במכשיר */
+    card.querySelectorAll('[data-edit]').forEach(function (b) { b.onclick = function () { m.remove(); Onboarding.start({ editId: +b.dataset.edit }); }; });
+    card.querySelectorAll('[data-del]').forEach(function (b) {
+      var id = +b.dataset.del, kid = Profile.list.filter(function (k) { return k.id === id; })[0];
+      confirmTwice(b, 'למחוק את ' + esc(kid ? kid.name : '') + ' וכל ההתקדמות שלה? לגעת שוב', function () { Profile.remove(id); location.reload(); });
+    });
+    var add = card.querySelector('#paAddKid'); if (add) add.onclick = function () { m.remove(); Onboarding.start({ fresh: true }); };
+    var swb = card.querySelector('#paSwitch'); if (swb) swb.onclick = function () { Profile.switchWho(); };
+    /* שיתוף */
+    card.querySelector('#paInvite').onclick = function () { snd('tap'); Share.invite(); };
+    card.querySelector('#paWeekly').onclick = function () { snd('tap'); Share.weekly(); };
+    card.querySelectorAll('[data-cert]').forEach(function (b) { b.onclick = function () { var c = Share.certs().filter(function (x) { return x.id === b.dataset.cert; })[0]; if (c) Share.showCert(c); }; });
+    /* גיבוי ושחזור */
+    card.querySelector('#paBackup').onclick = function () {
+      var data = JSON.stringify(Profile.exportData()), fname = 'גיבוי-עולם-הגיבורות-' + Profile.name + '-' + new Date().toISOString().slice(0, 10) + '.json';
+      var blob = new Blob([data], { type: 'application/json' }), file = window.File ? new File([blob], fname, { type: 'application/json' }) : null;
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: 'גיבוי עולם הגיבורות' }).catch(function () {}); return; }
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); a.remove();
+      snd('ding');
+    };
+    var fileIn = card.querySelector('#paFile');
+    card.querySelector('#paRestore').onclick = function () { fileIn.click(); };
+    fileIn.onchange = function () {
+      var f = fileIn.files && fileIn.files[0]; if (!f) return;
+      var rd = new FileReader();
+      rd.onload = function () {
+        var ok = false; try { ok = Profile.importData(JSON.parse(rd.result)); } catch (e) {}
+        if (ok) { snd('ding'); location.reload(); } else { snd('sad'); alert('הקובץ הזה אינו גיבוי של עולם הגיבורות'); }
+      };
+      rd.readAsText(f);
+    };
   }
 
   window.Parents = { open: open };

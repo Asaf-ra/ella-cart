@@ -4,6 +4,7 @@
    גרסה 2026: מסך HTML/CSS קל (בלי Phaser) — נטען מהר יותר באייפד.
    פרק 1 — כוכבים ברקע
    פרק 2 — הגיבורה: ציור לפי התחפושת השמורה + עדכון כשמחליפים תחפושת
+   פרק 0 — ילדה חדשה? אשף פתיחה. כמה ילדות? "מי משחקת היום?". אחרי יצירה — צבע אהוב ורמה (applyInit)
    פרק 3 — פתיח קולנועי ("ההשתנות") — פעם אחת בכל פתיחה
    פרק 4 — כרטיסי משימה: ניווט עם אפקט
    פרק 5 — סרגל עליון: HUD, ארון תחפושות, חנות שדרוגים, אזור הורים, צליל
@@ -16,6 +17,14 @@
   'use strict';
 
   var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- פרק 0 — מי משחקת ---------- */
+  var gate = null;
+  if (window.Profile && window.Onboarding) {
+    if (!Profile.has) gate = 'wizard';                   // פעם ראשונה במכשיר — בונים את הגיבורה
+    else if (Profile.needChoose) gate = 'choose';        // כמה ילדות — בוחרים מי משחקת
+    else Onboarding.applyInit();                          // אחרי יצירה: צבע אהוב לתחפושת + רמת קושי
+  }
 
   /* ---------- פרק 1 — כוכבים מנצנצים בשמיים ---------- */
   var sky = $('sky');
@@ -57,7 +66,11 @@
   $('introHero').innerHTML = HeroAvatar.svg(HeroRewards.outfit);
   var seen = false;
   try { seen = sessionStorage.getItem('ella-intro-seen') === '1'; } catch (e) {}
-  if (seen) {
+  if (gate) {
+    intro.remove();
+    document.addEventListener('pointerdown', function () { Sound.unlock(); }, { once: true });
+    if (gate === 'wizard') Onboarding.start(); else Onboarding.chooser();
+  } else if (seen) {
     intro.remove();
   } else {
     intro.addEventListener('click', function () {
@@ -138,6 +151,17 @@
     render();
   }
 
+  /* 5.1.5 החלפת ילדה (מופיע רק כשיש כמה ילדות במכשיר) */
+  if (window.Profile && Profile.list.length > 1) {
+    var sw = $('switchBtn'); sw.hidden = false;
+    sw.addEventListener('click', function () { Sound.tap(); Profile.switchWho(); });
+  }
+  /* 5.1.6 אלבום המדבקות (shared/stickers.js) */
+  if (window.Stickers) {
+    var ac = $('albumCount'), upd = function () { ac.textContent = Stickers.count() + '/' + Stickers.total; };
+    upd(); window.addEventListener('progress:track', function () { setTimeout(upd, 50); });
+    $('albumBtn').addEventListener('click', function () { Sound.tap(); Voice.say('אלבום המדבקות!'); Stickers.open(); });
+  } else $('albumBtn').hidden = true;
   /* 5.2 אזור הורים (שער הורים → לוח מעקב וזמן מסך) */
   $('parentsBtn').addEventListener('click', function () { Sound.tap(); if (window.Parents) Parents.open(); });
 
@@ -187,6 +211,9 @@
   $('questBtn').addEventListener('click', function () { Sound.tap(); openQuests(); });
   renderQuests();
   window.addEventListener('progress:track', renderQuests);
+
+  /* ---------- פרק 6.5 — חג / יום הולדת (shared/seasons.js) ---------- */
+  if (window.Seasons && !gate) Seasons.mount(document.querySelector('.logo'));
 
   /* ---------- פרק 7 — נבל השבוע + חיית המחמד ---------- */
   if (window.Progress) {

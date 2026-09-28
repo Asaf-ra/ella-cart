@@ -30,12 +30,16 @@
   function renderShelf() {
     var shelf = $('shelf'); shelf.innerHTML = '';
     var items = LIST.filter(function (s) { return tab === 'ella' ? s.series === 'ella' : !s.series && s.lang === tab; });
+    /* בתקופת חג — סיפור החג ראשון במדף (shared/seasons.js) */
+    var ev = window.Seasons ? Seasons.current() : null;
+    if (ev && ev.story) items.sort(function (a, b) { return (b.id === ev.story) - (a.id === ev.story); });
     items.forEach(function (s, i) {
       var open = episodeOpen(s), done = !!D.read[s.id];
       var b = document.createElement('button'); b.type = 'button';
       b.className = 'book' + (open ? '' : ' locked'); b.style.animationDelay = (i * .05) + 's';
-      b.innerHTML = '<div class="cover th-' + s.theme + '"><span>' + s.cover + '</span></div><div class="info"><b' + (s.lang === 'en' ? ' dir="ltr"' : '') + '>' + s.title + '</b><div class="tags">' +
-        (s.level === 'young' ? '<span class="tag">🌱 5–6</span>' : s.level === 'big' ? '<span class="tag">🚀 7–8</span>' : '<span class="tag">📺 פרק ' + s.ep + '</span>') +
+      b.innerHTML = '<div class="cover th-' + s.theme + '"><span>' + s.cover + '</span></div><div class="info"><b' + (s.lang === 'en' ? ' dir="ltr"' : '') + '>' + (window.Profile ? Profile.friendFix(s.title) : s.title) + '</b><div class="tags">' +
+        (s.holiday ? '<span class="tag"' + (ev && ev.story === s.id ? ' style="background:#ffc93c"' : '') + '>' + (ev && ev.story === s.id ? '✨ עכשיו חג!' : '🎉 סיפור חג') + '</span>' :
+         s.level === 'young' ? '<span class="tag">🌱 5–6</span>' : s.level === 'big' ? '<span class="tag">🚀 7–8</span>' : '<span class="tag">📺 פרק ' + s.ep + '</span>') +
         '<span class="tag">' + s.pages.length + ' עמודים</span>' + (done ? '<span class="tag done">✓ נקרא</span>' : '') + '</div>' +
         (open ? '' : '<div class="lock-note">נפתח כשמשלימים את משימת היום 📜</div>') + '</div>';
       b.addEventListener('click', function () {
@@ -59,7 +63,15 @@
   var DECO = {
     sky: '☁️', sea: '🫧', space: '✨', night: '⭐', forest: '🌼', city: '✨', home: '💖', party: '🎉'
   };
+  /* withFriends — עותק של הסיפור שבו חברה בשם זהה לשם הילדה מקבלת שם חלופי (shared/profile.js) */
+  function withFriends(s) {
+    if (!window.Profile || !Profile.friendFix) return s;
+    var f = Profile.friendFix;
+    return Object.assign({}, s, { title: f(s.title), pages: s.pages.map(function (p) { return Object.assign({}, p, { text: f(p.text) }); }),
+      quiz: Object.assign({}, s.quiz, { q: f(s.quiz.q), o: s.quiz.o.map(f) }) });
+  }
   function openStory(s) {
+    s = withFriends(s);
     cur = s; idx = 0; auto = false;
     $('libScreen').classList.remove('show'); $('readScreen').classList.add('show');
     $('readTitle').textContent = s.title; $('readTitle').dir = s.lang === 'en' ? 'ltr' : 'rtl';
@@ -204,6 +216,12 @@
   function finishStory(origin) {
     var first = !D.read[cur.id];
     D.read[cur.id] = Date.now(); save();
+    /* תעודות: כל 5 סיפורים, וסיום כל פרקי ההרפתקאות */
+    if (window.Share) {
+      var nRead = Object.keys(D.read).length;
+      if (first && nRead % 5 === 0) Share.award({ key: 'stories:' + nRead, line: 'קראה ' + nRead + ' סיפורים', ico: '📚' });
+      else if (first && cur.series && cur.ep === STORIES.EPISODES) Share.award({ key: 'series:ella', line: 'קראה את כל הרפתקאות אלה', ico: '🦸‍♀️' });
+    }
     try { if (window.Progress) Progress.track('story:read'); } catch (e) {}
     try { if (window.HeroRewards) { HeroRewards.award(first ? 2 : 1, origin, { word: 'קראת!' }); HeroRewards.confetti(); } } catch (e) {}
     if (first && typeof Wallet !== 'undefined') Wallet.add(5);
@@ -222,6 +240,9 @@
 
   /* ---------- פרק 6 — אתחול ---------- */
   renderShelf();
+  /* קישור ישיר לסיפור לפי מזהה (למשל stories.html#hol-hanukkah מסרט החג) */
+  var mh = location.hash.match(/^#([a-z][\w-]+)$/), direct = mh && LIST.filter(function (x) { return x.id === mh[1] && !x.series; })[0];
+  if (direct) { tab = direct.lang; document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x.dataset.t === tab); }); renderShelf(); setTimeout(function () { openStory(direct); }, 300); }
   var m = location.hash.match(/^#ep(\d+)$/);
   if (m) {
     var s = LIST.filter(function (x) { return x.series === 'ella' && x.ep === +m[1]; })[0];
