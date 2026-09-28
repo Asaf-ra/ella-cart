@@ -13,6 +13,9 @@
    פרק 7 — טמגוצ'י עדין: 4 צרכים (שובע, ניקיון, כיף, אנרגיה) שיורדים לאט עם הזמן, רצף ימי טיפול,
            קופסאות הפתעה מלמידה (כל 12 תשובות / עלייה בשלב / רצף) עם אביזרים ללבוש ופריטים לחדר.
            אין מוות, אין בריחה ואין עונש: הדרקון לכל היותר עייף/מלוכלך/משועמם — ושמח כשחוזרים אליו.
+   פרק 8 — "לא מרגיש טוב" (לווטרינר): לפעמים הדרקון מצונן / קיבל מכה / כואבת לו שן / כואבת לו הבטן.
+           לא מסוכן ולא מפחיד — הוא רק מבקש ללכת לווטרינר (js/dragon-care.js), ואחרי הטיפול בריא ושמח.
+           מתכונים שבישלו נשמרים ב-P.cook, ביקורים אצל הווטרינר ב-P.vet (מדבקות אומץ).
    תלויות: shared/theme.css; אופציונלי: js/audio.js, shared/hero-rewards.js, shared/progress.js
    ===================================================================== */
 (function () {
@@ -28,8 +31,8 @@
   var NEWS = ['', 'בקע מהביצה!', 'פקח עיניים גדולות!', 'צמחו לו קרניים קטנות!', 'הקרניים גדלו!', 'הכנפיים גדלו!', 'צמחו לו קוצים על הגב!',
               'יש לו זנב עם קוצים!', 'כנפיים ענקיות — הוא עף!', 'הוא יורק אש!', 'יש לו גלימת גיבור!', 'הוא מלך הדרקונים עם כתר!'];
   var MAX_FOOD = 30;
-  function blank() { return { color: null, name: '', xp: 0, food: 3, hunger: 30, fedAt: Date.now(), needs: {}, care: { day: '', streak: 0, best: 0 }, boxes: 0, ans: 0, items: [], wear: {}, room: [], seenAt: 0 }; }
-  function load() { try { var b = blank(), p = Object.assign(b, JSON.parse(localStorage.getItem(KEY)) || {}); ['needs', 'wear'].forEach(function (k) { p[k] = p[k] || {}; }); ['items', 'room'].forEach(function (k) { p[k] = p[k] || []; }); p.care = p.care || { day: '', streak: 0, best: 0 }; return p; } catch (e) { return blank(); } }
+  function blank() { return { color: null, name: '', xp: 0, food: 3, hunger: 30, fedAt: Date.now(), needs: {}, care: { day: '', streak: 0, best: 0 }, boxes: 0, ans: 0, items: [], wear: {}, room: [], seenAt: 0, sick: null, sickDay: '', lastSick: 0, vet: 0, cook: {} }; }
+  function load() { try { var b = blank(), p = Object.assign(b, JSON.parse(localStorage.getItem(KEY)) || {}); ['needs', 'wear'].forEach(function (k) { p[k] = p[k] || {}; }); ['items', 'room'].forEach(function (k) { p[k] = p[k] || []; }); p.care = p.care || { day: '', streak: 0, best: 0 }; p.cook = p.cook || {}; return p; } catch (e) { return blank(); } }
   var P = load();
   function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
   function snd(n) { try { if (window.Sound && Sound[n]) Sound[n](); } catch (e) {} }
@@ -52,6 +55,7 @@
   /* mood — ההבעה לפי הצורך הכי נמוך: רעב / מלוכלך / משועמם / עייף, אחרת שמח */
   function mood() {
     if (!P.color || stage() === 0) return 'happy';
+    if (P.sick) return 'sick';
     var l = lowest();
     if (l.v >= 30) return 'happy';
     return { food: 'hungry', clean: 'dirty', fun: 'bored', energy: 'tired' }[l.k];
@@ -113,6 +117,25 @@
     return { id: id, item: it, wear: id[0] === 'w' };
   }
   function toggleWear(k) { var sl = WEAR[k].slot; P.wear[sl] = P.wear[sl] === k ? null : k; save(); minis.forEach(function (m) { m.draw(); }); }
+  /* ---------- פרק 8 — לא מרגיש טוב ----------
+     פעם ביום בודקים: אם צורך כלשהו נמוך (< 30) — סיכוי 35%, אחרת 8%; לכל היותר פעם ב-3 ימים. */
+  var SICK = {
+    cold: { ico: '🤧', he: 'הצטננות', line: 'אפצ׳י! אני מצונן... 🤧 לווטרינר?' },
+    bump: { ico: '🤕', he: 'מכה בראש', line: 'איי, קיבלתי מכה בראש... 🤕 לווטרינר?' },
+    tooth: { ico: '🦷', he: 'כאב שיניים', line: 'השן כואבת לי... 🦷 לווטרינר?' },
+    tummy: { ico: '🤢', he: 'כאב בטן', line: 'הבטן כואבת... אכלתי יותר מדי ממתקים 🍬' }
+  };
+  function checkSick() {
+    if (!P.color || stage() === 0 || P.sick) return P.sick;
+    var d = dayKey(); if (P.sickDay === d) return null;
+    P.sickDay = d;
+    if (!(P.lastSick && Date.now() - P.lastSick < 3 * 864e5) && Math.random() < (lowest().v < 30 ? .35 : .08)) {
+      var ks = Object.keys(SICK); P.sick = { k: ks[(Math.random() * ks.length) | 0], at: Date.now() }; P.lastSick = Date.now();
+    }
+    save(); minis.forEach(function (m) { m.draw(); }); return P.sick;
+  }
+  function makeSick(k) { P.sick = { k: k || 'cold', at: Date.now() }; P.lastSick = Date.now(); save(); minis.forEach(function (m) { m.draw(); }); }
+  function heal() { P.sick = null; P.vet = (P.vet || 0) + 1; save(); minis.forEach(function (m) { m.draw(); }); }
   function toggleRoom(k) { var i = P.room.indexOf(k); if (i >= 0) P.room.splice(i, 1); else P.room.push(k); save(); }
 
   /* ---------- פרק 4 — ציור הדרקון ---------- */
@@ -138,6 +161,7 @@
     }
     var k = [0, .5, .56, .62, .68, .74, .8, .85, .9, .94, .97, 1][st], face = opts.face || mood();
     var wear = opts.wear || P.wear || {}, clean = opts.clean != null ? opts.clean : (opts.stage != null ? 100 : need('clean'));
+    var sick = opts.sick !== undefined ? opts.sick : (opts.stage != null ? null : P.sick && P.sick.k);
     s += '<defs><radialGradient id="' + id + 'b" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="' + W + '"/><stop offset="1" stop-color="' + c + '"/></radialGradient></defs>';
     s += '<ellipse cx="100" cy="190" rx="' + (48 * k) + '" ry="7" fill="rgba(27,16,54,.25)"/>';
     s += '<g transform="translate(100 190) scale(' + k + ') translate(-100 -190)">';
@@ -174,7 +198,7 @@
     if (st === 1 && face === 'happy') face = 'sleep';
     if (face === 'love' || face === 'eat') s += '<path d="M72 82 Q80 72 88 82 M112 82 Q120 72 128 82" fill="none"' + o + '/>';
     else if (face === 'sleep') s += '<path d="M72 82 Q80 88 88 82 M112 82 Q120 88 128 82" fill="none"' + o + '/>';
-    else if (face === 'tired') {   /* עפעפיים חצי סגורים */
+    else if (face === 'tired' || face === 'sick') {   /* עפעפיים חצי סגורים */
       s += '<ellipse cx="80" cy="80" rx="11" ry="13" fill="#fff"' + o + '/><ellipse cx="120" cy="80" rx="11" ry="13" fill="#fff"' + o + '/><circle cx="81" cy="85" r="6" fill="' + INK + '"/><circle cx="119" cy="85" r="6" fill="' + INK + '"/>';
       s += '<path d="M69 80 A11 13 0 0 1 91 80 Z M109 80 A11 13 0 0 1 131 80 Z" fill="' + c + '"' + o + '/>';
     }
@@ -188,17 +212,26 @@
     if (face === 'eat') s += '<ellipse cx="100" cy="116" rx="10" ry="8" fill="#b3124f"' + o + '/>';
     else if (face === 'hungry' || face === 'bored' || face === 'dirty') s += '<path d="M90 118 Q100 110 110 118" fill="none"' + o + '/>';
     else if (face === 'tired') s += '<ellipse cx="100" cy="116" rx="7" ry="9" fill="#b33e12"' + o + '/>';   /* פיהוק */
+    else if (face === 'sick') s += '<path d="M86 118 q7 -6 14 0 q7 6 14 0" fill="none"' + o + '/>';          /* פה גלי */
     else s += '<path d="M88 112 Q100 124 112 112" fill="#fff"' + o + '/>';
     /* אש מהפה/עשן מהאף (דרקון אש ומעלה) */
     if (st >= 9 && face !== 'eat') s += '<circle cx="92" cy="96" r="4" fill="#c9ced9" opacity=".8"/><circle cx="108" cy="94" r="5" fill="#c9ced9" opacity=".7"/>';
     if (face === 'fire') s += '<path d="M100 116 C120 110 150 100 176 112 C160 118 170 126 184 128 C160 136 128 130 104 122 Z" fill="#ff9f1c"' + o + '/><path d="M108 118 C130 116 150 114 166 120 C148 124 128 124 110 121 Z" fill="#ffe14d"/>';
     /* כתר (סופר) */
     if (st >= 11 && !wear.head) s += '<path d="M80 44 L84 22 L94 36 L100 16 L106 36 L116 22 L120 44 Z" fill="#ffc93c"' + o + '/><circle cx="100" cy="34" r="3.5" fill="#ff2e93"/>';
-    s += wearSVG(wear, o);
+    s += wearSVG(wear, o) + sickSVG(sick, o);
     s += '</g></svg>';
     return s;
   }
 
+  /* sickSVG — סימנים עדינים: אף אדום (הצטננות), בליטה (מכה), לחי נפוחה ותחבושת (שן), סחרחורת בבטן */
+  function sickSVG(k, o) {
+    if (k === 'cold') return '<ellipse cx="100" cy="102" rx="13" ry="9" fill="#ff5a6e"' + o + '/><path d="M108 110 q3 8 0 12" stroke="#8fe9ff" stroke-width="5" fill="none" stroke-linecap="round"/>';
+    if (k === 'bump') return '<circle cx="118" cy="46" r="10" fill="#ff8a8a"' + o + '/><path d="M130 30 l4 -8 M138 40 l8 -2 M122 26 l0 -8" stroke="#ffd95a" stroke-width="4" stroke-linecap="round"/>';
+    if (k === 'tooth') return '<ellipse cx="134" cy="100" rx="16" ry="14" fill="#ffb0c0"' + o + '/><path d="M60 70 Q100 150 140 70" fill="none" stroke="#fff" stroke-width="9" opacity=".9"/><path d="M92 50 Q100 40 108 50" stroke="#fff" stroke-width="9" fill="none"/>';
+    if (k === 'tummy') return '<path d="M92 152 q8 -8 16 0 q-8 8 -16 0 M88 164 q12 -10 24 0" stroke="#6cbf3a" stroke-width="4" fill="none" stroke-linecap="round"/>';
+    return '';
+  }
   /* wearSVG — אביזרים על הראש, הפנים והצוואר (קואורדינטות של הראש: מרכז 100,84 רדיוס 44) */
   function wearSVG(w, o) {
     var s = '';
@@ -342,7 +375,7 @@
       draw: function () {
         /* תג: ! (אין ביצה) · 🎁 קופסה · הצורך הכי דחוף · תפוחים */
         var l = P.color && stage() > 0 ? lowest() : null;
-        d.innerHTML = svg() + (!P.color ? '<span class="pm-badge">!</span>' : P.boxes > 0 ? '<span class="pm-badge">🎁' + P.boxes + '</span>' : l && l.v < 35 && l.k !== 'food' ? '<span class="pm-badge">' + NEED_INFO[l.k].ico + '</span>' : P.food > 0 && (stage() === 0 || hunger() >= 40) ? '<span class="pm-badge">🍎' + P.food + '</span>' : '');
+        d.innerHTML = svg() + (!P.color ? '<span class="pm-badge">!</span>' : P.sick ? '<span class="pm-badge">' + SICK[P.sick.k].ico + '</span>' : P.boxes > 0 ? '<span class="pm-badge">🎁' + P.boxes + '</span>' : l && l.v < 35 && l.k !== 'food' ? '<span class="pm-badge">' + NEED_INFO[l.k].ico + '</span>' : P.food > 0 && (stage() === 0 || hunger() >= 40) ? '<span class="pm-badge">🍎' + P.food + '</span>' : '');
       },
       /* gain — קופץ משמחה ומציג +🍎 כשמרוויחים אוכל */
       gain: function (n) {
@@ -369,5 +402,6 @@
   window.Pet = { open: open, mini: mini, svg: svg, stage: stage, hunger: hunger, addFood: addFood, grow: grow, NEWS: NEWS, nextAt: nextAt, save: save,
                  need: need, needs: needs, setNeed: setNeed, addNeed: addNeed, lowest: lowest, mood: mood, isNight: isNight, markCare: markCare, visit: visit,
                  openBox: openBox, toggleWear: toggleWear, toggleRoom: toggleRoom, WEAR: WEAR, ROOM: ROOM, NEED_INFO: NEED_INFO,
+                 SICK: SICK, checkSick: checkSick, makeSick: makeSick, heal: heal, dayKey: dayKey,
                  get state() { return P; }, STAGES: STAGES, reset: function () { P = blank(); save(); minis.forEach(function (m) { m.draw(); }); } };
 })();
