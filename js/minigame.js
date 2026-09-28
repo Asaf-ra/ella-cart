@@ -19,12 +19,10 @@ class MiniGameScene extends Phaser.Scene {
     this.build = { base: null, toppings: [] };
     this.input.dragDistanceThreshold = 14;   // רעד אצבע קטן ≠ גרירה — אחרת הקשות של ילדה קטנה נבלעות
 
-    const bg = this.add.graphics();
-    bg.fillStyle(0xfff6fc, 1); bg.fillRect(0, 0, W, H);
-    bg.fillStyle(0xe8fff6, 0.7); bg.fillRect(0, H - 180, W, 180);
-
-    Helper.txt(this, W / 2, 52, G.FOODS[this.food].name + ' ' + G.FOODS[this.food].emoji, 46, '#ff5ca8');
-    Helper.circleBtn(this, 70, 70, '✖', 42, () => this.finish(false));
+    Helper.comicBackdrop(this);                                     // רקע קומיקס (נייר + פס כותרת)
+    const title = Helper.txt(this, W / 2, 52, G.FOODS[this.food].name + ' ' + G.FOODS[this.food].emoji, 50, '#ffffff');
+    title.setStroke('#1b1036', 9); title.setShadow(3, 4, '#1b1036', 0, true, true);
+    Helper.circleBtn(this, 180, 56, '✖', 38, () => this.finish(false)); // מוזז ימינה — לא מתחת לכפתור הבית המשותף
 
     this.showTarget();
     this.buildCustomerCard();
@@ -45,10 +43,8 @@ class MiniGameScene extends Phaser.Scene {
     const n = 1 + (o.base ? 1 : 0) + o.toppings.length;
     const cell = 52, padX = 24, w = n * cell + padX * 2 + 150, h = 84, y = 150;
     const g = this.add.graphics();
-    g.fillStyle(0x000000, 0.10); g.fillRoundedRect(cx - w/2, y - h/2 + 6, w, h, 22);
-    g.fillStyle(0xffffff, 1); g.fillRoundedRect(cx - w/2, y - h/2, w, h, 22);
-    g.lineStyle(4, 0xffd24c, 1); g.strokeRoundedRect(cx - w/2, y - h/2, w, h, 22);
-    this.add.text(cx - w/2 + 78, y, 'להכין:', { fontFamily:'Heebo,sans-serif', fontSize:'30px', color:'#ff5ca8', fontStyle:'bold' }).setOrigin(0.5);
+    Helper.comicCard(g, cx - w/2, y - h/2, w, h, 22, 0xffffff);     // כרטיס קומיקס
+    this.add.text(cx - w/2 + 78, y, 'להכין:', { fontFamily:'Rubik, Heebo, sans-serif', fontSize:'30px', color:'#ff2e93', fontStyle:'900' }).setOrigin(0.5);
     let x = cx - w/2 + 150 + cell/2;
     Helper.foodIcon(this, x, y, this.food, 44); x += cell;
     if (o.base) { const b = Helper.icon(this, x, y, o.base, 40); this.bevel(b); x += cell; }
@@ -62,11 +58,10 @@ class MiniGameScene extends Phaser.Scene {
     const c = this.cust;
     const card = this.add.container(DESIGN.w - 180, 192).setDepth(40);
     const g = this.add.graphics();
-    g.fillStyle(0x000000, 0.08); g.fillRoundedRect(-140, -120, 280, 252, 26);
-    g.fillStyle(0xffffff, 1); g.fillRoundedRect(-140, -128, 280, 252, 26);
-    g.fillStyle(0xfff0f8, 1); g.fillRoundedRect(-140, -128, 280, 52, { tl:26, tr:26, bl:0, br:0 });
+    Helper.comicCard(g, -140, -128, 280, 252, 26, 0xffffff);        // כרטיס לקוח בסגנון קומיקס
+    g.fillStyle(0xffe1f1, 1); g.fillRoundedRect(-140, -128, 280, 52, { tl:26, tr:26, bl:0, br:0 });
     card.add(g);
-    card.add(this.add.text(0, -102, 'מכינים בשביל:', { fontFamily:'Heebo,sans-serif', fontSize:'24px', color:'#ff5ca8', fontStyle:'bold' }).setOrigin(0.5));
+    card.add(this.add.text(0, -102, 'מכינים בשביל:', { fontFamily:'Rubik, Heebo, sans-serif', fontSize:'24px', color:'#ff2e93', fontStyle:'900' }).setOrigin(0.5));
 
     let face = Helper.charImg(this, 0, 0, c.charKey, 150);
     if (!face) face = this.add.text(0, 0, c.face || '🙂', { fontSize: '92px' }).setOrigin(0.5);
@@ -1000,14 +995,15 @@ class StoreScene extends Phaser.Scene {
   create() {
     const W = DESIGN.w, H = DESIGN.h;
     this.cameras.main.fadeIn(250, 255, 246, 252);
-    const bg = this.add.graphics();
-    bg.fillStyle(0xfff6fc, 1); bg.fillRect(0, 0, W, H);
+    Helper.comicBackdrop(this);                                     // רקע קומיקס
+    const title = Helper.txt(this, W / 2, 54, '🛒 חנות השדרוגים', 50, '#ffffff');
+    title.setStroke('#1b1036', 9); title.setShadow(3, 4, '#1b1036', 0, true, true);
+    Helper.circleBtn(this, 180, 54, '✖', 38, () => this.close());     // מוזז ימינה — לא מתחת לכפתור הבית
 
-    Helper.txt(this, W / 2, 56, '🛒 חנות השדרוגים', 50, '#ff5ca8');
-    Helper.circleBtn(this, 70, 70, '✖', 42, () => this.close());
-
-    this.add.image(W - 240, 70, 'coin');
-    this.coinText = this.add.text(W - 210, 70, '' + G.coins, { fontFamily:'Heebo,sans-serif', fontSize:'44px', color:'#e09b00', fontStyle:'bold' }).setOrigin(0, 0.5);
+    const pill = this.add.graphics();                               // כדור-מטבעות בסגנון קומיקס
+    Helper.comicCard(pill, W - 280, 24, 220, 60, 30, 0xfffaf0);
+    this.add.image(W - 240, 54, 'coin');
+    this.coinText = this.add.text(W - 210, 54, '' + G.coins, { fontFamily:'Rubik, Heebo, sans-serif', fontSize:'40px', color:'#c47a00', fontStyle:'900' }).setOrigin(0, 0.5);
 
     this.cards = [];
     const cols = 4, cw = 290, ch = 300, gapX = 10, gapY = 20;
@@ -1023,14 +1019,14 @@ class StoreScene extends Phaser.Scene {
   buildCard(u, x, y) {
     const c = this.add.container(x, y);
     const g = this.add.graphics();
-    g.fillStyle(0x000000, 0.08); g.fillRoundedRect(-135, -122, 270, 280, 24);
-    g.fillStyle(0xffffff, 1); g.fillRoundedRect(-135, -130, 270, 280, 24);
+    Helper.comicCard(g, -135, -130, 270, 280, 24, 0xffffff);        // כרטיס שדרוג בסגנון קומיקס
     const ico = this.add.text(0, -78, u.ico, { fontSize: '76px' }).setOrigin(0.5);
     const name = Helper.txt(this, 0, -8, u.name, 30, '#5a3d5c');
     const lvl = Helper.txt(this, 0, 32, '', 24, '#9a7a9c');
     const buy = this.add.container(0, 96);
     const bg = this.add.graphics();
-    const bt = this.add.text(0, 0, '', { fontFamily:'Heebo,sans-serif', fontSize:'30px', color:'#fff', fontStyle:'bold' }).setOrigin(0.5);
+    const bt = this.add.text(0, 0, '', { fontFamily:'Rubik, Heebo, sans-serif', fontSize:'30px', color:'#fff', fontStyle:'900' }).setOrigin(0.5);
+    bt.setStroke('#1b1036', 6);
     buy.add([bg, bt]); buy.setSize(200, 64).setInteractive(new Phaser.Geom.Rectangle(0, 0, 200, 64), Phaser.Geom.Rectangle.Contains);
     buy.on('pointerdown', () => this.tryBuy(u, c));
     c.add([g, ico, name, lvl, buy]);
@@ -1053,8 +1049,8 @@ class StoreScene extends Phaser.Scene {
       const u = card._u, l = G.lvl(u.id), maxLvl = u.costs.length, cost = G.nextCost(u.id);
       card._lvl.setText('רמה ' + l + ' / ' + maxLvl);
       const bg = card._buyBg; bg.clear();
-      if (cost === null) { bg.fillStyle(0x8fd3b6, 1); bg.fillRoundedRect(-100, -32, 200, 64, 32); card._buyTxt.setText('✓ מקסימום'); }
-      else { const can = G.coins >= cost; bg.fillStyle(can ? 0xf5a800 : 0xc9b78a, 1); bg.fillRoundedRect(-100, -32, 200, 64, 32); card._buyTxt.setText('🪙 ' + cost); }
+      if (cost === null) { Helper.comicCard(bg, -100, -32, 200, 64, 32, 0x3fcf8e); card._buyTxt.setText('✓ מקסימום'); }
+      else { const can = G.coins >= cost; Helper.comicCard(bg, -100, -32, 200, 64, 32, can ? 0xffb31c : 0xb9a7d6); card._buyTxt.setText('🪙 ' + cost); }
     });
   }
 

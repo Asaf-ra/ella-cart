@@ -54,7 +54,7 @@ const Helper = {
     g.fillGradientStyle(0xfffaf0, 0xfffaf0, 0xffe9c7, 0xffe9c7, 1);
     g.fillCircle(0, 0, r - 2);                                                // פני הכפתור
     g.fillStyle(0xffffff, 0.7); g.fillEllipse(0, -r * 0.45, r * 1.1, r * 0.5); // ברק עליון
-    const t = scene.add.text(0, 0, emoji, { fontSize: (r * 1.05) + 'px' }).setOrigin(0.5);
+    const t = scene.add.text(0, 0, emoji, { fontSize: (r * 1.05) + 'px', color: '#1b1036' }).setOrigin(0.5);   // סימנים (✖) בצבע דיו — לא לבן על נייר
     c.add([g, t]);
     c.setSize(r * 2, r * 2);
     c.setInteractive(new Phaser.Geom.Circle(0, 0, r), Phaser.Geom.Circle.Contains);
@@ -105,6 +105,26 @@ const Helper = {
       const im = scene.add.image(x, y, key); im.setDisplaySize(displaySize, displaySize); return im;
     }
     return scene.add.text(x, y, G.FOODS[foodKey].emoji, { fontSize: Math.round(displaySize * 0.9) + 'px' }).setOrigin(0.5);
+  },
+
+  /* comicBackdrop — רקע "נייר קומיקס" למסכי הבישול והחנות: נייר בהיר, נקודות רסטר ורודות
+     ופס כותרת מג'נטה עם קווי מהירות. הטקסט הכהה נשאר קריא. */
+  comicBackdrop(scene) {
+    const W = DESIGN.w, H = DESIGN.h, g = scene.add.graphics().setDepth(-5);
+    g.fillStyle(0xfffaf0, 1); g.fillRect(0, 0, W, H);
+    g.fillStyle(0xff7ec2, 0.12);
+    for (let y = 120; y < H; y += 22) for (let x = (y / 22) % 2 ? 11 : 0; x < W; x += 22) g.fillCircle(x, y, 2.6);
+    g.fillGradientStyle(0x3a1177, 0x3a1177, 0xff2e93, 0xff2e93, 1); g.fillRect(0, 0, W, 104);
+    g.fillStyle(0xffffff, 0.09);
+    for (let i = 0; i < 26; i++) { const a = -Math.PI + i * Math.PI / 25; g.fillTriangle(W / 2, 52, W / 2 + Math.cos(a) * 1400, 52 + Math.sin(a) * 1400, W / 2 + Math.cos(a + 0.05) * 1400, 52 + Math.sin(a + 0.05) * 1400); }
+    g.fillStyle(0x1b1036, 1); g.fillRect(0, 104, W, 6);
+    return g;
+  },
+  /* comicCard — כרטיס עם מסגרת דיו וצל קשיח (במקום כרטיס לבן רך) */
+  comicCard(g, x, y, w, h, r, fill) {
+    g.fillStyle(0x1b1036, 1); g.fillRoundedRect(x - 4, y + 2, w + 8, h + 8, r + 4);
+    g.fillStyle(0x1b1036, 1); g.fillRoundedRect(x - 4, y - 4, w + 8, h + 8, r + 4);
+    g.fillStyle(fill == null ? 0xffffff : fill, 1); g.fillRoundedRect(x, y, w, h, r);
   },
 
   // תמונת דמות בגובה רצוי; null אם אין טקסטורה

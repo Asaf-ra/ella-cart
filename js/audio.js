@@ -140,36 +140,103 @@ const Music = (function () {
   };
 })();
 
-/* ===== קול מדבר בעברית — Web Speech API מובנה (אופליין, בלי קבצים) ===== */
+/* ===== קול מדבר — Web Speech API מובנה (אופליין, בלי קבצים) =====
+   פרק 1 — בחירת קולות: עברית (he-IL, ב-iOS עדיפות ל-Carmit) ואנגלית (en-US)
+   פרק 2 — ניקוי טקסט: בלי אימוג'י, סימנים הופכים למילים (+ → ועוד, ₪ → שקלים…)
+   פרק 3 — תור הקראה: משפטים לא "נבלעים"; interrupt מתחיל מחדש (שאלה חדשה),
+           ומשפט רגיל מחליף רק משפט שעוד ממתין (כדי שלא תיווצר ערימה)
+   פרק 4 — שומר-זמן: ב-Safari לפעמים onend לא מגיע — ממשיכים לבד אחרי זמן סביר
+   API: Voice.say(text, opts) · Voice.read([{text, lang}], opts) · Voice.praise() · Voice.silence() · Voice.clean(text, lang) */
 const Voice = (function () {
-  let voice = null, last = 0;
-  const ok = (typeof window !== 'undefined') && ('speechSynthesis' in window);
+  const ok = (typeof window !== 'undefined') && ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+  let he = null, en = null;
 
+  /* ---------- פרק 1 — בחירת קולות ---------- */
   function pick() {
     try {
-      const vs = window.speechSynthesis.getVoices();
-      voice = vs.find(v => /he|iw/i.test(v.lang)) || voice;
+      const vs = window.speechSynthesis.getVoices() || [];
+      const heAll = vs.filter(v => /^(he|iw)/i.test(v.lang));
+      he = heAll.find(v => /carmit/i.test(v.name)) || heAll.find(v => v.localService) || heAll[0] || he;
+      const enAll = vs.filter(v => /^en[-_]US/i.test(v.lang));
+      en = enAll.find(v => /samantha|allison|ava|karen/i.test(v.name)) || enAll.find(v => v.localService) || enAll[0] || vs.find(v => /^en/i.test(v.lang)) || en;
     } catch (e) {}
   }
   if (ok) { pick(); try { window.speechSynthesis.onvoiceschanged = pick; } catch (e) {} }
 
+  /* ---------- פרק 2 — ניקוי טקסט ---------- */
+  let EMOJI = null;
+  try { EMOJI = new RegExp('[\\p{Extended_Pictographic}\\u{1F1E6}-\\u{1F1FF}\\u{FE0F}\\u{200D}\\u{20E3}\\u{1F3FB}-\\u{1F3FF}]', 'gu'); } catch (e) {}
+  function clean(text, lang) {
+    let t = String(text == null ? '' : text);
+    if (EMOJI) t = t.replace(EMOJI, ' ');
+    t = t.replace(/[←→⟵⟶➜✓✔✖✦★☆●▲■◆♥·•]/g, ' ');
+    if (!lang || /^he/i.test(lang)) {
+      t = t.replace(/(\d+)\s*\/\s*(\d+)/g, '$1 מתוך $2')     // 3/3 → 3 מתוך 3
+           .replace(/\s*\+\s*/g, ' ועוד ')
+           .replace(/\s*[−–]\s*(?=\d)/g, ' פחות ')
+           .replace(/(\d)\s*-\s*(?=\d)/g, '$1 פחות ')
+           .replace(/\s*=\s*/g, ' שווה ')
+           .replace(/₪/g, ' שקלים ')
+           .replace(/_/g, ' ');
+    }
+    return t.replace(/\s{2,}/g, ' ').replace(/\s+([!?.,])/g, '$1').trim();
+  }
+
+  /* ---------- פרק 3 — תור הקראה ---------- */
+  let queue = [], speaking = false, watchdog = null, lastText = '', lastAt = 0;
+  function next() {
+    clearTimeout(watchdog);
+    const item = queue.shift();
+    if (!item) { speaking = false; return; }
+    speaking = true;
+    const u = new SpeechSynthesisUtterance(item.text);
+    const isEn = /^en/i.test(item.lang || '');
+    u.lang = isEn ? 'en-US' : 'he-IL';
+    const v = isEn ? en : he; if (v) u.voice = v;
+    u.rate = item.rate || (isEn ? .85 : .95);
+    u.pitch = item.pitch || 1.15;
+    u.volume = 1;
+    u.onend = u.onerror = function () { next(); };
+    /* ---------- פרק 4 — שומר-זמן ---------- */
+    watchdog = setTimeout(next, 1800 + item.text.length * 110);
+    try { window.speechSynthesis.speak(u); } catch (e) { next(); }
+  }
+  function read(parts, opts) {
+    if (!ok || (typeof Sound !== 'undefined' && !Sound.isOn())) return;
+    opts = opts || {};
+    const items = (parts || []).map(p => ({ text: clean(p.text, p.lang), lang: p.lang || 'he-IL', rate: opts.rate, pitch: opts.pitch })).filter(p => p.text);
+    if (!items.length) return;
+    const key = items.map(p => p.text).join('|'), now = Date.now();
+    if (key === lastText && now - lastAt < 1200) return;      // אותו משפט פעמיים ברצף — פעם אחת מספיקה
+    lastText = key; lastAt = now;
+    if (opts.interrupt) {                                      // שאלה חדשה: מפסיקים הכול ומתחילים מחדש
+      queue = []; clearTimeout(watchdog);
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+      speaking = false;
+    } else if (speaking && queue.length) {                     // משפט רגיל מחליף משפטים שעוד ממתינים
+      queue = [];
+    }
+    queue = queue.concat(items);
+    if (!speaking) next();
+  }
+
+  /* splitLang — מפצל משפט לקטעי עברית וקטעי אנגלית (למשל "נכון! Apple זה תפוח") */
+  function splitLang(text) {
+    return String(text == null ? '' : text).split(/([A-Za-z][A-Za-z' \-]*[A-Za-z]|[A-Za-z])/)
+      .filter(s => s && s.trim()).map(s => ({ text: s, lang: /[A-Za-z]/.test(s) ? 'en-US' : 'he-IL' }));
+  }
+
   return {
-    say(text, opts) {
-      if (!ok || !Sound.isOn()) return;
-      const now = Date.now();
-      if (now - last < 650) return;                 // לא לדבר אחד על השני
-      last = now;
-      try {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'he-IL'; if (voice) u.voice = voice;
-        u.rate = (opts && opts.rate) || 1.0;
-        u.pitch = (opts && opts.pitch) || 1.3;       // עליז וילדותי
-        u.volume = 1;
-        window.speechSynthesis.speak(u);
-      } catch (e) {}
-    },
+    clean: clean,
+    splitLang: splitLang,
+    read: read,
+    /* say — משפט בעברית; מילים באנגלית בתוכו מוקראות אוטומטית בקול אנגלי (פיצול לפי שפה) */
+    say(text, opts) { read(splitLang(text), opts); },
     praise() { const p = ['כל הכבוד!', 'מעולה!', 'יופי אלה!', 'וואו!', 'איזה יופי!', 'כל הכבוד אלה!']; this.say(p[(Math.random() * p.length) | 0]); },
-    silence() { if (ok) { try { window.speechSynthesis.cancel(); } catch (e) {} } }
+    silence() { queue = []; clearTimeout(watchdog); speaking = false; if (ok) { try { window.speechSynthesis.cancel(); } catch (e) {} } }
   };
 })();
+
+/* חשיפה גלובלית: const בראש קובץ לא יוצר window.Sound / window.Voice — ודפים שבודקים
+   "if (window.Voice)" (האקדמיה, מערכת הפרסים, הטיסה) היו שותקים. כך כולם מוצאים אותם. */
+window.Sound = Sound; window.Music = Music; window.Voice = Voice;

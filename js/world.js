@@ -253,7 +253,7 @@ class TitleScene extends Phaser.Scene {
     Helper.pillBtn(this, DESIGN.w / 2 + 180, 720, '🎨 חופשי', 0x34c79a, () => this.scene.start('World', { free: true })).setDepth(20)._label.setFontSize(30);
 
     // כפתור צליל
-    const sBtn = Helper.circleBtn(this, 70, 70, G.soundOn ? '🔊' : '🔇', 42, () => {
+    const sBtn = Helper.circleBtn(this, 180, 70, G.soundOn ? '🔊' : '🔇', 42, () => {
       const on = Sound.toggle(); G.soundOn = on;
       if (on) { Music.start(); Voice.say('יאללה, בואו נשחק!'); } else { Music.stop(); Voice.silence(); }
       sBtn.list[1].setText(on ? '🔊' : '🔇');
@@ -323,7 +323,7 @@ class WorldScene extends Phaser.Scene {
     hud.add(this.comboText);
 
     // כפתורים שמאל למעלה
-    hud.add(Helper.circleBtn(this, 70, 70, '🏠', 44, () => this.goHome()));
+    // כפתור הבית המשותף (kids-ui, לחיצה ארוכה) כבר בפינה — לכן אין 🏠 נוסף כאן
     hud.add(Helper.circleBtn(this, 180, 70, '🛒', 44, () => { this.scene.launch('Store'); this.scene.bringToTop('Store'); this.scene.pause(); }));
 
     // המשך אחרי חזרה מהחנות

@@ -43,7 +43,8 @@
      cfg: { ins, help, speak, success, read, replay, target, tcls, opts:[{h, ok, cls, color}], acls } */
   function Q(api, cfg) {
     var el = api.el;
-    api.setRound({ speak: cfg.speak || cfg.ins, success: cfg.success, read: cfg.read, replay: cfg.replay });
+    /* q — חלקים שמוקראים יחד עם השאלה (למשל המילה באנגלית שצריך לזהות) — לא התשובה */
+    api.setRound({ speak: cfg.speak || cfg.ins, success: cfg.success, read: cfg.read, replay: cfg.replay, q: cfg.q });
     el.instruction.textContent = cfg.ins;
     el.helper.textContent = cfg.help || '';
     el.target.className = 'target' + (cfg.tcls ? ' ' + cfg.tcls : '');
@@ -273,7 +274,7 @@
   }
   function colorEnglish(api) {
     var c = pick(COLORS.slice(0, 7));
-    Q(api, { ins: 'איך אומרים "' + c[0] + '" באנגלית?', help: 'אפשר ללחוץ "הקשיבו".', success: 'Great! ' + c[2], read: [{ text: c[2], lang: 'en-US' }],
+    Q(api, { ins: 'איך אומרים "' + c[0] + '" באנגלית?', help: 'אפשר ללחוץ "הקשיבו".', success: 'נכון! ' + c[0] + ' זה ' + c[2], read: [{ text: c[2], lang: 'en-US' }],
       target: '<div class="color-orb" style="background:' + c[1] + '"></div>',
       opts: mix([c].concat(others(COLORS.slice(0, 7), c, 3))).map(function (o) { return { h: L(o[2], ' dir="ltr"'), ok: o === c }; }) });
   }
@@ -387,7 +388,7 @@
   function enStarts(from, to) {
     return function (api) {
       var pool = EN.filter(function (x) { return x[0] >= from && x[0] <= to; }), w = pick(pool);
-      Q(api, { ins: 'מה מתחיל באות ' + w[0] + '?', speak: 'What starts with ' + w[0] + '?', help: 'לחצו "הקשיבו" לשמוע את האות והמילה.', success: w[0] + ' — ' + w[1] + '! ' + w[2],
+      Q(api, { ins: 'מה מתחיל באות ' + w[0] + '?', speak: 'What starts with ' + w[0] + '?', help: 'לחצו "הקשיבו" לשמוע את האות והמילה.', success: 'נכון! ' + w[0] + ' כמו ' + w[1] + ' ' + w[2],
         read: [{ text: w[0], lang: 'en-US' }, { text: w[1], lang: 'en-US' }],
         target: '<div class="letter-target"><span class="letter-symbol" dir="ltr">' + w[0] + '</span><span class="letter-copy"><strong dir="ltr">' + w[0].toLowerCase() + '</strong></span></div>',
         opts: mix([w].concat(others(EN, w, 3))).map(function (o) { return { h: BIG(o[2]), ok: o === w }; }) });
@@ -396,29 +397,29 @@
   function enCase(api) {
     var w = pick(EN), big = Math.random() < .5, shown = big ? w[0] : w[0].toLowerCase();
     var pool = EN.map(function (x) { return big ? x[0].toLowerCase() : x[0]; }), ans = big ? w[0].toLowerCase() : w[0];
-    Q(api, { ins: big ? 'מצאו את האות הקטנה' : 'מצאו את האות הגדולה', help: 'לכל אות באנגלית יש צורה גדולה וצורה קטנה.', success: w[0] + ' ' + w[0].toLowerCase() + ' — נכון!',
+    Q(api, { ins: big ? 'מצאו את האות הקטנה' : 'מצאו את האות הגדולה', help: 'לכל אות באנגלית יש צורה גדולה וצורה קטנה.', success: 'נכון! ' + w[0] + ' ' + w[0].toLowerCase(),
       target: '<div class="letter-target"><span class="letter-symbol" dir="ltr">' + shown + '</span></div>',
       opts: mix([ans].concat(others(pool, ans, 3))).map(function (l) { return { h: L(l, ' dir="ltr" style="font-size:clamp(34px,4.5vw,52px)"'), ok: l === ans }; }) });
   }
   function enWord(api) {
     var w = pick(EN);
-    Q(api, { ins: 'איך אומרים את זה באנגלית?', help: 'קראו את המילים ובחרו.', success: 'Great job! ' + w[1], read: [{ text: w[1], lang: 'en-US' }],
+    Q(api, { ins: 'איך אומרים את זה באנגלית?', help: 'קראו את המילים ובחרו.', success: 'נכון! ' + w[1], read: [{ text: w[1], lang: 'en-US' }],
       target: '<div class="nature-scene">' + w[2] + '</div>', opts: mix([w].concat(others(EN, w, 3))).map(function (o) { return { h: L(o[1], ' dir="ltr"'), ok: o === w }; }) });
   }
   function enFirst(api) {
     var w = pick(EN);
-    Q(api, { ins: 'באיזו אות מתחילה המילה באנגלית?', help: 'אמרו את המילה באנגלית והקשיבו לצליל הראשון.', success: w[1] + ' starts with ' + w[0] + '!', read: [{ text: w[1], lang: 'en-US' }],
+    Q(api, { ins: 'באיזו אות מתחילה המילה באנגלית?', help: 'אמרו את המילה באנגלית והקשיבו לצליל הראשון.', success: 'נכון! ' + w[1] + ' מתחילה ב-' + w[0], read: [{ text: w[1], lang: 'en-US' }],
       target: '<div class="nature-scene">' + w[2] + '</div>',
       opts: mix([w[0]].concat(others(EN.map(function (x) { return x[0]; }), w[0], 3))).map(function (l) { return { h: L(l, ' dir="ltr" style="font-size:clamp(34px,4.5vw,52px)"'), ok: l === w[0] }; }) });
   }
   function enNumbers(api) {
     var n = rnd(1, 10);
-    Q(api, { ins: 'איך אומרים את המספר באנגלית?', help: 'לחצו "הקשיבו" לשמוע.', success: n + ' = ' + EN_NUMBERS[n] + '!', read: [{ text: EN_NUMBERS[n], lang: 'en-US' }],
+    Q(api, { ins: 'איך אומרים את המספר באנגלית?', help: 'לחצו "הקשיבו" לשמוע.', success: 'נכון! ' + n + ' זה ' + EN_NUMBERS[n], read: [{ text: EN_NUMBERS[n], lang: 'en-US' }],
       target: '<div class="equation">' + n + '</div>', opts: mix([n].concat(others([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], n, 3))).map(function (v) { return { h: L(EN_NUMBERS[v], ' dir="ltr"'), ok: v === n }; }) });
   }
   function enSentence(api) {
     var s = pick(EN_SENT);
-    Q(api, { ins: 'קראו את המשפט באנגלית ובחרו תמונה:', help: 'אפשר ללחוץ "הקשיבו".', success: 'Excellent! 🌟', read: [{ text: s[0], lang: 'en-US' }],
+    Q(api, { ins: 'קראו את המשפט באנגלית ובחרו תמונה:', help: 'אפשר ללחוץ "הקשיבו".', success: 'מצוין! 🌟', read: [{ text: s[0], lang: 'en-US' }], q: [{ text: s[0], lang: 'en-US' }],
       target: '<div class="read-word" dir="ltr">' + s[0] + '</div>', opts: mix([s].concat(others(EN_SENT, s, 3))).map(function (o) { return { h: BIG(o[1]), ok: o === s }; }) });
   }
 
@@ -427,7 +428,7 @@
   function listenPick(list) {
     return function (api) {
       var w = pick(list), play = function () { api.read([{ text: w[2], lang: 'en-US' }]); };
-      Q(api, { ins: 'הקשיבו למילה באנגלית ובחרו תמונה', help: 'לחצו על הרמקול כדי לשמוע שוב.', success: w[2] + ' = ' + w[1] + ' ' + w[0], replay: play,
+      Q(api, { ins: 'הקשיבו למילה באנגלית ובחרו תמונה', help: 'לחצו על הרמקול כדי לשמוע שוב.', success: 'נכון! ' + w[1] + ' באנגלית זה ' + w[2] + ' ' + w[0], replay: play,
         target: '<button type="button" class="music-stage" aria-label="השמעה">🔊</button>', opts: mix([w].concat(others(list, w, 3))).map(function (o) { return { h: BIG(o[0]), ok: o === w }; }) });
       api.el.target.firstChild.addEventListener('click', play);
       setTimeout(play, 250);
@@ -437,7 +438,7 @@
   function readPick(list) {
     return function (api) {
       var w = pick(list);
-      Q(api, { ins: 'מה המילה באנגלית אומרת?', help: 'קראו (או הקשיבו) ובחרו את התמונה.', success: 'Yes! ' + w[2] + ' = ' + w[1], read: [{ text: w[2], lang: 'en-US' }],
+      Q(api, { ins: 'מה המילה באנגלית אומרת?', help: 'קראו (או הקשיבו) ובחרו את התמונה.', success: 'נכון! ' + w[2] + ' זה ' + w[1], read: [{ text: w[2], lang: 'en-US' }], q: [{ text: w[2], lang: 'en-US' }],
         target: '<div class="read-word" dir="ltr">' + w[2] + '</div>', opts: mix([w].concat(others(list, w, 3))).map(function (o) { return { h: BIG(o[0]), ok: o === w }; }) });
     };
   }
@@ -445,7 +446,7 @@
   function pickWord(list) {
     return function (api) {
       var w = pick(list);
-      Q(api, { ins: 'איך אומרים ' + w[1] + ' באנגלית?', help: 'קראו את האפשרויות ובחרו.', success: w[1] + ' = ' + w[2] + '!', read: [{ text: w[2], lang: 'en-US' }],
+      Q(api, { ins: 'איך אומרים ' + w[1] + ' באנגלית?', help: 'קראו את האפשרויות ובחרו.', success: 'נכון! ' + w[1] + ' באנגלית זה ' + w[2], read: [{ text: w[1] + ' באנגלית זה', lang: 'he-IL' }, { text: w[2], lang: 'en-US' }],
         target: '<div class="bilingual-card"><span class="emoji">' + w[0] + '</span><span class="bilingual-copy"><strong class="hebrew">' + w[1] + '</strong></span></div>',
         opts: mix([w].concat(others(list, w, 3))).map(function (o) { return { h: L(o[2], ' dir="ltr"'), ok: o === w }; }) });
     };
