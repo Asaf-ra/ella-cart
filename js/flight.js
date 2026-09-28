@@ -275,6 +275,8 @@
     var newZone = false;
     if (save.open < ZONES.length && selZone === save.open - 1) { save.open++; newZone = true; }
     save.best = Math.max(save.best, game.stars); save.cats += game.cats; persist();
+    /* משימת היום "הצילי חתולים" + מעקב התקדמות */
+    try { if (window.Progress && game.cats) Progress.track('flight:cats', game.cats); } catch (e) {}
     $('rStars').textContent = game.stars; $('rCats').textContent = game.cats; $('rCoins').innerHTML = '<bdi dir="ltr">' + game.coins + (game.done ? ' +3' : '') + '</bdi>';
     $('endKicker').textContent = game.stars >= save.best && game.stars > 0 ? 'שיא חדש! 🏆' : 'הטיסה הסתיימה!';
     $('endText').textContent = (game.done ? 'המשימה הושלמה — קיבלת 3 מטבעות בונוס! ' : '') + (newZone ? 'נפתח אזור חדש: ' + ZONES[save.open - 1].name + ' ' + ZONES[save.open - 1].ico : 'סה״כ חתולים שהצלת: ' + save.cats + ' 🐱');

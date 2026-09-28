@@ -7,7 +7,9 @@
    פרק 3 — award(): פרס על תשובה נכונה / התקדמות — פיצוץ "POW!",
            כוכב שעף אל המד, ובעלייה ברמה — חלון "תחפושת חדשה!".
    פרק 4 — HUD: תג רמה + מד אנרגיה + מטבעות (mountHUD).
-   פרק 5 — ארון התחפושות: openWardrobe() — בחירת פריטים והלבשה.
+   פרק 5 — ארון התחפושות: openWardrobe() — בחירת דמות מהצוות, פריטים והלבשה.
+   פרק 6 — צוות הגיבורים: switchHero() — לכל דמות תחפושת משלה (state.team);
+           דמות חדשה מצטרפת בעליית רמה (HeroAvatar.HEROES[].level).
    תלויות: shared/hero-avatar.js (חובה), shared/wallet.js ו-js/audio.js (אופציונלי).
    ===================================================================== */
 (function () {
@@ -26,7 +28,7 @@
     return ids;
   }
   function fresh() {
-    return { level: 1, energy: 0, total: 0, unlocked: freeIds(), outfit: HeroAvatar.defaultOutfit(), gift: '' };
+    return { level: 1, energy: 0, total: 0, unlocked: freeIds(), outfit: HeroAvatar.defaultOutfit(), gift: '', team: {} };
   }
   /* טעינה עם הגנה: קובץ פגום/חסר → מצב התחלתי; שדות חסרים מקבלים ברירת מחדל */
   function load() {
@@ -40,7 +42,8 @@
         total: Math.max(0, s.total | 0),
         unlocked: Array.isArray(s.unlocked) ? s.unlocked.concat(f.unlocked.filter(function (id) { return s.unlocked.indexOf(id) < 0; })) : f.unlocked,
         outfit: Object.assign(f.outfit, s.outfit || {}),
-        gift: typeof s.gift === 'string' ? s.gift : ''
+        gift: typeof s.gift === 'string' ? s.gift : '',
+        team: s.team && typeof s.team === 'object' ? s.team : {}
       };
     } catch (e) { return fresh(); }
   }
@@ -151,6 +154,8 @@
       state.energy -= need(state.level);
       state.level++;
       result.levelUp = true;
+      /* דמות חדשה מצטרפת לצוות ברמה הזו? */
+      HeroAvatar.HEROES.forEach(function (h) { if (h.level === state.level && h.level > 1) pendingUnlocks.push({ hero: h, level: state.level }); });
       var u = UNLOCKS[state.level];
       if (u && state.unlocked.indexOf(u[1]) < 0) {
         state.unlocked.push(u[1]);
@@ -173,6 +178,15 @@
   function showNextUnlock() {
     var u = pendingUnlocks.shift();
     if (!u) return;
+    if (u.hero) {   /* חלון "חבר חדש בצוות" */
+      var prevH = Object.assign({}, state.team[u.hero.id] || HeroAvatar.defaultOutfit(), { hero: u.hero.id });
+      openModal('<span class="h-modal-kicker">רמה ' + u.level + '!</span><div class="h-modal-hero">' + HeroAvatar.svg(prevH) + '</div>' +
+        '<h2>' + u.hero.name + (u.hero.g === 'f' ? ' הצטרפה' : ' הצטרף') + ' לצוות! ' + u.hero.ico + '</h2><p>דמות חדשה בצוות הגיבורים — אפשר לשחק איתה ולהלביש אותה!</p>',
+        [{ text: 'לשחק עם ' + u.hero.name + '! 🦸', cls: 'h-btn gold', fn: function () { switchHero(u.hero.id); } }, { text: 'אחר כך', cls: 'h-btn violet', fn: function () {} }],
+        function () { setTimeout(showNextUnlock, 250); });
+      snd('ding'); confetti(); say('חבר חדש בצוות הגיבורים! ' + u.hero.name);
+      return;
+    }
     var preview = Object.assign({}, state.outfit); preview[u.slot] = u.item.id;
     var isPower = u.slot === 'aura';
     openModal(
@@ -226,6 +240,21 @@
     /* צבע סטודיו (id מסוג cape_custom) תמיד מותר; פריט רגיל — רק אם נפתח */
     if (id !== slot + '_custom' && state.unlocked.indexOf(id) < 0) return false;
     state.outfit[slot] = id; save();
+    window.dispatchEvent(new CustomEvent('hero:outfit', { detail: state.outfit }));
+    return true;
+  }
+
+  /* ---------- פרק 6 — צוות הגיבורים ---------- */
+  /* heroUnlocked — האם הדמות כבר בצוות (לפי הרמה) */
+  function heroUnlocked(id) { return HeroAvatar.hero(id).level <= state.level; }
+  /* switchHero — מחליף דמות: שומר את התחפושת של הקודמת ומלביש את זו של החדשה */
+  function switchHero(id) {
+    if (!heroUnlocked(id)) return false;
+    var cur = state.outfit.hero || 'ella';
+    if (cur === id) return true;
+    state.team[cur] = state.outfit;
+    state.outfit = Object.assign(HeroAvatar.defaultOutfit(), state.team[id] || {}, { hero: id });
+    save();
     window.dispatchEvent(new CustomEvent('hero:outfit', { detail: state.outfit }));
     return true;
   }
@@ -287,6 +316,13 @@
       var slots = Object.keys(HeroAvatar.CATALOG);
       var html = '<button type="button" class="h-ward-close" aria-label="סגירה">✖</button>' +
         '<span class="h-modal-kicker">ארון התחפושות</span>' +
+        /* שורת צוות הגיבורים: בחירת דמות (נעולה — מציגה באיזו רמה מצטרפת) */
+        '<div class="h-team">' + HeroAvatar.HEROES.map(function (h) {
+          var open = heroUnlocked(h.id), on = (state.outfit.hero || 'ella') === h.id;
+          var o = on ? state.outfit : Object.assign(HeroAvatar.defaultOutfit(), state.team[h.id] || {}, { hero: h.id });
+          return '<button type="button" class="h-team-hero' + (on ? ' on' : '') + (open ? '' : ' locked') + '" data-hero="' + h.id + '">' +
+            '<span class="th">' + HeroAvatar.svg(o, { className: 'h-team-svg' }) + (open ? '' : '<i>🔒</i>') + '</span><b>' + h.name + '</b>' + (open ? '' : '<small>רמה ' + h.level + '</small>') + '</button>';
+        }).join('') + '</div>' +
         '<div class="h-ward-body"><div class="h-ward-hero">' + HeroAvatar.svg(state.outfit) + '</div><div class="h-ward-side">' +
         '<div class="h-ward-tabs">' + slots.concat(['studio']).map(function (s) {
           return '<button type="button" data-slot="' + s + '" class="h-ward-tab' + (s === activeSlot ? ' on' : '') + (s === 'studio' ? ' studio' : '') + '">' + (s === 'studio' ? '🎨 סטודיו' : HeroAvatar.SLOT_NAMES[s]) + '</button>';
@@ -311,6 +347,14 @@
       card.innerHTML = html;
 
       card.querySelector('.h-ward-close').onclick = function () { snd('tap'); m.remove(); };
+      /* בחירת דמות מהצוות */
+      Array.prototype.forEach.call(card.querySelectorAll('.h-team-hero'), function (b) {
+        b.onclick = function () {
+          var h = HeroAvatar.hero(b.dataset.hero);
+          if (b.classList.contains('locked')) { snd('sad'); say(h.name + (h.g === 'f' ? ' תצטרף' : ' יצטרף') + ' לצוות ברמה ' + h.level + '. עוד קצת למידה!'); return; }
+          switchHero(h.id); snd('ding'); say(h.say); render();
+        };
+      });
       /* צבע סטודיו */
       Array.prototype.forEach.call(card.querySelectorAll('.h-swatch'), function (b) {
         b.onclick = function () { state.outfit.colors = state.outfit.colors || {}; state.outfit.colors[b.dataset.slot] = b.dataset.color; wear(b.dataset.slot, b.dataset.slot + '_custom'); snd('sparkle'); render(); };
@@ -361,6 +405,13 @@
     '.h-studio-row b{min-width:62px;font:900 18px/1 var(--h-font);color:var(--h-ink)}' +
     '.h-swatch{width:42px;height:42px;border:3px solid var(--h-ink);border-radius:50%;cursor:pointer;box-shadow:0 3px 0 var(--h-ink);transition:transform .12s var(--h-spring)}' +
     '.h-swatch.on{transform:scale(1.18);box-shadow:0 3px 0 var(--h-ink),0 0 0 4px var(--h-gold)}' +
+    '.h-team{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:10px 4px 4px;margin-top:6px}.h-team::-webkit-scrollbar{display:none}' +
+    '.h-team-hero{flex:0 0 auto;display:grid;justify-items:center;gap:2px;width:92px;padding:6px 4px;border:3px solid var(--h-ink);border-radius:18px;background:#fff;box-shadow:0 3px 0 var(--h-ink);cursor:pointer;font-family:var(--h-font);transition:transform .15s var(--h-spring)}' +
+    '.h-team-hero .th{position:relative;width:66px;height:74px;border-radius:12px;background:radial-gradient(circle at 50% 40%,#4a1c8f,#1d0b4a);overflow:hidden}' +
+    '.h-team-hero .th svg{width:100%;height:100%}.h-team-hero .th i{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-size:26px;background:rgba(27,16,54,.55)}' +
+    '.h-team-hero b{font-size:15px;color:var(--h-ink)}.h-team-hero small{font-size:12px;font-weight:700;color:var(--h-text-soft)}' +
+    '.h-team-hero.on{background:linear-gradient(180deg,#fff3b0,#ffc93c);box-shadow:0 3px 0 var(--h-ink),0 0 0 4px rgba(255,46,147,.5);transform:translateY(-2px)}' +
+    '.h-team-hero.locked .th svg{filter:grayscale(.7) brightness(.8)}' +
     '@media (max-width:760px){.h-ward-body{grid-template-columns:1fr}.h-ward-hero svg{max-height:34vh}}';
   document.head.appendChild(st);
 
@@ -376,6 +427,9 @@
     openModal: openModal,
     confetti: confetti,
     wear: wear,
+    switchHero: switchHero,
+    heroUnlocked: heroUnlocked,
+    get hero() { return HeroAvatar.hero(state.outfit.hero); },
     get state() { return state; },
     get outfit() { return state.outfit; },
     need: need,

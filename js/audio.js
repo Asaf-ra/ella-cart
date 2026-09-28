@@ -160,9 +160,12 @@ const Voice = (function () {
   /* ציון איכות לקול: גבוה יותר = טבעי יותר */
   function quality(v, favorites) {
     let q = 0;
-    if (/premium|neural|natural/i.test(v.name)) q += 60;
-    if (/enhanced|siri|משופר/i.test(v.name)) q += 45;
+    /* ב-iOS האיכות מופיעה גם במזהה הקול: com.apple.voice.enhanced / premium / compact */
+    const id = v.name + ' ' + (v.voiceURI || '');
+    if (/premium|neural|natural/i.test(id)) q += 60;
+    if (/enhanced|siri|משופר/i.test(id)) q += 45;
     if (/google/i.test(v.name)) q += 30;
+    if (/compact/i.test(v.voiceURI || '')) q -= 20;
     if (/compact|eloquence|novelty|bad news|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|albert|fred|junior|ralph|bahh/i.test(v.name)) q -= 80;
     favorites.forEach((f, i) => { if (new RegExp(f, 'i').test(v.name)) q += 20 - i * 3; });
     if (v.localService) q += 4;                       // עובד גם בלי אינטרנט
@@ -180,6 +183,8 @@ const Voice = (function () {
     } catch (e) {}
   }
   if (ok) { pick(); try { window.speechSynthesis.onvoiceschanged = pick; } catch (e) {} }
+  /* heStatus — מצב הקול העברי: 'good' (משופר/פרימיום), 'basic' (בסיסי), 'none' (אין קול עברי) — להסבר להורה */
+  function heStatus() { pick(); if (!he) return 'none'; return /premium|enhanced|neural|natural|siri|משופר/i.test(he.name + ' ' + (he.voiceURI || '')) ? 'good' : 'basic'; }
 
   /* ---------- פרק 2 — ניקוי טקסט ---------- */
   let EMOJI = null;
@@ -195,18 +200,65 @@ const Voice = (function () {
            .replace(/(\d)\s*-\s*(?=\d)/g, '$1 פחות ')
            .replace(/\s*=\s*/g, ' שווה ')
            .replace(/₪/g, ' שקלים ')
-           .replace(/_/g, ' ');
+           .replace(/_/g, ' ')
+           /* "אלה" בלי ניקוד נקרא "אֵלֶּה" (these) — מנקדים כדי שהקול יגיד את השם: אֶלָּה */
+           .replace(/(^|[^\u0590-\u05FF])([ולב]?)אלה(?![\u0590-\u05FF])/g, '$1$2\u05D0\u05B6\u05DC\u05BC\u05B8\u05D4');
     }
     return t.replace(/\s{2,}/g, ' ').replace(/\s+([!?.,])/g, '$1').trim();
   }
 
+  /* ---------- פרק 2.5 — הקלטות טבעיות באנגלית ----------
+     לכל מילה/משפט באנגלית שיש לו הקלטה (js/voice-en.js, נוצר ע"י tools/gen_voice.py)
+     מנגנים את ההקלטה (קול נוירוני טבעי) במקום מנוע הדיבור של המכשיר. אין הקלטה → מנוע הדיבור. */
+  function normEn(t) { return String(t).toLowerCase().replace(/\u2019/g, "'").replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+  const clipCache = {};
+  let currentSrc = null;
+  function clipFor(text) { const m = window.VOICE_EN; return m ? m[normEn(text)] : null; }
+  /* playClip — מפענח (פעם אחת, עם מטמון) ומנגן דרך Web Audio; onDone נקרא בסוף או בכישלון (fallback) */
+  function playClip(file, rate, onDone, onFail, onStart) {
+    const ctx = (typeof Sound !== 'undefined' && Sound.getCtx) ? Sound.getCtx() : null;
+    if (!ctx || !window.fetch) return onFail();
+    const go = (buf) => {
+      try {
+        const src = ctx.createBufferSource(), g = ctx.createGain();
+        src.buffer = buf; src.playbackRate.value = Math.max(.85, Math.min(1.15, rate || 1)); g.gain.value = 1;
+        src.connect(g); g.connect(ctx.destination);
+        src.onended = () => { if (currentSrc === src) currentSrc = null; onDone(); };
+        currentSrc = src; src.start();
+        if (onStart) onStart(buf.duration / src.playbackRate.value);
+      } catch (e) { onFail(); }
+    };
+    if (clipCache[file]) return go(clipCache[file]);
+    fetch('assets/voice/en/' + file).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(ab => new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej)))
+      .then(buf => { clipCache[file] = buf; go(buf); })
+      .catch(onFail);
+  }
+  function stopClip() { if (currentSrc) { try { currentSrc.onended = null; currentSrc.stop(); } catch (e) {} currentSrc = null; } }
+
   /* ---------- פרק 3 — תור הקראה ---------- */
-  let queue = [], speaking = false, watchdog = null, lastText = '', lastAt = 0;
+  let queue = [], speaking = false, watchdog = null, lastText = '', lastAt = 0, current = null;
+  /* next — מסיים את הפריט הנוכחי (קורא ל-onEnd שלו, אם יש — לסיפורים) ועובר לבא בתור */
   function next() {
     clearTimeout(watchdog);
-    const item = queue.shift();
+    if (current && current.onEnd) { const f = current.onEnd; current.onEnd = null; setTimeout(f, 0); }
+    const item = current = queue.shift();
     if (!item) { speaking = false; return; }
     speaking = true;
+    /* אנגלית עם הקלטה → מנגנים את ההקלטה הטבעית */
+    if (/^en/i.test(item.lang || '')) {
+      const file = clipFor(item.text);
+      if (file) {
+        watchdog = setTimeout(next, 8000);
+        playClip(file, prefs().rate || 1, () => { if (current === item) next(); }, () => { if (current !== item) return; clearTimeout(watchdog); speakSynth(item); }, item.onStart);
+        return;
+      }
+    }
+    speakSynth(item);
+  }
+  /* speakSynth — הקראה במנוע הדיבור של המכשיר */
+  function speakSynth(item) {
+    if (!ok) { next(); return; }                     // אין מנוע דיבור במכשיר — ממשיכים הלאה
     const u = new SpeechSynthesisUtterance(item.text);
     const isEn = /^en/i.test(item.lang || '');
     u.lang = isEn ? 'en-US' : 'he-IL';
@@ -216,29 +268,39 @@ const Voice = (function () {
     u.rate = Math.max(.7, Math.min(1.2, (item.rate || (isEn ? .9 : .97)) * speed));
     u.pitch = Math.max(.95, Math.min(1.05, item.pitch || 1.02));
     u.volume = 1;
-    u.onend = u.onerror = function () { next(); };
+    /* רק אם זה עדיין הפריט הנוכחי — הקראה שבוטלה (interrupt) לא "מדלגת" על המשפט החדש */
+    u.onend = u.onerror = function () { if (current === item) next(); };
+    /* לסיפורים: התחלה + גבולות מילים (הדגשת המילה שמוקראת), אם המכשיר תומך */
+    if (item.onStart) u.onstart = function () { item.onStart(null); };
+    if (item.onBoundary) u.onboundary = function (e) { if (e.name === 'word' || e.name == null) item.onBoundary(e.charIndex); };
     /* ---------- פרק 4 — שומר-זמן ---------- */
     watchdog = setTimeout(next, 1800 + item.text.length * 110);
     try { window.speechSynthesis.speak(u); } catch (e) { next(); }
   }
   function read(parts, opts) {
-    if (!ok || (typeof Sound !== 'undefined' && !Sound.isOn())) return;
+    if (typeof Sound !== 'undefined' && !Sound.isOn()) return;
     opts = opts || {};
-    let items = (parts || []).map(p => ({ text: clean(p.text, p.lang), lang: p.lang || 'he-IL', rate: opts.rate, pitch: opts.pitch })).filter(p => p.text);
+    /* מסננים קטעים שנשארו רק סימני פיסוק */
+    let items = (parts || []).map(p => ({ text: clean(p.text, p.lang), lang: p.lang || 'he-IL', rate: opts.rate, pitch: opts.pitch })).filter(p => /[A-Za-z\u0590-\u05FF0-9]/.test(p.text));
     /* מאחדים קטעים רצופים באותה שפה למשפט אחד — פחות "קטיעות" בין מילים = דיבור זורם */
     items = items.reduce((acc, it) => {
       const last = acc[acc.length - 1];
-      if (last && /^en/i.test(last.lang) === /^en/i.test(it.lang)) last.text += (/[.!?,:]$/.test(last.text) ? ' ' : ', ') + it.text;
+      /* מאחדים רק עברית; קטעי אנגלית נשארים נפרדים — כדי שכל אחד ימצא את ההקלטה שלו */
+      if (last && !/^en/i.test(last.lang) && !/^en/i.test(it.lang)) last.text += (/[.!?,:]$/.test(last.text) ? ' ' : ', ') + it.text;
       else acc.push(Object.assign({}, it));
       return acc;
     }, []);
-    if (!items.length) return;
+    if (!items.length) { if (opts.onEnd) setTimeout(opts.onEnd, 0); return; }
+    /* קריאות חוזרות (onStart / onBoundary לפריט הראשון, onEnd לאחרון) — משמשות את ספריית הסיפורים */
+    if (opts.onStart) items[0].onStart = opts.onStart;
+    if (opts.onBoundary) items[0].onBoundary = opts.onBoundary;
+    if (opts.onEnd) items[items.length - 1].onEnd = opts.onEnd;
     const key = items.map(p => p.text).join('|'), now = Date.now();
-    if (key === lastText && now - lastAt < 1200) return;      // אותו משפט פעמיים ברצף — פעם אחת מספיקה
+    if (key === lastText && now - lastAt < 1200 && !opts.onEnd) return;      // אותו משפט פעמיים ברצף — פעם אחת מספיקה
     lastText = key; lastAt = now;
     if (opts.interrupt) {                                      // שאלה חדשה: מפסיקים הכול ומתחילים מחדש
-      queue = []; clearTimeout(watchdog);
-      try { window.speechSynthesis.cancel(); } catch (e) {}
+      queue = []; clearTimeout(watchdog); stopClip(); current = null;
+      try { if (ok) window.speechSynthesis.cancel(); } catch (e) {}
       speaking = false;
     } else if (speaking && queue.length) {                     // משפט רגיל מחליף משפטים שעוד ממתינים
       queue = [];
@@ -256,6 +318,7 @@ const Voice = (function () {
   return {
     clean: clean,
     splitLang: splitLang,
+    heStatus: heStatus,
     /* להגדרות הקול (shared/voice-settings.js) */
     voices() { pick(); return voices.slice(); },
     current() { return { he: he && he.name, en: en && en.name, rate: prefs().rate || 1 }; },
@@ -264,7 +327,7 @@ const Voice = (function () {
     /* say — משפט בעברית; מילים באנגלית בתוכו מוקראות אוטומטית בקול אנגלי (פיצול לפי שפה) */
     say(text, opts) { read(splitLang(text), opts); },
     praise() { const p = ['כל הכבוד!', 'מעולה!', 'יופי אלה!', 'וואו!', 'איזה יופי!', 'כל הכבוד אלה!']; this.say(p[(Math.random() * p.length) | 0]); },
-    silence() { queue = []; clearTimeout(watchdog); speaking = false; if (ok) { try { window.speechSynthesis.cancel(); } catch (e) {} } }
+    silence() { queue = []; clearTimeout(watchdog); stopClip(); current = null; speaking = false; if (ok) { try { window.speechSynthesis.cancel(); } catch (e) {} } }
   };
 })();
 

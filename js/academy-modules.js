@@ -1061,6 +1061,17 @@
       nature: { name: 'טבע', subtitle: 'חיות, עונות וחלל', icon: '🌿', color: '#3ff2b0', title: 'חוקרות הטבע', mascot: '🦉' }
     },
     CHAPTERS: CHAPTERS,
-    CH_COUNT: 5
+    CH_COUNT: 5,
+    /* englishPhrases — כל הטקסטים באנגלית שהאפליקציה מקריאה (משמש ליצירת הקלטות קול טבעיות: tools/gen_voice.py) */
+    englishPhrases: function () {
+      var out = [];
+      EN.forEach(function (x) { out.push(x[1], 'What starts with ' + x[0] + '?'); });
+      out = out.concat(EN_NUMBERS.slice(1), EN_SENT.map(function (x) { return x[0]; }), COLORS.map(function (x) { return x[2]; }));
+      all(ANIMALS).concat(all(FOODS)).forEach(function (x) { out.push(x[2]); });
+      Object.keys(ENV).forEach(function (k) { ENV[k].forEach(function (x) { out.push(x[2]); }); });
+      TALK.forEach(function (t) { out.push(t[0], t[1]); out = out.concat(t[2]); });
+      SP3.concat(SP4, SP5).forEach(function (x) { out.push(x[0].toLowerCase()); });
+      return out;
+    }
   };
 })();

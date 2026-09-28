@@ -5,6 +5,7 @@
    פרק 2 — רשימות קולות: עברית ואנגלית, עם סימון "מומלץ" לקולות איכותיים
    פרק 3 — בדיקת קול (משפט לדוגמה) + מהירות דיבור
    פרק 4 — הסבר להורה: איך מורידים קול משופר באייפד (הכי משפיע על הטבעיות)
+   פרק 5 — מצב הקול העברי במכשיר (Voice.heStatus): משופר ✅ / בסיסי ⚠️ / אין קול
    תלויות: js/audio.js (Voice.voices/current/setPref/read), shared/theme.css
    ===================================================================== */
 (function () {
@@ -14,7 +15,7 @@
   var SAMPLE_EN = 'Hello Ella! You are a super hero. Let us learn some English words together!';
 
   /* האם שם הקול מרמז על איכות גבוהה */
-  function isGood(name) { return /premium|enhanced|siri|neural|natural|google|משופר/i.test(name); }
+  function isGood(v) { return /premium|enhanced|siri|neural|natural|google|משופר/i.test(v.name + ' ' + (v.voiceURI || '')); }
 
   /* ---------- פרק 1 — פתיחה ---------- */
   function open() {
@@ -34,11 +35,18 @@
         if (!arr.length) return '<p class="vs-empty">לא נמצא קול ' + (key === 'he' ? 'עברי' : 'אנגלי') + ' במכשיר — ראו הסבר למטה.</p>';
         return '<div class="vs-list">' + arr.slice(0, 14).map(function (v) {
           return '<button type="button" class="vs-voice' + (cur[key] === v.name ? ' on' : '') + '" data-k="' + key + '" data-n="' + v.name.replace(/"/g, '&quot;') + '">' +
-            (isGood(v.name) ? '⭐ ' : '') + v.name + '</button>';
+            (isGood(v) ? '⭐ ' : '') + v.name + (/compact/i.test(v.voiceURI || '') ? ' (בסיסי)' : '') + '</button>';
         }).join('') + '</div>';
       }
       card.innerHTML = '<button type="button" class="vs-close" aria-label="סגירה">✖</button>' +
         '<span class="h-modal-kicker">🔊 הגדרות קול</span>' +
+        /* ---------- פרק 5 — מצב הקול העברי ---------- */
+        (function () {
+          var stt = Voice.heStatus ? Voice.heStatus() : 'basic';
+          if (stt === 'good') return '<p class="vs-status ok">✅ מותקן קול עברי משופר — ההקראה בעברית טבעית.</p>';
+          if (stt === 'none') return '<p class="vs-status warn">⚠️ לא נמצא קול עברי במכשיר — ראו הסבר למטה איך מורידים את "כרמית (משופר)".</p>';
+          return '<p class="vs-status warn">⚠️ מותקן רק הקול העברי הבסיסי (הוא שנשמע "רובוטי"). מומלץ מאוד להוריד את <b>כרמית (משופר)</b> — הסבר למטה. האנגלית כבר מוקראת בהקלטות טבעיות מובנות 🎙️</p>';
+        })() +
         '<div class="vs-cols">' +
           '<section><h3>קול עברי</h3>' + list(heList, 'he') + '<button type="button" class="h-btn cyan vs-test" data-t="he">▶ בדיקה בעברית</button></section>' +
           '<section><h3>קול אנגלי</h3>' + list(enList, 'en') + '<button type="button" class="h-btn cyan vs-test" data-t="en">▶ Test English</button></section>' +
@@ -46,7 +54,7 @@
         /* ---------- פרק 3 — מהירות ---------- */
         '<label class="vs-rate">מהירות דיבור: <input type="range" min="0.8" max="1.15" step="0.05" value="' + cur.rate + '"> <b>' + Math.round(cur.rate * 100) + '%</b></label>' +
         /* ---------- פרק 4 — הסבר להורה ---------- */
-        '<details class="vs-tip"><summary>💡 איך מקבלים קול טבעי יותר באייפד?</summary>' +
+        '<details class="vs-tip"' + (Voice.heStatus && Voice.heStatus() !== 'good' ? ' open' : '') + '><summary>💡 איך מקבלים קול טבעי יותר באייפד?</summary>' +
           '<ol><li>הגדרות ← נגישות ← תוכן מוקרא ← קולות</li>' +
           '<li>עברית ← <b>כרמית (משופר)</b> ← להוריד</li>' +
           '<li>אנגלית ← <b>Ava (Premium)</b> או <b>Samantha (Enhanced)</b> ← להוריד</li>' +
@@ -79,6 +87,7 @@
     '.vs-voice{text-align:right;padding:10px 12px;border:3px solid var(--h-ink);border-radius:14px;background:#fff;font:700 16px/1.2 var(--h-font);color:var(--h-ink);cursor:pointer;direction:ltr}' +
     '.vs-voice.on{background:linear-gradient(180deg,#fff3b0,#ffc93c);box-shadow:0 0 0 3px var(--h-magenta)}' +
     '.vs-empty{color:var(--h-text-soft);font-weight:700}' +
+    '.vs-status{margin:12px 0 0;padding:10px 14px;border:3px solid var(--h-ink);border-radius:16px;font:800 16px/1.45 var(--h-font);color:var(--h-ink)}.vs-status.ok{background:#e0fff1}.vs-status.warn{background:#fff3b0}' +
     '.vs-rate{display:flex;gap:10px;align-items:center;margin:14px 0;font:800 18px/1 var(--h-font);color:var(--h-ink)}.vs-rate input{flex:1;accent-color:#ff2e93}' +
     '.vs-tip{border:3px dashed rgba(27,16,54,.3);border-radius:16px;padding:10px 14px;color:var(--h-ink);font-weight:700}.vs-tip summary{cursor:pointer;font-weight:900}.vs-tip ol{margin:8px 22px 6px 0;line-height:1.7}' +
     '@media (max-width:760px){.vs-cols{grid-template-columns:1fr}}';
