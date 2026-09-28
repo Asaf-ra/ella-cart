@@ -4,7 +4,8 @@
    פרק 1 — שמירה (ella-pet-v1): צבע, שם, נקודות גדילה (xp), אוכל, רעב, מתי האכילו
    פרק 2 — אוכל מלמידה: כל תשובה באקדמיה = 🍎 אחד; ציור שנשמר = 🍎; סיפור שנקרא = 🍎🍎
            (מאזינים לאירוע progress:track מ-shared/progress.js)
-   פרק 3 — שלבי גדילה: ביצה → תינוק → ילד → גדול → סופר-דרקון (לפי xp)
+   פרק 3 — 12 שלבי גדילה (לפי xp): ביצה → בוקע → תינוק → פעוט → קטנטן → ילד → נער → צעיר → גדול →
+           דרקון אש → סופר-דרקון → מלך הדרקונים. משימות הדרקון (dragon.html) נותנות הרבה xp בבת אחת (Pet.grow)
    פרק 4 — ציור הדרקון כ-SVG: גודל ותכונות לפי השלב (כנפיים, קרניים, קוצים, כתר וגלימה),
            הבעה לפי מצב רוח (שמח / רעב / אוכל / מלטפים)
    פרק 5 — חדר החיה (Pet.open): בחירת ביצה, האכלה, משחק (תעלול לפי שלב), ליטוף, בקיעה ומתן שם
@@ -18,7 +19,11 @@
   var KEY = 'ella-pet-v1';
   var COLORS = [['#ff7ec2', 'ורוד'], ['#3ff2b0', 'מנטה'], ['#5cc8ff', 'תכלת'], ['#a98bff', 'סגול'], ['#ffc93c', 'זהב']];
   var NAMES = ['ניצוץ', 'שוקו', 'זוהר', 'לולו', 'מוקי', 'טופי'];
-  var STAGES = [[0, 'ביצה'], [3, 'דרקונצ׳יק תינוק'], [12, 'דרקונצ׳יק ילד'], [30, 'דרקון גדול'], [60, 'סופר-דרקון']];
+  var STAGES = [[0, 'ביצה'], [4, 'דרקונצ׳יק בוקע'], [14, 'דרקונצ׳יק תינוק'], [26, 'דרקונצ׳יק פעוט'], [40, 'דרקונצ׳יק קטנטן'], [56, 'דרקונצ׳יק ילד'],
+                [74, 'דרקון נער'], [94, 'דרקון צעיר'], [116, 'דרקון גדול'], [140, 'דרקון אש'], [166, 'סופר-דרקון'], [194, 'מלך הדרקונים']];
+  /* מה חדש בכל שלב (נאמר בטקס הגדילה) */
+  var NEWS = ['', 'בקע מהביצה!', 'פקח עיניים גדולות!', 'צמחו לו קרניים קטנות!', 'הקרניים גדלו!', 'הכנפיים גדלו!', 'צמחו לו קוצים על הגב!',
+              'יש לו זנב עם קוצים!', 'כנפיים ענקיות — הוא עף!', 'הוא יורק אש!', 'יש לו גלימת גיבור!', 'הוא מלך הדרקונים עם כתר!'];
   var MAX_FOOD = 30;
   function blank() { return { color: null, name: '', xp: 0, food: 3, hunger: 30, fedAt: Date.now() }; }
   function load() { try { return Object.assign(blank(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return blank(); } }
@@ -58,39 +63,43 @@
       s += '<ellipse cx="100" cy="112" rx="54" ry="70" fill="' + L + '"' + o + '/>';
       s += '<circle cx="78" cy="92" r="11" fill="' + c + '"/><circle cx="122" cy="80" r="8" fill="' + c + '"/><circle cx="118" cy="138" r="13" fill="' + c + '"/><circle cx="76" cy="140" r="7" fill="' + c + '"/>';
       s += '<path d="M70 62 Q80 52 92 50" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" opacity=".7"/>';
-      var cracks = Math.min(3, P.xp);
+      var cracks = Math.min(3, Math.floor(P.xp * 3 / 4));
       if (cracks >= 1) s += '<path d="M84 70 L92 82 L86 92 L96 102" fill="none"' + o + '/>';
       if (cracks >= 2) s += '<path d="M132 104 L122 112 L130 122 L120 130" fill="none"' + o + '/>';
       if (cracks >= 3) s += '<path d="M66 120 L78 124 L72 134" fill="none"' + o + '/>';
       return s + '</svg>';
     }
-    var k = [0, .64, .76, .88, 1][st], face = opts.face || mood();
+    var k = [0, .5, .56, .62, .68, .74, .8, .85, .9, .94, .97, 1][st], face = opts.face || mood();
     s += '<defs><radialGradient id="' + id + 'b" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="' + W + '"/><stop offset="1" stop-color="' + c + '"/></radialGradient></defs>';
     s += '<ellipse cx="100" cy="190" rx="' + (48 * k) + '" ry="7" fill="rgba(27,16,54,.25)"/>';
     s += '<g transform="translate(100 190) scale(' + k + ') translate(-100 -190)">';
     /* גלימה (סופר) מאחור */
-    if (st >= 4) s += '<path d="M70 108 Q100 98 130 108 L150 186 Q100 196 50 186 Z" fill="#ff2e93"' + o + '/>';
+    if (st >= 9) s += '<circle cx="100" cy="120" r="96" fill="#ffb347" opacity=".22"/>';                           /* הילת אש */
+    if (st >= 11) s += '<circle cx="100" cy="110" r="100" fill="#fff3b0" opacity=".35"/>';                          /* הילת מלך */
+    if (st >= 10) s += '<path d="M70 108 Q100 98 130 108 L150 186 Q100 196 50 186 Z" fill="#ff2e93"' + o + '/>';
     /* כנפיים: קטנות לתינוק, גדולות מהשלב השלישי */
-    var wg = st >= 3 ? 1.35 : 1;
+    var wg = st >= 8 ? 1.5 : st >= 5 ? 1.25 : 1;
     s += '<g transform="translate(100 120) scale(' + wg + ') translate(-100 -120)"><path d="M66 118 C36 92 20 104 24 124 C36 120 44 128 44 136 C52 128 60 132 66 138 Z" fill="' + L + '"' + o + '/>' +
          '<path d="M134 118 C164 92 180 104 176 124 C164 120 156 128 156 136 C148 128 140 132 134 138 Z" fill="' + L + '"' + o + '/></g>';
     /* זנב מסתלסל (+ קוצים מהשלב השלישי) */
     s += '<path d="M130 160 C166 168 176 140 164 128 C160 124 154 128 158 134 C164 146 150 156 128 148 Z" fill="url(#' + id + 'b)"' + o + '/>';
-    if (st >= 3) s += '<path d="M166 124 L176 116 L172 130 Z" fill="#ffc93c"' + o + '/>';
+    if (st >= 7) s += '<path d="M166 124 L176 116 L172 130 Z" fill="#ffc93c"' + o + '/><path d="M150 150 L160 140 L160 154 Z" fill="#ffc93c"' + o + '/>';
     /* גוף + בטן + רגליים + ידיים */
     s += '<ellipse cx="100" cy="148" rx="44" ry="40" fill="url(#' + id + 'b)"' + o + '/>';
-    s += '<ellipse cx="100" cy="156" rx="26" ry="26" fill="' + L + '"/><path d="M84 146 Q100 150 116 146 M82 160 Q100 164 118 160" stroke="' + mix(c, .2) + '" stroke-width="3" fill="none"/>';
+    s += '<ellipse cx="100" cy="156" rx="26" ry="26" fill="' + L + '"/><path d="M84 146 Q100 150 116 146 M82 160 Q100 164 118 160' + (st >= 7 ? ' M86 172 Q100 176 114 172' : '') + '" stroke="' + mix(c, .2) + '" stroke-width="3" fill="none"/>';
     s += '<ellipse cx="80" cy="186" rx="14" ry="8" fill="' + c + '"' + o + '/><ellipse cx="120" cy="186" rx="14" ry="8" fill="' + c + '"' + o + '/>';
     s += '<path d="M62 142 Q54 150 60 158" fill="none"' + o + '/><path d="M138 142 Q146 150 140 158" fill="none"' + o + '/>';
     /* קוצים על הראש/גב מהשלב השלישי */
-    if (st >= 3) s += '<path d="M86 44 L92 30 L100 42 L108 30 L114 44 Z" fill="#ffc93c"' + o + '/>';
+    if (st >= 6) s += '<path d="M86 44 L92 30 L100 42 L108 30 L114 44 Z" fill="#ffc93c"' + o + '/><path d="M56 118 L48 106 L62 110 Z M144 118 L152 106 L138 110 Z" fill="#ffc93c"' + o + '/>';
     /* קרניים מהשלב השני */
-    if (st >= 2) s += '<path d="M72 54 L62 30 L84 46 Z" fill="#fff3b0"' + o + '/><path d="M128 54 L138 30 L116 46 Z" fill="#fff3b0"' + o + '/>';
+    if (st >= 4) s += '<path d="M72 54 L62 30 L84 46 Z" fill="#fff3b0"' + o + '/><path d="M128 54 L138 30 L116 46 Z" fill="#fff3b0"' + o + '/>';
+    else if (st >= 3) s += '<path d="M76 50 L72 38 L84 46 Z" fill="#fff3b0"' + o + '/><path d="M124 50 L128 38 L116 46 Z" fill="#fff3b0"' + o + '/>';
     /* ראש גדול וחמוד */
     s += '<circle cx="100" cy="84" r="44" fill="url(#' + id + 'b)"' + o + '/>';
     s += '<ellipse cx="100" cy="104" rx="24" ry="15" fill="' + L + '"/><circle cx="92" cy="100" r="2.5" fill="' + INK + '"/><circle cx="108" cy="100" r="2.5" fill="' + INK + '"/>';
     s += '<circle cx="68" cy="98" r="8" fill="#ff9eb0" opacity=".8"/><circle cx="132" cy="98" r="8" fill="#ff9eb0" opacity=".8"/>';
     /* עיניים לפי מצב רוח */
+    if (st === 1 && face === 'happy') face = 'sleep';
     if (face === 'love' || face === 'eat') s += '<path d="M72 82 Q80 72 88 82 M112 82 Q120 72 128 82" fill="none"' + o + '/>';
     else if (face === 'sleep') s += '<path d="M72 82 Q80 88 88 82 M112 82 Q120 88 128 82" fill="none"' + o + '/>';
     else {
@@ -102,8 +111,11 @@
     if (face === 'eat') s += '<ellipse cx="100" cy="116" rx="10" ry="8" fill="#b3124f"' + o + '/>';
     else if (face === 'hungry') s += '<path d="M90 118 Q100 110 110 118" fill="none"' + o + '/>';
     else s += '<path d="M88 112 Q100 124 112 112" fill="#fff"' + o + '/>';
+    /* אש מהפה/עשן מהאף (דרקון אש ומעלה) */
+    if (st >= 9 && face !== 'eat') s += '<circle cx="92" cy="96" r="4" fill="#c9ced9" opacity=".8"/><circle cx="108" cy="94" r="5" fill="#c9ced9" opacity=".7"/>';
+    if (face === 'fire') s += '<path d="M100 116 C120 110 150 100 176 112 C160 118 170 126 184 128 C160 136 128 130 104 122 Z" fill="#ff9f1c"' + o + '/><path d="M108 118 C130 116 150 114 166 120 C148 124 128 124 110 121 Z" fill="#ffe14d"/>';
     /* כתר (סופר) */
-    if (st >= 4) s += '<path d="M80 44 L84 22 L94 36 L100 16 L106 36 L116 22 L120 44 Z" fill="#ffc93c"' + o + '/><circle cx="100" cy="34" r="3.5" fill="#ff2e93"/>';
+    if (st >= 11) s += '<path d="M80 44 L84 22 L94 36 L100 16 L106 36 L116 22 L120 44 Z" fill="#ffc93c"' + o + '/><circle cx="100" cy="34" r="3.5" fill="#ff2e93"/>';
     s += '</g></svg>';
     return s;
   }
@@ -132,7 +144,7 @@
     '.pet-bar{display:grid;gap:4px;font-weight:800;font-size:15px}.pet-bar .h-meter{height:18px}' +
     '.pet-food{display:flex;align-items:center;gap:8px;padding:8px 12px;border:3px solid var(--h-ink);border-radius:16px;background:#fff;font:900 22px/1 var(--h-font)}' +
     '.pet-food small{font:700 13px/1.3 var(--h-font);color:var(--h-text-soft)}' +
-    '.pet-acts{display:flex;gap:10px;flex-wrap:wrap}.pet-acts .h-btn{flex:1;min-width:130px}' +
+    '.pet-acts{display:flex;gap:10px;flex-wrap:wrap}.pet-acts .h-btn{flex:1;min-width:130px}.pet-lair{display:block;text-align:center;text-decoration:none}' +
     '.pet-pick{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px 0}' +
     '.pet-pick button{width:120px;padding:8px;border:4px solid var(--h-ink);border-radius:22px;background:#fff;box-shadow:0 4px 0 var(--h-ink);cursor:pointer;font:800 16px/1.2 var(--h-font)}' +
     '.pet-pick button svg{width:100%;height:auto}' +
@@ -177,7 +189,8 @@
         (egg ? '' : '<div class="pet-bar">' + (h >= 70 ? '😢 רעב מאוד!' : h >= 40 ? '🙂 קצת רעב' : '😋 שבע ומאושר') + '<div class="h-meter"><div class="h-meter-fill" style="width:' + (100 - h) + '%;background:linear-gradient(90deg,#ff5a6e,#ffc93c,#3ff2b0)"></div></div></div>') +
         '<div class="pet-food">🍎 × ' + P.food + ' <small>כל תשובה באקדמיה = 🍎<br>ציור שנשמר = 🍎 · סיפור = 🍎🍎</small></div>' +
         '<div class="pet-acts"><button type="button" class="h-btn gold" id="petFeed">' + (egg ? '🔥 לחמם' : '🍎 להאכיל') + '</button>' +
-        (egg ? '' : '<button type="button" class="h-btn cyan" id="petPlay">🎾 לשחק</button>') + '</div></div></div>';
+        (egg ? '' : '<button type="button" class="h-btn cyan" id="petPlay">🎾 לשחק</button>') + '</div>' +
+        (/dragon\.html/.test(location.pathname) ? '' : '<a class="h-btn violet pet-lair" href="./dragon.html">🐉 למאורת הדרקון — משימות ומשחקים</a>') + '</div></div>';
       card.querySelector('.pet-x').onclick = close;
       var body = card.querySelector('#petBody'), stageEl = card.querySelector('#petStage');
       function float(t, x) { var f = el('div', 'pet-float', t); f.style.left = (x == null ? 40 + Math.random() * 20 : x) + '%'; f.style.bottom = '40%'; stageEl.appendChild(f); setTimeout(function () { f.remove(); }, 1300); }
@@ -200,9 +213,9 @@
         if (after > before) {   /* עלייה בשלב: בקיעה / גדילה */
           setTimeout(function () {
             try { if (window.HeroRewards) HeroRewards.confetti(); } catch (e) {}
-            snd('ding'); say(before === 0 ? 'הביצה בוקעת!' : P.name + ' גדל! עכשיו הוא ' + STAGES[after][1]);
+            snd('ding'); say(before === 0 ? 'הביצה בוקעת!' : P.name + ' גדל! עכשיו הוא ' + STAGES[after][1] + '. ' + NEWS[after]);
             /* תעודה כשהדרקון מגיע לשלב הסופר */
-            if (after === STAGES.length - 1 && window.Share) setTimeout(function () { Share.award({ key: 'pet:super', line: 'גידלה סופר-דרקון בשם ' + P.name, ico: '🐉' }); }, 1500);
+            if (after === STAGES.length - 1 && window.Share) setTimeout(function () { Share.award({ key: 'pet:super', line: 'גידלה את ' + P.name + ' למלך הדרקונים', ico: '🐉' }); }, 1500);
             render();
           }, 900);
         } else setTimeout(render, egg ? 700 : 1300);
@@ -210,10 +223,10 @@
       var play = card.querySelector('#petPlay');
       if (play) play.onclick = function () {
         /* תעלול לפי השלב: קפיצה → סיבוב → תעופה → תעופה עם קשת */
-        var tr = ['', 'jump', 'spin', 'fly', 'fly'][s];
-        anim(tr); snd('happy'); float(s >= 4 ? '🌈' : s >= 3 ? '☁️' : '⭐');
-        if (s >= 4) { float('✨', 30); float('✨', 60); }
-        say([P.name + ' קופץ!', P.name + ' מסתובב!', P.name + ' עף!', P.name + ' עף עם קשת!'][s - 1]);
+        var tr = s >= 8 ? 'fly' : s >= 5 ? 'spin' : 'jump';
+        anim(tr); snd('happy'); float(s >= 9 ? '🔥' : s >= 8 ? '☁️' : '⭐');
+        if (s >= 9) { body.innerHTML = svg({ face: 'fire' }); setTimeout(function () { body.innerHTML = svg(); }, 1200); float('✨', 30); float('✨', 60); }
+        say(s >= 9 ? P.name + ' יורק אש!' : s >= 8 ? P.name + ' עף!' : s >= 5 ? P.name + ' מסתובב!' : P.name + ' קופץ!');
       };
     }
     render();
@@ -244,6 +257,15 @@
     return api;
   }
 
-  window.Pet = { open: open, mini: mini, svg: svg, stage: stage, hunger: hunger, addFood: addFood,
+  /* grow(n) — מוסיף n נקודות גדילה ישירות (פרס של משימת דרקון); מחזיר {from, to} של השלב */
+  function grow(n) {
+    var from = stage();
+    P.xp += n; P.hunger = 0; P.fedAt = Date.now(); save();
+    var to = stage();
+    if (to === STAGES.length - 1 && from < to && window.Share) setTimeout(function () { Share.award({ key: 'pet:super', line: 'גידלה את ' + (P.name || 'הדרקון') + ' למלך הדרקונים', ico: '🐉' }); }, 2500);
+    minis.forEach(function (m) { m.draw(); });
+    return { from: from, to: to };
+  }
+  window.Pet = { open: open, mini: mini, svg: svg, stage: stage, hunger: hunger, addFood: addFood, grow: grow, NEWS: NEWS, nextAt: nextAt, save: save,
                  get state() { return P; }, STAGES: STAGES, reset: function () { P = blank(); save(); minis.forEach(function (m) { m.draw(); }); } };
 })();

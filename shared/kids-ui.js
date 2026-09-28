@@ -9,9 +9,14 @@
 
   /* ---------- הזרקת סגנון פעם אחת ---------- */
   var css = [
-    '#kui-fade{position:fixed;inset:0;background:#fff;z-index:9999;pointer-events:none;',
-    ' opacity:0;transition:opacity .35s ease;}',
-    '#kui-fade.kui-on{opacity:1;pointer-events:all;}',
+    /* מעבר קומיקס: "איריס" — עיגול בצבע הלילה של הערכה עם נקודות רסטר וברק, שנסגר ונפתח */
+    '#kui-fade{position:fixed;inset:0;z-index:9999;pointer-events:none;display:grid;place-items:center;',
+    ' background:radial-gradient(rgba(255,255,255,.12) 2px,transparent 2.4px) 0 0/18px 18px,var(--h-night,#140a33);',
+    ' clip-path:circle(0% at 50% 50%);transition:clip-path .42s cubic-bezier(.6,0,.3,1);}',
+    '#kui-fade::after{content:"⚡";font-size:120px;filter:drop-shadow(0 6px 0 rgba(0,0,0,.35));transform:scale(.3) rotate(-20deg);transition:transform .42s cubic-bezier(.2,1.4,.3,1);}',
+    '#kui-fade.kui-on{clip-path:circle(75% at 50% 50%);pointer-events:all;}',
+    '#kui-fade.kui-on::after{transform:scale(1) rotate(0);}',
+    '@media (prefers-reduced-motion:reduce){#kui-fade{transition:none}}',
     /* כפתור בית בסגנון "גיבורים 2026": עיגול נייר עם מסגרת דיו וצל קומיקס */
     '#kui-home{position:fixed;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));z-index:9000;width:64px;height:64px;',
     ' border:4px solid #1b1036;border-radius:50%;background:#fffaf0;font-size:28px;',
@@ -53,7 +58,7 @@
     go: function (url) {
       var el = ensureFade();
       el.classList.add('kui-on');
-      setTimeout(function () { location.href = url; }, 360);
+      setTimeout(function () { location.href = url; }, 430);
     }
   };
 
