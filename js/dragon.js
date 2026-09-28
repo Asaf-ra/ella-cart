@@ -2,7 +2,7 @@
    js/dragon.js — מאורת הדרקון
    ---------------------------------------------------------------------
    פרק 1 — שמירה (ella-dragon-v1): כוכבים לכל סט משימה, משחקים שנפתחו, מגבלת תפוחים יומית ממשחקים
-   פרק 2 — לשונית "הדרקון שלי": הדרקון הגדול, שם ושלב, מד גדילה, מסלול 12 השלבים, האכלה ותעלול
+   פרק 2 — לשונית "הדרקון שלי" (טמגוצ'י עדין): 4 מדדים, בועת דיבור, האכלה, אמבטיה, שינה, משחק, ארון וקופסת הפתעה
    פרק 3 — לשונית "משימות דרקון": מסלול אנגלית (13 סטים) + מסלול חשבון (7 סטים); כל סט נפתח אחרי הקודם
    פרק 4 — נגן השאלות: 8 שאלות, ציורים גדולים, 🔊 הגייה רגילה ו-🐢 איטית, הסבר אחרי כל תשובה
    פרק 5 — סיום סט: כוכבים → תפוחים עפים לדרקון → טקס גדילה (אם עלה שלב) → מתנת משחק חדשה
@@ -61,33 +61,181 @@
   }));
   function render(tab) { refreshChips(); if (tab === 'missions') renderMissions(); else if (tab === 'toys') renderToys(); else if (tab === 'words') renderWords(); else renderLair(); }
 
-  /* ---------- פרק 2 — הדרקון שלי ---------- */
-  function renderLair() {
+  /* ---------- פרק 2 — הדרקון שלי (טמגוצ'י עדין) ----------
+     2.1 סצנה: הדרקון, פריטי החדר, בועת דיבור ("אני רעב!"), קופסת הפתעה, לילה/יום
+     2.2 מדדים: שובע 🍎 · ניקיון 🛁 · כיף 🎾 · אנרגיה ⚡ (ירוק > 60, צהוב 30–60, אדום < 30)
+     2.3 טיפול: להאכיל · אמבטיה (משפשפים באצבע) · לישון (לילה, כוכבים, Zzz) · לשחק · ארון · קופסה
+     כל פעולה אומרת גם את המילה באנגלית (Bath · אמבטיה), וכל יום עם טיפול מאריך את הרצף 🔥 */
+  const LINES = {
+    food: 'אני רעב! 🍎 אפשר תפוח?', clean: 'אני מלוכלך... בואי לאמבטיה? 🛁', fun: 'משעמם לי! בואי נשחק 🎾', energy: 'אני עייף... 😴 אפשר לישון?',
+    happy: ['אני אוהב אותך! 💗', 'איזה כיף שבאת!', 'בואי נלמד מילה חדשה באנגלית!', 'אני מרגיש מעולה! ⭐'], night: 'כבר לילה... אני קצת עייף 😴', miss: 'התגעגעתי אליך! 🥰', box: 'יש לך קופסת הפתעה! 🎁'
+  };
+  let lairSpoke = false, busy = false;
+  const needColor = v => v >= 60 ? '#3ff2b0' : v >= 30 ? '#ffd95a' : '#ff5a6e';
+  function bubbleLine() {
+    if (Pet.stage() === 0) return 'הביצה זזה... משהו בפנים! 🥚';
+    const l = Pet.lowest();
+    if (l.v < 30) return LINES[l.k];
+    if (Pet.isNight() && Pet.need('energy') < 60) return LINES.night;
+    if (P().boxes > 0) return LINES.box;
+    return LINES.happy[(Math.random() * LINES.happy.length) | 0];
+  }
+  function renderLair(opts) {
+    opts = opts || {};
     const pane = $('#pane-lair');
     if (!P().color) {
       pane.innerHTML = '<div style="text-align:center;padding:30px"><div style="font-size:120px">🥚</div><h2 style="font:900 34px var(--h-font)">עוד אין לך ביצת דרקון!</h2><p style="font-weight:800">בוחרים ביצה — והמשימות יגדלו אותה.</p><button type="button" class="h-btn gold" id="pickEgg">🥚 לבחור ביצה</button></div>';
       $('#pickEgg').onclick = () => { Pet.open(); const t = setInterval(() => { if (!document.querySelector('.pet-card')) { clearInterval(t); render('lair'); } }, 500); };
       return;
     }
-    const st = Pet.stage(), nx = Pet.nextAt(), prev = Pet.STAGES[st][0];
+    const st = Pet.stage(), egg = st === 0, nx = Pet.nextAt(), prev = Pet.STAGES[st][0];
     const pct = nx ? Math.round((P().xp - prev) / (nx - prev) * 100) : 100;
-    pane.innerHTML = '<div class="lair"><div class="scene" id="scene"><div class="dragon bob" id="bigD">' + Pet.svg() + '</div></div>' +
-      '<div class="info"><div><div class="dname">' + (st ? dname() : 'ביצה מסתורית') + '</div><div class="dstage">' + Pet.STAGES[st][1] + (nx ? ' · עוד ' + (nx - P().xp) + ' 🍎 לשלב "' + Pet.STAGES[st + 1][1] + '"' : ' · השלב הכי גבוה! 👑') + '</div></div>' +
-      '<div class="meter"><i style="width:' + pct + '%"></i></div>' +
-      '<div class="path">' + Pet.STAGES.map((s, i) => '<div class="st ' + (i < st ? 'done' : i === st ? 'cur' : 'lock') + '" title="' + s[1] + '">' + Pet.svg({ stage: i, face: 'happy' }) + '<b>' + (i + 1) + '</b></div>').join('') + '</div>' +
-      '<div class="acts"><button type="button" class="h-btn gold" id="feed">🍎 להאכיל (' + (P().food || 0) + ')</button><button type="button" class="h-btn cyan" id="trick">' + (st >= 9 ? '🔥 יריקת אש' : st >= 8 ? '☁️ לעוף' : '⭐ תעלול') + '</button></div>' +
+    const away = opts.fresh ? Pet.visit() : 0, N = Pet.needs(), I = Pet.NEED_INFO, boxes = P().boxes || 0, streak = P().care.streak || 0;
+    const line = away > 6 && !egg ? LINES.miss : bubbleLine();
+    const room = (P().room || []).map(k => '<span class="ritem r-' + k + '">' + Pet.ROOM[k].ico + '</span>').join('');
+    /* 2.1 סצנה */
+    pane.innerHTML = '<div class="lair"><div class="scene' + (Pet.isNight() ? ' night' : '') + '" id="scene">' + room +
+      '<div class="bubble" id="bubble">' + line + '</div>' +
+      '<div class="dragon bob" id="bigD">' + Pet.svg() + '</div>' +
+      (!egg && N.energy < 30 ? '<div class="zzz">Z<small>z</small><small>z</small></div>' : '') +
+      (boxes ? '<button type="button" class="giftbox" id="giftbox" title="קופסת הפתעה">🎁<b>' + boxes + '</b></button>' : '') + '</div>' +
+      /* 2.2 מידע ומדדים */
+      '<div class="info"><div class="nm-row"><div><div class="dname">' + (st ? dname() : 'ביצה מסתורית') + '</div><div class="dstage">' + Pet.STAGES[st][1] + (nx ? ' · עוד ' + (nx - P().xp) + ' 🍎 לשלב "' + Pet.STAGES[st + 1][1] + '"' : ' · השלב הכי גבוה! 👑') + '</div></div>' +
+      (streak ? '<span class="streak" title="ימים ברצף שטיפלת בדרקון">🔥 ' + streak + ' ' + (streak === 1 ? 'יום' : 'ימים') + '</span>' : '') + '</div>' +
+      '<div class="meter" title="גדילה"><i style="width:' + pct + '%"></i></div>' +
+      (egg ? '' : '<div class="needs">' + Object.keys(I).map(k => '<div class="need' + (N[k] < 30 ? ' low' : '') + '"><span class="ni">' + I[k].ico + '</span><span class="nl">' + I[k].he + ' <small dir="ltr">' + I[k].en + '</small></span><div class="nb"><i style="width:' + N[k] + '%;background:' + needColor(N[k]) + '"></i></div></div>').join('') + '</div>') +
+      /* 2.3 פעולות טיפול */
+      '<div class="care">' +
+        '<button type="button" class="cbtn" id="feed"><b>' + (egg ? '🔥' : '🍎') + '</b>' + (egg ? 'לחמם' : 'להאכיל') + ' <small>' + (P().food || 0) + ' 🍎</small><i dir="ltr">' + (egg ? 'Warm' : 'Eat') + '</i></button>' +
+        (egg ? '' : '<button type="button" class="cbtn" id="bath"><b>🛁</b>אמבטיה<i dir="ltr">Bath</i></button>' +
+        '<button type="button" class="cbtn" id="sleep"><b>😴</b>לישון<i dir="ltr">Sleep</i></button>' +
+        '<button type="button" class="cbtn" id="play"><b>🎾</b>לשחק<i dir="ltr">Play</i></button>' +
+        '<button type="button" class="cbtn" id="closet"><b>👕</b>ארון<i dir="ltr">Closet</i></button>') +
+        (boxes ? '<button type="button" class="cbtn cgift" id="openBox"><b>🎁</b>קופסה (' + boxes + ')<i dir="ltr">Surprise</i></button>' : '') +
+      '</div>' +
+      '<div class="path">' + Pet.STAGES.map((s, i) => '<div class="st ' + (i < st ? 'done' : i === st ? 'cur' : 'lock') + '" title="' + s[1] + '">' + Pet.svg({ stage: i, face: 'happy', wear: {} }) + '<b>' + (i + 1) + '</b></div>').join('') + '</div>' +
       '<button type="button" class="h-btn violet" id="goMission">🗺️ למשימת הדרקון הבאה</button></div></div>';
-    const big = $('#bigD');
-    big.onclick = () => { big.innerHTML = Pet.svg({ face: 'love' }); snd('sparkle'); floatAt(big, '💗'); setTimeout(() => { big.innerHTML = Pet.svg(); }, 1100); };
+    if (opts.fresh && !lairSpoke) { lairSpoke = true; say(line); }
+    const big = $('#bigD'), scene = $('#scene');
+    const bubble = t => { const b = $('#bubble'); b.textContent = t; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); };
+    /* ליטוף: לבבות + קצת כיף */
+    big.onclick = () => { if (busy) return; big.innerHTML = Pet.svg({ face: 'love' }); snd('sparkle'); floatAt(big, '💗'); if (!egg) { Pet.addNeed('fun', 3); readP([he('גם אני אוהב אותך!'), en('I love you')]); } setTimeout(() => { if (!busy) big.innerHTML = Pet.svg(); }, 1100); };
     $('#feed').onclick = () => {
+      if (busy) return;
       if (!(P().food > 0)) { snd('sad'); say('אין תפוחים! עונים על שאלות באקדמיה או במשימות הדרקון.'); return; }
-      P().food--; const r = Pet.grow(1); Pet.save && Pet.save();
+      P().food--; const r = Pet.grow(1); Pet.save && Pet.save(); Pet.markCare();
       try { if (window.Progress) Progress.track('pet:feed'); } catch (e) {}
       big.innerHTML = Pet.svg({ face: 'eat' }); snd('pop'); floatAt(big, '🍎'); jump(big);
-      if (r.to > r.from) setTimeout(() => ceremony(r.from, r.to, () => render('lair')), 700); else setTimeout(() => render('lair'), 900);
+      if (!egg) { bubble('יאמי! 😋'); readP([he('יאמי!'), en('yummy'), en('eat'), he('זה לאכול.')]); }
+      if (r.to > r.from) setTimeout(() => ceremony(r.from, r.to, () => render('lair')), 700); else setTimeout(() => render('lair'), 1300);
     };
-    $('#trick').onclick = () => { jump(big); snd('happy'); if (st >= 9) { big.innerHTML = Pet.svg({ face: 'fire' }); setTimeout(() => { big.innerHTML = Pet.svg(); }, 1200); } floatAt(big, st >= 9 ? '🔥' : '⭐'); say(st >= 9 ? dname() + ' יורק אש!' : dname() + ' עושה תעלול!'); };
     $('#goMission').onclick = () => $('.tab[data-tab="missions"]').click();
+    if ($('#giftbox')) $('#giftbox').onclick = () => openGift();
+    if ($('#openBox')) $('#openBox').onclick = () => openGift();
+    if (egg) return;
+    $('#bath').onclick = () => { if (!busy) bath(scene, big, bubble); };
+    $('#sleep').onclick = () => { if (!busy) sleep(scene, big, bubble); };
+    $('#play').onclick = () => { readP([en("Let's play!"), he('בואי נשחק!')]); $('.tab[data-tab="toys"]').click(); };
+    $('#closet').onclick = () => closet();
+  }
+
+  /* 2.4 אמבטיה: משפשפים את הדרקון באצבע → בועות, הלכלוך נעלם בהדרגה, ובסוף שטיפה במים */
+  function bath(scene, big, bubble) {
+    busy = true; snd('bubble');
+    const c0 = Pet.need('clean'); let prog = 0, lastStep = -1, lastXY = null;
+    scene.classList.add('bathing');
+    const tub = el('div', 'tub', '<div class="water"></div>'), bar = el('div', 'sbar', '<i></i><span>🧽 שפשפו את הדרקון!</span>'), done = el('button', 'sdone', '✓ סיימנו');
+    done.type = 'button'; scene.append(tub, bar, done);
+    bubble('זמן אמבטיה! שפשפו אותי 🧽');
+    readP([en('Time for a bath!'), he('זמן אמבטיה! שפשפו את הדרקון באצבע.')]);
+    const rub = e => {
+      if (e.type === 'pointermove' && !(e.buttons || e.pointerType === 'touch')) return;
+      const r = scene.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      const d = lastXY ? Math.hypot(x - lastXY[0], y - lastXY[1]) : 20; lastXY = [x, y];
+      if (d < 6) return;
+      prog = Math.min(100, prog + Math.min(4, d / 14));
+      const b = el('span', 'bub', '🫧'); b.style.left = x + 'px'; b.style.top = y + 'px'; b.style.fontSize = (18 + Math.random() * 22) + 'px'; scene.appendChild(b); setTimeout(() => b.remove(), 1100);
+      if (Math.random() < .25) snd('pop');
+      $('i', bar).style.width = prog + '%';
+      const step = Math.floor(prog / 20);
+      if (step !== lastStep) { lastStep = step; big.innerHTML = Pet.svg({ face: 'love', clean: c0 + (100 - c0) * prog / 100 }); }
+      if (prog >= 100) finish();
+    };
+    scene.addEventListener('pointerdown', rub); scene.addEventListener('pointermove', rub);
+    let ended = false;
+    function finish() {
+      if (ended) return; ended = true;
+      scene.removeEventListener('pointerdown', rub); scene.removeEventListener('pointermove', rub);
+      for (let i = 0; i < 14; i++) setTimeout(() => { const w = el('span', 'drop', '💧'); w.style.left = (20 + Math.random() * 60) + '%'; scene.appendChild(w); setTimeout(() => w.remove(), 900); }, i * 60);
+      const full = prog >= 100;
+      Pet.setNeed('clean', full ? 100 : Math.max(c0, Math.round(c0 + (100 - c0) * prog / 100))); if (full) Pet.addNeed('fun', 8);
+      Pet.markCare(); try { if (window.Progress) Progress.track('pet:bath'); } catch (e) {}
+      big.innerHTML = Pet.svg({ face: 'love' }); floatAt(big, '✨'); snd('ding'); if (full) confetti();
+      bubble(full ? 'נקי ומבריק! ✨' : 'קצת יותר נקי!');
+      readP(full ? [he('נקי ומבריק!'), en('clean'), he('בעברית: נקי.'), en('clean', true)] : [he('קצת יותר נקי!')]);
+      setTimeout(() => { busy = false; render('lair'); }, 2200);
+    }
+    done.onclick = e => { e.stopPropagation(); finish(); };
+  }
+
+  /* 2.5 שינה: לילה, כוכבים, Zzz; האנרגיה מתמלאת תוך 8 שניות. נגיעה = מעירים מוקדם */
+  function sleep(scene, big, bubble) {
+    busy = true; scene.classList.add('sleeping');
+    big.classList.remove('bob'); big.innerHTML = Pet.svg({ face: 'sleep' });
+    const e0 = Pet.need('energy'), bar = el('div', 'sbar night', '<i></i><span>😴 ישן... (נגיעה = להעיר)</span>'), z = el('div', 'zzz big', 'Z<small>z</small><small>z</small>');
+    scene.append(bar, z);
+    bubble('לילה טוב... 💤');
+    readP([en('Good night!'), he('לילה טוב, ' + dname() + '.')]);
+    const t0 = performance.now(), DUR = 8000;
+    const tick = setInterval(() => { const p = Math.min(1, (performance.now() - t0) / DUR); $('i', bar).style.width = p * 100 + '%'; if (p >= 1) wake(); }, 120);
+    const wake = () => {
+      clearInterval(tick); scene.onclick = null;
+      const p = Math.min(1, (performance.now() - t0) / DUR);
+      Pet.setNeed('energy', Math.max(e0, e0 + (100 - e0) * p)); Pet.markCare();
+      try { if (window.Progress) Progress.track('pet:sleep'); } catch (e) {}
+      scene.classList.remove('sleeping'); z.remove(); big.innerHTML = Pet.svg({ face: 'love' }); jump(big); snd('happy');
+      bubble(p >= 1 ? 'בוקר טוב! מלא אנרגיה ⚡' : 'אוי, התעוררתי מוקדם...');
+      readP(p >= 1 ? [en('Good morning!'), he('בוקר טוב! ' + dname() + ' מלא אנרגיה!')] : [he('התעוררתי מוקדם. אפשר לישון עוד קצת אחר כך.')]);
+      setTimeout(() => { busy = false; render('lair'); }, 2000);
+    };
+    setTimeout(() => { scene.onclick = () => wake(); }, 600);
+  }
+
+  /* 2.6 קופסת הפתעה: מקישים 3 פעמים → נפתחת → אביזר ללבוש או פריט לחדר (או 5 תפוחים אם יש הכול) */
+  function openGift() {
+    if (!(P().boxes > 0)) return;
+    const ov = el('div', 'ov'), c = el('div', 'cere'); ov.appendChild(c); document.body.appendChild(ov);
+    c.innerHTML = '<div class="rays"></div><div class="inner"><h2>קופסת הפתעה!</h2><div class="bigbox" id="bb">🎁</div><p style="font:800 20px var(--h-font)">הקישו על הקופסה 3 פעמים!</p></div>';
+    let taps = 0; say('קופסת הפתעה! הקישו עליה שלוש פעמים.');
+    $('#bb', c).onclick = function () {
+      taps++; this.classList.remove('shake'); void this.offsetWidth; this.classList.add('shake'); snd(taps < 3 ? 'pop' : 'ding');
+      if (taps < 3) return;
+      const r = Pet.openBox(); confetti();
+      const inner = $('.inner', c);
+      if (!r) { ov.remove(); return; }
+      if (r.food) { inner.innerHTML = '<h2>הפתעה! 🍎 ×5</h2><p style="font:800 20px var(--h-font)">כבר יש לך את כל הפריטים — קיבלת 5 תפוחים!</p><button type="button" class="h-btn gold" id="ok">יש! ✓</button>'; readP([en('Surprise!'), he('חמישה תפוחים!')]); }
+      else {
+        inner.innerHTML = '<h2>הפתעה! ' + r.item.ico + ' ' + r.item.name + '</h2>' + (r.wear ? '<div class="gdragon">' + Pet.svg({ face: 'love' }) + '</div><p style="font:800 20px var(--h-font)">' + dname() + ' לובש את זה עכשיו! אפשר להחליף בארון 👕</p>' : '<div class="bigbox">' + r.item.ico + '</div><p style="font:800 20px var(--h-font)">הפריט נכנס לחדר של ' + dname() + '!</p>') + '<button type="button" class="h-btn gold" id="ok">יש! ✓</button>';
+        readP([en('Surprise!'), he('הפתעה! ' + r.item.name + '!')]);
+      }
+      $('#ok', c).onclick = () => { ov.remove(); render('lair'); };
+    };
+  }
+
+  /* 2.7 ארון: לובשים ומורידים אביזרים, ומסדרים את החדר. פריט שעוד אין = ❓ (נפתח בקופסת הפתעה) */
+  function closet() {
+    const ov = el('div', 'ov'), c = el('div', 'closet'); ov.appendChild(c); document.body.appendChild(ov);
+    const draw = () => {
+      const own = P().items || [], W = Pet.WEAR, R = Pet.ROOM;
+      c.innerHTML = '<button type="button" class="x">✖</button><h2>👕 הארון של ' + dname() + '</h2><div class="cl-grid"><div class="cl-prev">' + Pet.svg({ face: 'love' }) + '</div><div>' +
+        '<h3>ללבוש</h3><div class="cl-items">' + Object.keys(W).map(k => { const has = own.indexOf('w:' + k) >= 0, on = P().wear[W[k].slot] === k; return '<button type="button" class="cl-it' + (has ? '' : ' lock') + (on ? ' on' : '') + '" data-w="' + k + '"' + (has ? '' : ' disabled') + '><b>' + (has ? W[k].ico : '❓') + '</b><small>' + (has ? W[k].name : 'בקופסה') + '</small></button>'; }).join('') + '</div>' +
+        '<h3>לחדר</h3><div class="cl-items">' + Object.keys(R).map(k => { const has = own.indexOf('r:' + k) >= 0, on = (P().room || []).indexOf(k) >= 0; return '<button type="button" class="cl-it' + (has ? '' : ' lock') + (on ? ' on' : '') + '" data-r="' + k + '"' + (has ? '' : ' disabled') + '><b>' + (has ? R[k].ico : '❓') + '</b><small>' + (has ? R[k].name : 'בקופסה') + '</small></button>'; }).join('') + '</div>' +
+        '<p class="cl-note">🎁 קופסת הפתעה מקבלים כל 12 תשובות נכונות, בכל שלב גדילה, וברצף של 3/7/14 ימי טיפול.</p></div></div>';
+      $('.x', c).onclick = () => { ov.remove(); render('lair'); };
+      $$('[data-w]', c).forEach(b => b.onclick = () => { Pet.toggleWear(b.dataset.w); snd('pop'); draw(); });
+      $$('[data-r]', c).forEach(b => b.onclick = () => { Pet.toggleRoom(b.dataset.r); snd('pop'); draw(); });
+    };
+    draw(); snd('bubble');
   }
   function jump(n) { n.classList.remove('bob', 'jump'); void n.offsetWidth; n.classList.add('jump'); setTimeout(() => { n.classList.remove('jump'); n.classList.add('bob'); }, 750); }
   function floatAt(n, t) {
@@ -381,6 +529,8 @@
       if (score > 0 && D.cap.n < 6) { bonus = Math.min(2, 6 - D.cap.n); D.cap.n += bonus; save(); Pet.addFood(bonus); refreshChips(); }
       const e = el('div', 'end', '<div><h2>' + (msg || 'כל הכבוד!') + '</h2><div style="font:900 30px var(--h-font)">' + toy.ico + ' ' + score + '</div>' + (bonus ? '<div style="font-weight:800">' + dname() + ' מצא ' + bonus + ' 🍎 במשחק!</div>' : '') + '<div style="display:flex;gap:10px;justify-content:center"><button type="button" class="h-btn gold" id="again">🔁 שוב</button><button type="button" class="h-btn violet" id="bye">✓ סיום</button></div></div>');
       g.appendChild(e); confetti(); snd('happy');
+      /* משחק = כיף לדרקון (וקצת עייף אותו) + יום טיפול ברצף */
+      if (score > 0) { Pet.addNeed('fun', 25); Pet.addNeed('energy', -6); Pet.markCare(); }
       $('#again', e).onclick = () => { ov.remove(); openToy(id); };
       $('#bye', e).onclick = () => { ov.remove(); render($('.tab.on').dataset.tab); };
     }
@@ -484,7 +634,7 @@
   }
 
   /* ---------- התחלה ---------- */
-  render('lair');
+  renderLair({ fresh: true }); refreshChips();
   if (/#missions/.test(location.hash)) $('.tab[data-tab="missions"]').click();
-  window.DragonLair = { startSet, openToy, ceremony, render, state: D };
+  window.DragonLair = { startSet, openToy, ceremony, render, state: D, openGift, closet };
 })();
