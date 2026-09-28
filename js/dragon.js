@@ -7,6 +7,9 @@
    פרק 4 — נגן השאלות: 8 שאלות, ציורים גדולים, 🔊 הגייה רגילה ו-🐢 איטית, הסבר אחרי כל תשובה
    פרק 5 — סיום סט: כוכבים → תפוחים עפים לדרקון → טקס גדילה (אם עלה שלב) → מתנת משחק חדשה
    פרק 6 — משחקים עם הדרקון: כדור, בועות מילים (אנגלית!), תופסים תפוחים, טבעות בשמיים, דגדוגים
+   פרק 7 — "המילים שלי": כל המילים מהסטים שהושלמו, כרטיס לכל מילה (אנגלית → עברית → שוב לאט + טיפ)
+   הבנת הנשמע: כל הסבר מוקרא במלואו — המילה באנגלית, הפירוש בעברית, שוב לאט, וטיפ צליל ברור.
+   מילה שטעו בה נשמרת (D.miss) וחוזרת בסט "חזרה על מילים קשות" עד שעונים עליה נכון.
    פרס סט: 8 תפוחים + 2 לכל כוכב (פעם ראשונה), חצי בחזרה על סט — כך כל סט ראשון ≈ שלב גדילה.
    תלויות: Pet (shared/pet.js), DragonData (js/dragon-data.js), Voice/Sound (js/audio.js), HeroRewards (confetti)
    ===================================================================== */
@@ -17,12 +20,20 @@
   const snd = n => { try { Sound[n](); } catch (e) {} };
   const say = (t, o) => { try { Voice.say(t, Object.assign({ interrupt: true }, o || {})); } catch (e) {} };
   const sayEn = (t, slow) => { try { Voice.en(t, { slow: slow }); } catch (e) {} };
+  /* readP — רצף קטעים בעברית ובאנגלית לפי הסדר (בלי שאחד יקטע את השני); he()/en() בונים קטע */
+  const readP = (parts, o) => { try { Voice.read(parts, Object.assign({ interrupt: true }, o || {})); } catch (e) {} };
+  const he = t => ({ text: t, lang: 'he-IL' }), en = (t, slow) => ({ text: t, lang: 'en-US', slow: !!slow });
+  /* teachParts — אנגלית → "בעברית: ..." → שוב אנגלית לאט */
+  const teachParts = w => [en(w.en), he('בעברית: ' + w.he + '.'), en(w.en, true)];
   const confetti = () => { try { HeroRewards.confetti(); } catch (e) {} };
   const nm = t => window.Profile ? Profile.fix(t) : t;
 
   /* ---------- פרק 1 — שמירה ---------- */
   const KEY = 'ella-dragon-v1';
-  const D = (() => { try { return Object.assign({ done: {}, toys: {}, cap: { day: '', n: 0 } }, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return { done: {}, toys: {}, cap: { day: '', n: 0 } }; } })();
+  const D = (() => { try { return Object.assign({ done: {}, toys: {}, cap: { day: '', n: 0 }, miss: [] }, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return { done: {}, toys: {}, cap: { day: '', n: 0 }, miss: [] }; } })();
+  /* miss — מילים שהיו קשות (עד 24, החדשה ראשונה) */
+  const addMiss = w => { D.miss = [w].concat((D.miss || []).filter(x => x !== w)).slice(0, 24); };
+  const dropMiss = w => { D.miss = (D.miss || []).filter(x => x !== w); };
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} };
   const P = () => Pet.state;
   const dname = () => P().name || 'הדרקון';
@@ -48,7 +59,7 @@
     $$('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + b.dataset.tab));
     snd('tap'); render(b.dataset.tab);
   }));
-  function render(tab) { refreshChips(); if (tab === 'missions') renderMissions(); else if (tab === 'toys') renderToys(); else renderLair(); }
+  function render(tab) { refreshChips(); if (tab === 'missions') renderMissions(); else if (tab === 'toys') renderToys(); else if (tab === 'words') renderWords(); else renderLair(); }
 
   /* ---------- פרק 2 — הדרקון שלי ---------- */
   function renderLair() {
@@ -99,15 +110,20 @@
           '<div class="stars">' + [0, 1, 2].map(k => '<span class="' + (k < stars ? 'on' : '') + '">★</span>').join('') + '</div><small>' + (open ? (stars ? 'שוב: +' + Math.round(reward(3) / 2) + ' 🍎' : '8 שאלות · +' + reward(3) + ' 🍎') : '🔒 נפתח אחרי הקודם') + '</small></button>';
       }).join('') + '</div></div>';
     };
-    pane.innerHTML = track('en', '🇬🇧 מסלול האנגלית', '— שומעים, רואים ולומדים מילים חדשות', '#29c5ff') + track('math', '🔢 מסלול החשבון', '— אתגרים לגיבורי מספרים', '#3ff2b0');
+    const miss = (D.miss || []).length;
+    const review = miss >= 3 ? '<button type="button" class="review" id="review"><span class="ic">🔁</span><span><b>חזרה על מילים קשות</b><small>' + miss + ' מילים שכדאי לתרגל שוב · +' + REVIEW_APPLES + ' 🍎</small></span><span class="go">▶</span></button>' : '';
+    pane.innerHTML = review + track('en', '🇬🇧 מסלול האנגלית', '— שומעים, רואים ולומדים מילים חדשות', '#29c5ff') + track('math', '🔢 מסלול החשבון', '— אתגרים לגיבורי מספרים', '#3ff2b0');
     $$('.node[data-set]', pane).forEach(b => b.addEventListener('click', () => { if (!b.disabled) startSet(b.dataset.set); }));
+    if ($('#review')) $('#review').onclick = () => startSet('review');
   }
   const reward = stars => 8 + stars * 2;
+  const REVIEW_APPLES = 6;
 
   /* ---------- פרק 4 — נגן השאלות ---------- */
   function startSet(setId) {
-    const meta = DragonData.TRACKS[setId.split(':')[0]].find(s => s.id === setId);
-    const qs = DragonData.build(setId);
+    const isReview = setId === 'review';
+    const meta = isReview ? { icon: '🔁', name: 'חזרה על מילים קשות' } : DragonData.TRACKS[setId.split(':')[0]].find(s => s.id === setId);
+    const qs = isReview ? DragonData.reviewSet(D.miss || []) : DragonData.build(setId);
     const res = [];
     let i = 0, mistakes = 0;
     const ov = el('div', 'ov'), box = el('div', 'play');
@@ -121,14 +137,17 @@
       const q = qs[i], qb = $('#qbox', box); qb.innerHTML = '';
       renderQ(q, qb, ok => {
         res[i] = ok; if (!ok) mistakes++;
+        /* מילה שטעו בה → לרשימת החזרה; תשובה נכונה בחזרה → יוצאת מהרשימה */
+        if (q.word) { if (!ok) addMiss(q.word.en); else if (q.review) dropMiss(q.word.en); save(); }
         pips[i].className = ok ? 'ok' : 'no';
         explain(q, ok, box, () => { i++; if (i < qs.length) show(); else finish(); });
       });
     }
     function finish() {
-      const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1, first = D.done[setId] == null;
-      const apples = first ? reward(stars) : Math.round(reward(stars) / 2);
-      D.done[setId] = Math.max(D.done[setId] || 0, stars); save();
+      const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1, first = !isReview && D.done[setId] == null;
+      const apples = isReview ? REVIEW_APPLES : first ? reward(stars) : Math.round(reward(stars) / 2);
+      if (!isReview) D.done[setId] = Math.max(D.done[setId] || 0, stars);
+      save();
       try { if (window.Progress) { Progress.track('dragon:set'); for (let k = 0; k < res.filter(Boolean).length; k++) Progress.track('answer:dragon'); } } catch (e) {}
       ov.remove();
       results(meta, stars, apples);
@@ -148,24 +167,24 @@
       ins('🎧 הקשיבו — איזו תמונה זו?');
       spk(w.en).forEach(b => main.appendChild(b)); main.firstChild.classList.add('pulse');
       q.options.forEach(o => { const b = el('button', 'opt pic', o.pic); b.type = 'button'; b.onclick = () => finish(b, o === w, $$('.opt', opts)[q.options.indexOf(w)]); opts.appendChild(b); });
-      say('הקשיבו, איזו תמונה זו?', { onEnd: () => setTimeout(() => sayEn(w.en), 200) });
+      readP([he('הקשיבו למילה באנגלית, ובחרו את התמונה:'), en(w.en), en(w.en, true)]);
     } else if (q.type === 'pic2word') {
-      ins('🖼️ איך אומרים את זה באנגלית?');
+      ins('🖼️ איך אומרים <b>' + w.he + '</b> באנגלית?');
       main.appendChild(el('div', 'bigpic', w.pic));
       q.options.forEach(o => { const b = el('button', 'opt en', o.en); b.type = 'button'; const m = el('span', 'mini', '🔊'); m.onclick = e => { e.stopPropagation(); sayEn(o.en); }; b.appendChild(m); b.onclick = () => finish(b, o === w, $$('.opt', opts)[q.options.indexOf(w)]); opts.appendChild(b); });
-      say('איך אומרים את זה באנגלית?');
+      say('איך אומרים ' + w.he + ' באנגלית? אפשר ללחוץ על הרמקול שליד כל מילה.');
     } else if (q.type === 'word2pic') {
       ins('📖 קראו את המילה — איזו תמונה מתאימה?');
       main.appendChild(el('div', 'bigword', w.en)); spk(w.en).forEach(b => main.appendChild(b));
       q.options.forEach(o => { const b = el('button', 'opt pic', o.pic); b.type = 'button'; b.onclick = () => finish(b, o === w, $$('.opt', opts)[q.options.indexOf(w)]); opts.appendChild(b); });
-      say('קראו את המילה. איזו תמונה מתאימה?');
+      readP([he('קראו את המילה, או הקשיבו לה:'), en(w.en), he('איזו תמונה מתאימה?')]);
     } else if (q.type === 'missing') {
       ins('🔤 איזו אות חסרה?');
       main.appendChild(el('div', 'bigpic', w.pic));
       main.appendChild(el('div', 'bigword', w.en.split('').map((c, k) => k === q.idx ? '<span class="gap">_</span>' : c).join('')));
       spk(w.en).forEach(b => main.appendChild(b));
       q.letters.forEach(L => { const b = el('button', 'opt en tile', L); b.type = 'button'; b.onclick = () => { if (L === q.letter) { const g = $('.gap', main); if (g) g.textContent = L; } finish(b, L === q.letter, $$('.opt', opts)[q.letters.indexOf(q.letter)]); }; opts.appendChild(b); });
-      say('איזו אות חסרה במילה?', { onEnd: () => sayEn(w.en) });
+      readP([he('איזו אות חסרה במילה'), en(w.en), he('? הקשיבו טוב לכל צליל:'), en(w.en, true)]);
     } else if (q.type === 'spell') {
       ins('🧩 בנו את המילה — לחצו על האותיות לפי הסדר');
       main.appendChild(el('div', 'bigpic', w.pic)); spk(w.en).forEach(b => main.appendChild(b));
@@ -178,16 +197,16 @@
         if (done || b.disabled) return;
         if (L === w.en[pos]) { b.disabled = true; b.classList.add('good'); slots.children[pos].textContent = L; slots.children[pos].classList.add('f'); pos++; snd('pop');
           if (pos === w.en.length) { done = true; snd('ding'); setTimeout(() => answer(!err), 600); } }
-        else { err = true; b.classList.remove('bad'); void b.offsetWidth; b.classList.add('bad'); snd('sad'); sayEn(w.en); }
+        else { err = true; b.classList.remove('bad'); void b.offsetWidth; b.classList.add('bad'); snd('sad'); readP([he('לא זאת. האות הבאה היא'), en(w.en[pos])]); }
       }; opts.appendChild(b); });
       qb.appendChild(main); qb.appendChild(slots); qb.appendChild(opts);
-      say('בנו את המילה', { onEnd: () => sayEn(w.en) });
+      readP([he('בנו את המילה'), en(w.en), he(', שזה ' + w.he + '. לוחצים על האותיות לפי הסדר.')]);
       return;
     } else if (q.type === 'sentence') {
       ins('💬 הקשיבו למשפט — איזו תמונה מתאימה?');
       const bw = el('div', 'bigword', q.text); bw.style.fontSize = 'clamp(30px,5vh,52px)'; main.appendChild(bw); spk(q.text).forEach(b => main.appendChild(b));
       q.options.forEach(o => { const b = el('button', 'opt pic', o); b.type = 'button'; b.onclick = () => finish(b, o === q.answer, $$('.opt', opts)[q.options.indexOf(q.answer)]); opts.appendChild(b); });
-      say('הקשיבו למשפט', { onEnd: () => sayEn(q.text) });
+      readP([he('הקשיבו למשפט, ובחרו את התמונה:'), en(q.text), en(q.text, true)]);
     } else if (q.type === 'math') {
       ins(/[א-ת]/.test(q.q) ? q.q : '🔢 כמה זה?');
       if (!/[א-ת]/.test(q.q)) main.appendChild(el('div', 'mathq', q.q));
@@ -203,23 +222,29 @@
   /* explain — לוח הסבר אחרי כל תשובה: ציור, מילה, הגייה, תרגום, טיפ, 🔊/🐢 */
   function explain(q, ok, box, next) {
     const ex = el('div', 'explain ' + (ok ? 'ok' : 'no'));
-    let pic, body, en = null;
+    let pic, body, enTxt = null;
+    let speech = null, tp = null;
     if (q.word) {
-      const w = q.word; en = w.en; pic = w.pic;
-      body = '<b>' + (ok ? '✓ נכון! ' : 'כמעט! התשובה: ') + '</b><span class="w">' + w.en + '</span><span class="tr">' + w.say + ' · ' + w.he + '</span>' + (w.tip ? '<small>💡 ' + w.tip + '</small>' : '');
+      const w = q.word; enTxt = w.en; pic = w.pic; tp = DragonData.tip(w);
+      /* שתי שורות ברורות: איך אומרים (הגייה בעברית) ומה זה אומר (פירוש) */
+      body = '<b>' + (ok ? '✓ נכון! ' : 'כמעט! התשובה היא: ') + '</b><span class="w">' + w.en + '</span>' +
+        '<span class="tr"><span class="lab">🗣️ אומרים:</span> <b class="say">' + w.say + '</b> <span class="lab">· 🇮🇱 בעברית:</span> <b class="say">' + w.he + '</b></span>' +
+        (tp ? '<small class="tip">💡 ' + tp.html + '</small>' : '');
+      speech = [he(ok ? 'נכון!' : 'כמעט! התשובה היא')].concat(teachParts(w), tp ? tp.parts : []);
     } else if (q.type === 'sentence') {
-      en = q.text; pic = q.answer;
-      body = '<b>' + (ok ? '✓ נכון! ' : 'כמעט! ') + '</b><span class="w" style="font-size:clamp(22px,2.6vw,32px)">' + q.text + '</span><small>' + q.he + '</small>';
+      enTxt = q.text; pic = q.answer;
+      body = '<b>' + (ok ? '✓ נכון! ' : 'כמעט! ') + '</b><span class="w" style="font-size:clamp(22px,2.6vw,32px)">' + q.text + '</span><span class="tr"><span class="lab">🇮🇱 פירוש:</span> <b class="say">' + q.he + '</b></span>';
+      speech = [he(ok ? 'נכון!' : 'כמעט!'), en(q.text), he('פירוש: ' + q.he), en(q.text, true)];
     } else {
       pic = ok ? '🎉' : '💡';
       body = '<b>' + (ok ? '✓ נכון! ' : 'כמעט! התשובה: ') + '<span style="direction:ltr;display:inline-block">' + q.ans + '</span></b><small>' + q.why + '</small>';
     }
     ex.innerHTML = '<div class="ep">' + pic + '</div><div class="et">' + body + '</div><div class="eb"></div>';
     const eb = $('.eb', ex);
-    if (en) { const a = el('button', 'spk', '🔊'); a.type = 'button'; a.onclick = () => sayEn(en); const s = el('button', 'spk slow', '🐢'); s.type = 'button'; s.onclick = () => sayEn(en, true); eb.append(a, s); }
+    if (enTxt) { const a = el('button', 'spk', '🔊'); a.type = 'button'; a.title = 'להקשיב שוב להסבר'; a.onclick = () => readP(speech.slice(1)); const s = el('button', 'spk slow', '🐢'); s.type = 'button'; s.title = 'לאט'; s.onclick = () => sayEn(enTxt, true); eb.append(a, s); }
     const nb = el('button', 'h-btn gold', 'הבא ←'); nb.type = 'button'; nb.onclick = () => { ex.remove(); next(); }; eb.appendChild(nb);
     box.appendChild(ex);
-    if (en) { say(ok ? 'נכון!' : 'כמעט!', { onEnd: () => setTimeout(() => sayEn(en), 150) }); }
+    if (speech) readP(speech);
     else say(ok ? 'נכון! ' + (q.why || '') : 'כמעט! ' + (q.why || ''));
   }
 
@@ -284,6 +309,38 @@
   }
 
   /* ---------- פרק 6 — משחקים ---------- */
+  /* ---------- פרק 7 — המילים שלי ----------
+     כל נושא שהסט שלו הושלם נפתח כאן. לחיצה על כרטיס = אנגלית → עברית → שוב לאט + טיפ צליל.
+     "🎧 להקשיב לכל הנושא" מקריא זוגות: מילה באנגלית ופירושה, אחת אחרי השנייה. */
+  function renderWords() {
+    const pane = $('#pane-words'), T = DragonData.THEMES, miss = D.miss || [];
+    const themes = DragonData.TRACKS.en.filter(t => T[t.theme]);
+    const learned = themes.filter(t => D.done[t.id] != null);
+    const total = learned.reduce((n, t) => n + T[t.theme].words.length, 0);
+    let html = '<div class="wb-head"><div class="wb-big">📖</div><div><h2>המילים שלי</h2><p>' + (total ? 'למדת <b>' + total + '</b> מילים באנגלית! לוחצים על כרטיס כדי לשמוע אותו שוב.' : 'עוד אין מילים — משלימים סט במסלול האנגלית, והמילים שלו יופיעו כאן.') + '</p></div>' +
+      (miss.length ? '<div class="wb-miss">🔁 ' + miss.length + ' מילים לחזרה</div>' : '') + '</div>';
+    themes.forEach(t => {
+      const open = D.done[t.id] != null, th = T[t.theme];
+      html += '<section class="wb-theme' + (open ? '' : ' lock') + '"><h3>' + th.icon + ' ' + th.name + (open ? ' <button type="button" class="wb-all" data-theme="' + t.theme + '">🎧 להקשיב לכל הנושא</button>' : ' <small>🔒 נפתח כשמשלימים את הסט "' + t.name + '"</small>') + '</h3>';
+      if (open) html += '<div class="wb-grid">' + th.words.map(w => '<button type="button" class="wcard' + (miss.indexOf(w[0]) >= 0 ? ' miss' : '') + '" data-w="' + w[0] + '"><span class="wp">' + w[1] + '</span><b dir="ltr">' + w[0] + '</b><span class="wh">' + w[2] + '</span><small>🗣️ ' + w[3] + '</small></button>').join('') + '</div>';
+      html += '</section>';
+    });
+    pane.innerHTML = html;
+    $$('.wcard', pane).forEach(c => c.onclick = () => {
+      const w = DragonData.wordByEn(c.dataset.w), tp = DragonData.tip(w);
+      $$('.wcard.on', pane).forEach(x => x.classList.remove('on')); c.classList.add('on'); snd('pop');
+      /* מה שנשמע מופיע גם כתוב: כרטיס הסבר מתחת לכותרת הנושא */
+      $$('.wb-tip', pane).forEach(x => x.remove());
+      const box = el('div', 'wb-tip', w.pic + ' <span class="w" dir="ltr">' + w.en + '</span> · 🗣️ אומרים: <b>' + w.say + '</b> · 🇮🇱 בעברית: <b>' + w.he + '</b>' + (tp ? '<br>💡 ' + tp.html : ''));
+      c.closest('.wb-grid').before(box);
+      readP(teachParts(w).concat(tp ? tp.parts : []));
+    });
+    $$('.wb-all', pane).forEach(b => b.onclick = () => {
+      snd('bubble');
+      readP(T[b.dataset.theme].words.reduce((a, w) => a.concat([en(w[0]), he(w[2] + '.')]), [he('מילים בנושא ' + T[b.dataset.theme].name + ':')]));
+    });
+  }
+
   function renderToys() {
     const pane = $('#pane-toys');
     pane.innerHTML = '<div class="toys">' + TOYS.map(t => {

@@ -387,7 +387,8 @@
     <div class="rotate-message"><div class="rotate-icon">📱</div><strong>בואו נסובב לרוחב</strong><span>אקדמיית הגיבורים נבנתה במיוחד למסך הרחב של האייפד.</span></div>
   </div>
   <script src="shared/profile.js"></script>
-  <script src="shared/kids-ui.js"></script><script src="shared/wallet.js"></script><script src="js/voice-en.js"></script><script src="js/audio.js"></script>
+  <script src="shared/kids-ui.js"></script><script src="shared/wallet.js"></script><script src="js/voice-en.js"></script>
+<script src="js/voice-en-slow.js"></script><script src="js/audio.js"></script>
   <script src="shared/hero-avatar.js"></script><script src="shared/hero-rewards.js"></script><script src="shared/progress.js"></script><script src="shared/stickers.js"></script><script src="shared/pet.js"></script><script src="shared/share.js"></script><script src="shared/voice-settings.js"></script><script src="js/academy-puzzle.js"></script><script src="js/academy-modules.js"></script>
   <script>
     (function(){
@@ -422,6 +423,8 @@ const young={};Object.keys(saved.progress||{}).forEach(function(k){const p=Math.
       /* say / readParts — כל ההקראה עוברת דרך Voice (audio.js): תור, ניקוי אימוג'י וסימנים, קול עברי/אנגלי נכון */
       function say(text,opts){if(window.Voice)Voice.say(text,Object.assign({rate:.92,pitch:1.15},opts||{}))}function sound(name){if(window.Sound&&Sound[name])Sound[name]()}
       function readParts(parts,opts){if(window.Voice&&parts&&parts.length)Voice.read(parts,opts||{})}
+      /* successParts — המשפט המלא (עברית + אנגלית לפי שפה) + קטעי read שלא נאמרו + חזרה איטית על מילה באנגלית */
+      function successParts(){const s=el.feedback.textContent||praise(),low=s.toLowerCase(),parts=window.Voice&&Voice.splitLang?Voice.splitLang(s):[{text:s,lang:'he-IL'}];(currentRound.read||[]).forEach(function(p){const t=String(p.text||'').toLowerCase().trim();if(t&&low.indexOf(t)<0&&!(/^he/i.test(p.lang||'he')&&/\d/.test(s)))parts.push(p)});const ens=parts.filter(function(p){return /^en/i.test(p.lang)});if(ens.length===1)parts.push({text:ens[0].text,lang:'en-US',slow:true});return parts}
       /* speakPrompt — מקריא את השאלה (וגם את תוכן השאלה, q, אם יש) — בלי לגלות את התשובה */
       function speakPrompt(interrupt){if(!currentRound)return;const txt=currentRound.speak||el.instruction.textContent;const parts=(window.Voice&&Voice.splitLang?Voice.splitLang(txt):[{text:txt,lang:'he-IL'}]).concat(currentRound.q||[]);readParts(parts,{interrupt:!!interrupt})}
       function completedCount(){return Object.values(state.completed).filter(Boolean).length}function levelText(){const done=completedCount(),total=Object.keys(modules).length;return !done?'גיבורה מתחילה':done<3?'גיבורה בהתהוות':done<total?'גיבורת-על של למידה':'כל האקדמיה הושלמה!'}
@@ -561,8 +564,9 @@ setStreak(roundWrong?0:streak+1)
 const r=scoreStar(button,1)
 el.feedback.className='feedback good';el.feedback.textContent=r.chapterDone?'וואו! הפרק הושלם!':(currentRound.success||praise())
 el.next.disabled=false;el.next.textContent='ממשיכים הלאה ←'
-/* מקריאים את אותו משפט שמוצג (או את ההסבר המלא, read, כשיש בו אנגלית/הגייה) */
-if(r.chapterDone)say('וואו! הפרק הושלם!',{interrupt:true});else if(currentRound.read)readParts([{text:(currentRound.success&&/^[\u0590-\u05FF]/.test(currentRound.success))?currentRound.success.split('!')[0]+'!':praise(),lang:'he-IL'}].concat(currentRound.read),{interrupt:true});else say(el.feedback.textContent,{interrupt:true})
+/* הבנת הנשמע: מקריאים את כל משפט ההצלחה כמו שהוא מוצג (כולל הפירוש בעברית), ואז את read רק אם הוא מוסיף משהו שלא נאמר.
+   מילה אחת באנגלית במשפט = חוזרים עליה שוב לאט (🐢), כדי שהילד ישמע אותה ברור */
+if(r.chapterDone)say('וואו! הפרק הושלם!',{interrupt:true});else readParts(successParts(),{interrupt:true})
 sound('happy');burst(button)
 if(r.chapterDone)setTimeout(function(){celebrate(state.active,r)},430)}
       /* celebrate — חגיגת פרק: מציג איזה פרק הושלם ואיזה נפתח, ומעביר לפרק הבא */

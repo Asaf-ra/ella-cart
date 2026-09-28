@@ -53,6 +53,8 @@
         '</div>' +
         /* ---------- פרק 3 — מהירות ---------- */
         '<label class="vs-rate">מהירות דיבור: <input type="range" min="0.8" max="1.15" step="0.05" value="' + cur.rate + '"> <b>' + Math.round(cur.rate * 100) + '%</b></label>' +
+        /* ---------- פרק 3.5 — כתוביות: מה שנשמע מופיע גם כתוב בתחתית המסך ---------- */
+        '<label class="vs-cap"><input type="checkbox"' + (cur.captions ? ' checked' : '') + '> 🔊 כתוביות: להציג בתחתית המסך את מה שהקול אומר (אנגלית מודגשת בזהב)</label>' +
         /* ---------- פרק 4 — הסבר להורה ---------- */
         '<details class="vs-tip"' + (Voice.heStatus && Voice.heStatus() !== 'good' ? ' open' : '') + '><summary>💡 איך מקבלים קול טבעי יותר באייפד?</summary>' +
           '<ol><li>הגדרות ← נגישות ← תוכן מוקרא ← קולות</li>' +
@@ -69,6 +71,7 @@
       var range = card.querySelector('.vs-rate input');
       range.oninput = function () { card.querySelector('.vs-rate b').textContent = Math.round(range.value * 100) + '%'; };
       range.onchange = function () { Voice.setPref('rate', +range.value); test('he'); };
+      card.querySelector('.vs-cap input').onchange = function () { Voice.setPref('captions', this.checked); test('he'); };
     }
     function test(k) { Voice.read([{ text: k === 'en' ? SAMPLE_EN : SAMPLE_HE, lang: k === 'en' ? 'en-US' : 'he-IL' }], { interrupt: true }); }
     render();
@@ -88,6 +91,7 @@
     '.vs-voice.on{background:linear-gradient(180deg,#fff3b0,#ffc93c);box-shadow:0 0 0 3px var(--h-magenta)}' +
     '.vs-empty{color:var(--h-text-soft);font-weight:700}' +
     '.vs-status{margin:12px 0 0;padding:10px 14px;border:3px solid var(--h-ink);border-radius:16px;font:800 16px/1.45 var(--h-font);color:var(--h-ink)}.vs-status.ok{background:#e0fff1}.vs-status.warn{background:#fff3b0}' +
+    '.vs-cap{display:flex;gap:10px;align-items:center;margin:0 0 12px;font:800 17px/1.3 var(--h-font);color:var(--h-ink)}.vs-cap input{width:24px;height:24px;accent-color:#ff622e}' +
     '.vs-rate{display:flex;gap:10px;align-items:center;margin:14px 0;font:800 18px/1 var(--h-font);color:var(--h-ink)}.vs-rate input{flex:1;accent-color:#ff2e93}' +
     '.vs-tip{border:3px dashed rgba(27,16,54,.3);border-radius:16px;padding:10px 14px;color:var(--h-ink);font-weight:700}.vs-tip summary{cursor:pointer;font-weight:900}.vs-tip ol{margin:8px 22px 6px 0;line-height:1.7}' +
     '@media (max-width:760px){.vs-cols{grid-template-columns:1fr}}';

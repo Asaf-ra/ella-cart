@@ -111,13 +111,13 @@
 
   /* אנגלית: אות, מילה, אימוג'י (בלי X — אין מילה פשוטה עם תמונה ברורה) */
   var EN = [
-    ['A', 'Apple', '🍎'], ['B', 'Ball', '⚽'], ['C', 'Cat', '🐱'], ['D', 'Dog', '🐶'], ['E', 'Egg', '🥚'], ['F', 'Fish', '🐟'], ['G', 'Grapes', '🍇'],
-    ['H', 'House', '🏠'], ['I', 'Ice cream', '🍦'], ['J', 'Juice', '🧃'], ['K', 'Key', '🔑'], ['L', 'Lion', '🦁'], ['M', 'Moon', '🌙'], ['N', 'Nose', '👃'],
-    ['O', 'Octopus', '🐙'], ['P', 'Pig', '🐷'], ['Q', 'Queen', '👸'], ['R', 'Rainbow', '🌈'], ['S', 'Sun', '☀️'], ['T', 'Tree', '🌳'], ['U', 'Umbrella', '☂️'],
-    ['V', 'Violin', '🎻'], ['W', 'Whale', '🐋'], ['Y', 'Yo-yo', '🪀'], ['Z', 'Zebra', '🦓']
+    ['A', 'Apple', '🍎', 'תפוח'], ['B', 'Ball', '⚽', 'כדור'], ['C', 'Cat', '🐱', 'חתול'], ['D', 'Dog', '🐶', 'כלב'], ['E', 'Egg', '🥚', 'ביצה'], ['F', 'Fish', '🐟', 'דג'], ['G', 'Grapes', '🍇', 'ענבים'],
+    ['H', 'House', '🏠', 'בית'], ['I', 'Ice cream', '🍦', 'גלידה'], ['J', 'Juice', '🧃', 'מיץ'], ['K', 'Key', '🔑', 'מפתח'], ['L', 'Lion', '🦁', 'אריה'], ['M', 'Moon', '🌙', 'ירח'], ['N', 'Nose', '👃', 'אף'],
+    ['O', 'Octopus', '🐙', 'תמנון'], ['P', 'Pig', '🐷', 'חזיר'], ['Q', 'Queen', '👸', 'מלכה'], ['R', 'Rainbow', '🌈', 'קשת'], ['S', 'Sun', '☀️', 'שמש'], ['T', 'Tree', '🌳', 'עץ'], ['U', 'Umbrella', '☂️', 'מטרייה'],
+    ['V', 'Violin', '🎻', 'כינור'], ['W', 'Whale', '🐋', 'לווייתן'], ['Y', 'Yo-yo', '🪀', 'יו-יו'], ['Z', 'Zebra', '🦓', 'זברה']
   ];
   var EN_NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-  var EN_SENT = [['I see a cat', '🐱'], ['The sun is hot', '☀️'], ['I like apples', '🍎'], ['The dog can run', '🐶'], ['I have a red ball', '⚽'], ['The fish can swim', '🐟'], ['It is raining', '🌧️'], ['I love my mom', '❤️']];
+  var EN_SENT = [['I see a cat', '🐱', 'אני רואה חתול'], ['The sun is hot', '☀️', 'השמש חמה'], ['I like apples', '🍎', 'אני אוהבת תפוחים'], ['The dog can run', '🐶', 'הכלב יכול לרוץ'], ['I have a red ball', '⚽', 'יש לי כדור אדום'], ['The fish can swim', '🐟', 'הדג יודע לשחות'], ['It is raining', '🌧️', 'יורד גשם'], ['I love my mom', '❤️', 'אני אוהבת את אמא שלי']];
 
   /* קבוצות מילים (אימוג'י, עברית, אנגלית) */
   var ANIMALS = {
@@ -388,7 +388,7 @@
   function enStarts(from, to) {
     return function (api) {
       var pool = EN.filter(function (x) { return x[0] >= from && x[0] <= to; }), w = pick(pool);
-      Q(api, { ins: 'מה מתחיל באות ' + w[0] + '?', speak: 'What starts with ' + w[0] + '?', help: 'לחצו "הקשיבו" לשמוע את האות והמילה.', success: 'נכון! ' + w[0] + ' כמו ' + w[1] + ' ' + w[2],
+      Q(api, { ins: 'מה מתחיל באות ' + w[0] + '?', speak: 'מה מתחיל באות ' + w[0] + '? לחצו על התמונה.', help: 'לחצו "הקשיבו" לשמוע את האות והמילה.', success: 'נכון! ' + w[0] + ' כמו ' + w[1] + ', ' + w[3] + ' ' + w[2],
         read: [{ text: w[0], lang: 'en-US' }, { text: w[1], lang: 'en-US' }],
         target: '<div class="letter-target"><span class="letter-symbol" dir="ltr">' + w[0] + '</span><span class="letter-copy"><strong dir="ltr">' + w[0].toLowerCase() + '</strong></span></div>',
         opts: mix([w].concat(others(EN, w, 3))).map(function (o) { return { h: BIG(o[2]), ok: o === w }; }) });
@@ -403,12 +403,12 @@
   }
   function enWord(api) {
     var w = pick(EN);
-    Q(api, { ins: 'איך אומרים את זה באנגלית?', help: 'קראו את המילים ובחרו.', success: 'נכון! ' + w[1], read: [{ text: w[1], lang: 'en-US' }],
+    Q(api, { ins: 'איך אומרים את זה באנגלית?', help: 'קראו את המילים ובחרו.', success: 'נכון! ' + w[1] + ' זה ' + w[3], read: [{ text: w[1], lang: 'en-US' }],
       target: '<div class="nature-scene">' + w[2] + '</div>', opts: mix([w].concat(others(EN, w, 3))).map(function (o) { return { h: L(o[1], ' dir="ltr"'), ok: o === w }; }) });
   }
   function enFirst(api) {
     var w = pick(EN);
-    Q(api, { ins: 'באיזו אות מתחילה המילה באנגלית?', help: 'אמרו את המילה באנגלית והקשיבו לצליל הראשון.', success: 'נכון! ' + w[1] + ' מתחילה ב-' + w[0], read: [{ text: w[1], lang: 'en-US' }],
+    Q(api, { ins: 'באיזו אות מתחילה המילה באנגלית?', help: 'אמרו את המילה באנגלית והקשיבו לצליל הראשון.', success: 'נכון! ' + w[1] + ', ' + w[3] + ', מתחילה באות ' + w[0], read: [{ text: w[1], lang: 'en-US' }],
       target: '<div class="nature-scene">' + w[2] + '</div>',
       opts: mix([w[0]].concat(others(EN.map(function (x) { return x[0]; }), w[0], 3))).map(function (l) { return { h: L(l, ' dir="ltr" style="font-size:clamp(34px,4.5vw,52px)"'), ok: l === w[0] }; }) });
   }
@@ -419,7 +419,7 @@
   }
   function enSentence(api) {
     var s = pick(EN_SENT);
-    Q(api, { ins: 'קראו את המשפט באנגלית ובחרו תמונה:', help: 'אפשר ללחוץ "הקשיבו".', success: 'מצוין! 🌟', read: [{ text: s[0], lang: 'en-US' }], q: [{ text: s[0], lang: 'en-US' }],
+    Q(api, { ins: 'קראו את המשפט באנגלית ובחרו תמונה:', help: 'אפשר ללחוץ "הקשיבו".', success: 'מצוין! ' + s[0] + '. פירוש: ' + s[2] + ' 🌟', read: [{ text: s[0], lang: 'en-US' }], q: [{ text: s[0], lang: 'en-US' }],
       target: '<div class="read-word" dir="ltr">' + s[0] + '</div>', opts: mix([s].concat(others(EN_SENT, s, 3))).map(function (o) { return { h: BIG(o[1]), ok: o === s }; }) });
   }
 
