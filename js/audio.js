@@ -149,16 +149,34 @@ const Music = (function () {
    API: Voice.say(text, opts) · Voice.read([{text, lang}], opts) · Voice.praise() · Voice.silence() · Voice.clean(text, lang) */
 const Voice = (function () {
   const ok = (typeof window !== 'undefined') && ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
-  let he = null, en = null;
+  let he = null, en = null, voices = [];
 
-  /* ---------- פרק 1 — בחירת קולות ---------- */
+  /* ---------- פרק 1 — בחירת קולות ----------
+     הקול ה"רובוטי" מגיע בדרך כלל מקול בסיסי (Compact). מעדיפים קולות איכותיים:
+     Premium / Enhanced / Siri / Neural / Natural / Google — ומאפשרים להורה לבחור ידנית (נשמר במכשיר). */
+  const PREF_KEY = 'ella-voice-v1';
+  function prefs() { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (e) { return {}; } }
+  function savePrefs(p) { try { localStorage.setItem(PREF_KEY, JSON.stringify(p)); } catch (e) {} }
+  /* ציון איכות לקול: גבוה יותר = טבעי יותר */
+  function quality(v, favorites) {
+    let q = 0;
+    if (/premium|neural|natural/i.test(v.name)) q += 60;
+    if (/enhanced|siri|משופר/i.test(v.name)) q += 45;
+    if (/google/i.test(v.name)) q += 30;
+    if (/compact|eloquence|novelty|bad news|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|albert|fred|junior|ralph|bahh/i.test(v.name)) q -= 80;
+    favorites.forEach((f, i) => { if (new RegExp(f, 'i').test(v.name)) q += 20 - i * 3; });
+    if (v.localService) q += 4;                       // עובד גם בלי אינטרנט
+    return q;
+  }
+  function best(list, favorites) { return list.slice().sort((a, b) => quality(b, favorites) - quality(a, favorites))[0] || null; }
   function pick() {
     try {
-      const vs = window.speechSynthesis.getVoices() || [];
-      const heAll = vs.filter(v => /^(he|iw)/i.test(v.lang));
-      he = heAll.find(v => /carmit/i.test(v.name)) || heAll.find(v => v.localService) || heAll[0] || he;
-      const enAll = vs.filter(v => /^en[-_]US/i.test(v.lang));
-      en = enAll.find(v => /samantha|allison|ava|karen/i.test(v.name)) || enAll.find(v => v.localService) || enAll[0] || vs.find(v => /^en/i.test(v.lang)) || en;
+      voices = window.speechSynthesis.getVoices() || [];
+      const p = prefs();
+      const heAll = voices.filter(v => /^(he|iw)/i.test(v.lang));
+      const enAll = voices.filter(v => /^en[-_](US|GB|AU)/i.test(v.lang));
+      he = heAll.find(v => v.name === p.he) || best(heAll, ['carmit']) || he;
+      en = enAll.find(v => v.name === p.en) || best(enAll.filter(v => /^en[-_]US/i.test(v.lang)).concat(enAll), ['ava', 'samantha', 'allison', 'nicky', 'google us', 'zoe', 'evan', 'susan']) || voices.find(v => /^en/i.test(v.lang)) || en;
     } catch (e) {}
   }
   if (ok) { pick(); try { window.speechSynthesis.onvoiceschanged = pick; } catch (e) {} }
@@ -193,8 +211,10 @@ const Voice = (function () {
     const isEn = /^en/i.test(item.lang || '');
     u.lang = isEn ? 'en-US' : 'he-IL';
     const v = isEn ? en : he; if (v) u.voice = v;
-    u.rate = item.rate || (isEn ? .85 : .95);
-    u.pitch = item.pitch || 1.15;
+    const p = prefs(), speed = p.rate || 1;
+    /* קצב וגובה טבעיים: גובה מוגזם (1.2+) הוא מה שנשמע "רובוטי/סנאי" — מגבילים ל-1.05 */
+    u.rate = Math.max(.7, Math.min(1.2, (item.rate || (isEn ? .9 : .97)) * speed));
+    u.pitch = Math.max(.95, Math.min(1.05, item.pitch || 1.02));
     u.volume = 1;
     u.onend = u.onerror = function () { next(); };
     /* ---------- פרק 4 — שומר-זמן ---------- */
@@ -204,7 +224,14 @@ const Voice = (function () {
   function read(parts, opts) {
     if (!ok || (typeof Sound !== 'undefined' && !Sound.isOn())) return;
     opts = opts || {};
-    const items = (parts || []).map(p => ({ text: clean(p.text, p.lang), lang: p.lang || 'he-IL', rate: opts.rate, pitch: opts.pitch })).filter(p => p.text);
+    let items = (parts || []).map(p => ({ text: clean(p.text, p.lang), lang: p.lang || 'he-IL', rate: opts.rate, pitch: opts.pitch })).filter(p => p.text);
+    /* מאחדים קטעים רצופים באותה שפה למשפט אחד — פחות "קטיעות" בין מילים = דיבור זורם */
+    items = items.reduce((acc, it) => {
+      const last = acc[acc.length - 1];
+      if (last && /^en/i.test(last.lang) === /^en/i.test(it.lang)) last.text += (/[.!?,:]$/.test(last.text) ? ' ' : ', ') + it.text;
+      else acc.push(Object.assign({}, it));
+      return acc;
+    }, []);
     if (!items.length) return;
     const key = items.map(p => p.text).join('|'), now = Date.now();
     if (key === lastText && now - lastAt < 1200) return;      // אותו משפט פעמיים ברצף — פעם אחת מספיקה
@@ -229,6 +256,10 @@ const Voice = (function () {
   return {
     clean: clean,
     splitLang: splitLang,
+    /* להגדרות הקול (shared/voice-settings.js) */
+    voices() { pick(); return voices.slice(); },
+    current() { return { he: he && he.name, en: en && en.name, rate: prefs().rate || 1 }; },
+    setPref(k, v) { const p = prefs(); p[k] = v; savePrefs(p); pick(); },
     read: read,
     /* say — משפט בעברית; מילים באנגלית בתוכו מוקראות אוטומטית בקול אנגלי (פיצול לפי שפה) */
     say(text, opts) { read(splitLang(text), opts); },
