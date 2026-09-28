@@ -82,10 +82,11 @@
   .need .ni { grid-row: 1 / 3; font-size: 30px; } .need .nl { font: 900 16px var(--h-font); } .need .nl small { color: #6a5d87; font-family: 'Rubik', sans-serif; }
   .need .nb { height: 16px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff; overflow: hidden; } .need .nb i { display: block; height: 100%; border-radius: 999px; transition: width .6s; }
   .need.low .ni { animation: gbox 1s ease-in-out infinite; }
-  .care { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .care { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .cbtn { position: relative; display: grid; justify-items: center; gap: 0; padding: 8px 4px 6px; border: 4px solid var(--h-ink); border-radius: 18px; background: #fff; box-shadow: 0 4px 0 var(--h-ink); font: 900 17px/1.15 var(--h-font); color: var(--h-ink); cursor: pointer; transition: transform .12s var(--h-spring); }
   .cbtn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--h-ink); }
-  .cbtn b { font-size: 34px; line-height: 1.1; } .cbtn small { font-size: 13px; color: #6a5d87; } .cbtn i { font: 800 12px 'Rubik', sans-serif; color: #1b3c8f; font-style: normal; }
+  .cbtn b { font-size: 30px; line-height: 1.1; }
+  .cbtn.sickb { background: linear-gradient(180deg, #ffe0e6, #ff9fb0); animation: ch-p 1.2s ease-in-out infinite; } .cbtn small { font-size: 13px; color: #6a5d87; } .cbtn i { font: 800 12px 'Rubik', sans-serif; color: #1b3c8f; font-style: normal; }
   .cbtn.cgift { background: linear-gradient(180deg, #fff3c4, #ffc93c); animation: ch-p 1.4s ease-in-out infinite; }
   .path { grid-template-columns: repeat(12, 1fr); gap: 4px; } .path .st { border-radius: 10px; border-width: 2px; } .path .st b { font-size: 10px; }
   .scene.bathing { cursor: grab; touch-action: none; }
@@ -262,6 +263,8 @@
   <script src="shared/share.js"></script>
   <script src="shared/pet.js"></script>
   <script src="js/dragon-data.js"></script>
+  <script src="js/care-data.js"></script>
+  <script src="js/dragon-care.js"></script>
   <script src="js/dragon.js"></script>
   <script>
     if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });

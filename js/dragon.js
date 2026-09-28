@@ -64,7 +64,7 @@
   /* ---------- פרק 2 — הדרקון שלי (טמגוצ'י עדין) ----------
      2.1 סצנה: הדרקון, פריטי החדר, בועת דיבור ("אני רעב!"), קופסת הפתעה, לילה/יום
      2.2 מדדים: שובע 🍎 · ניקיון 🛁 · כיף 🎾 · אנרגיה ⚡ (ירוק > 60, צהוב 30–60, אדום < 30)
-     2.3 טיפול: להאכיל · אמבטיה (משפשפים באצבע) · לישון (לילה, כוכבים, Zzz) · לשחק · ארון · קופסה
+     2.3 טיפול: להאכיל · אמבטיה (משפשפים באצבע) · לישון (לילה, כוכבים, Zzz) · לשחק · לבשל · וטרינר · ארון · קופסה
      כל פעולה אומרת גם את המילה באנגלית (Bath · אמבטיה), וכל יום עם טיפול מאריך את הרצף 🔥 */
   const LINES = {
     food: 'אני רעב! 🍎 אפשר תפוח?', clean: 'אני מלוכלך... בואי לאמבטיה? 🛁', fun: 'משעמם לי! בואי נשחק 🎾', energy: 'אני עייף... 😴 אפשר לישון?',
@@ -74,6 +74,7 @@
   const needColor = v => v >= 60 ? '#3ff2b0' : v >= 30 ? '#ffd95a' : '#ff5a6e';
   function bubbleLine() {
     if (Pet.stage() === 0) return 'הביצה זזה... משהו בפנים! 🥚';
+    if (P().sick) return Pet.SICK[P().sick.k].line;
     const l = Pet.lowest();
     if (l.v < 30) return LINES[l.k];
     if (Pet.isNight() && Pet.need('energy') < 60) return LINES.night;
@@ -90,6 +91,7 @@
     }
     const st = Pet.stage(), egg = st === 0, nx = Pet.nextAt(), prev = Pet.STAGES[st][0];
     const pct = nx ? Math.round((P().xp - prev) / (nx - prev) * 100) : 100;
+    if (opts.fresh) Pet.checkSick();
     const away = opts.fresh ? Pet.visit() : 0, N = Pet.needs(), I = Pet.NEED_INFO, boxes = P().boxes || 0, streak = P().care.streak || 0;
     const line = away > 6 && !egg ? LINES.miss : bubbleLine();
     const room = (P().room || []).map(k => '<span class="ritem r-' + k + '">' + Pet.ROOM[k].ico + '</span>').join('');
@@ -110,6 +112,8 @@
         (egg ? '' : '<button type="button" class="cbtn" id="bath"><b>🛁</b>אמבטיה<i dir="ltr">Bath</i></button>' +
         '<button type="button" class="cbtn" id="sleep"><b>😴</b>לישון<i dir="ltr">Sleep</i></button>' +
         '<button type="button" class="cbtn" id="play"><b>🎾</b>לשחק<i dir="ltr">Play</i></button>' +
+        '<button type="button" class="cbtn" id="cook"><b>🍳</b>לבשל<i dir="ltr">Cook</i></button>' +
+        '<button type="button" class="cbtn' + (P().sick ? ' sickb' : '') + '" id="vet"><b>🩺</b>וטרינר<i dir="ltr">Doctor</i></button>' +
         '<button type="button" class="cbtn" id="closet"><b>👕</b>ארון<i dir="ltr">Closet</i></button>') +
         (boxes ? '<button type="button" class="cbtn cgift" id="openBox"><b>🎁</b>קופסה (' + boxes + ')<i dir="ltr">Surprise</i></button>' : '') +
       '</div>' +
@@ -137,6 +141,9 @@
     $('#sleep').onclick = () => { if (!busy) sleep(scene, big, bubble); };
     $('#play').onclick = () => { readP([en("Let's play!"), he('בואי נשחק!')]); $('.tab[data-tab="toys"]').click(); };
     $('#closet').onclick = () => closet();
+    /* 2.8 מטבח ווטרינר (js/dragon-care.js) — בישול מגדל את הדרקון (ואולי טקס גדילה), ווטרינר מבריא */
+    $('#cook').onclick = () => DragonCare.cook({ onDone: g => { if (g && g.to > g.from) ceremony(g.from, g.to, () => render('lair')); else render('lair'); } });
+    $('#vet').onclick = () => DragonCare.vet({ onDone: () => render('lair') });
   }
 
   /* 2.4 אמבטיה: משפשפים את הדרקון באצבע → בועות, הלכלוך נעלם בהדרגה, ובסוף שטיפה במים */
