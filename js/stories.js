@@ -26,10 +26,23 @@
   function episodeOpen(s) { if (!s.series) return true; var got = window.Progress ? Progress.storyEpisode() : 0; return s.ep <= got + 1; }
 
   /* ---------- פרק 2 — מדף הספרים ---------- */
-  var tab = 'he';
+  /* מדפים (סיידבר): לכל מדף מסנן משלו. המדף האחרון נשמר במכשיר */
+  var SHELVES = {
+    young: function (s) { return !s.series && !s.holiday && s.lang === 'he' && s.level !== 'big'; },
+    big: function (s) { return !s.series && !s.holiday && s.lang === 'he' && s.level === 'big'; },
+    holiday: function (s) { return !!s.holiday; },
+    ella: function (s) { return s.series === 'ella'; },
+    en: function (s) { return !s.series && s.lang === 'en'; }
+  };
+  var TKEY = 'ella-stories-shelf', tab = 'young';
+  try { var t0 = localStorage.getItem(TKEY); if (SHELVES[t0]) tab = t0; } catch (e) {}
+  /* בתקופת חג — פותחים ישר על מדף סיפורי החג */
+  try { if (window.Seasons && Seasons.current() && Seasons.current().story) tab = 'holiday'; } catch (e) {}
   function renderShelf() {
     var shelf = $('shelf'); shelf.innerHTML = '';
-    var items = LIST.filter(function (s) { return tab === 'ella' ? s.series === 'ella' : !s.series && s.lang === tab; });
+    var items = LIST.filter(SHELVES[tab]);
+    /* מונה "נקרא" על כל מדף בסיידבר */
+    document.querySelectorAll('.tab').forEach(function (t) { var all = LIST.filter(SHELVES[t.dataset.t]), rd = all.filter(function (s) { return D.read[s.id]; }).length; t.querySelector('.tc').textContent = rd + '/' + all.length; t.classList.toggle('on', t.dataset.t === tab); t.setAttribute('aria-selected', t.dataset.t === tab); });
     /* בתקופת חג — סיפור החג ראשון במדף (shared/seasons.js) */
     var ev = window.Seasons ? Seasons.current() : null;
     if (ev && ev.story) items.sort(function (a, b) { return (b.id === ev.story) - (a.id === ev.story); });
@@ -53,8 +66,8 @@
   }
   document.querySelectorAll('.tab').forEach(function (t) {
     t.addEventListener('click', function () {
-      tab = t.dataset.t; document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x === t); });
-      snd('bubble'); say(t.textContent.replace(/[^֐-׿A-Za-z ]/g, '')); renderShelf();
+      tab = t.dataset.t; try { localStorage.setItem(TKEY, tab); } catch (e) {}
+      snd('bubble'); say(t.querySelector('b').textContent + '!'); renderShelf();
     });
   });
 
@@ -242,7 +255,7 @@
   renderShelf();
   /* קישור ישיר לסיפור לפי מזהה (למשל stories.html#hol-hanukkah מסרט החג) */
   var mh = location.hash.match(/^#([a-z][\w-]+)$/), direct = mh && LIST.filter(function (x) { return x.id === mh[1] && !x.series; })[0];
-  if (direct) { tab = direct.lang; document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x.dataset.t === tab); }); renderShelf(); setTimeout(function () { openStory(direct); }, 300); }
+  if (direct) { tab = Object.keys(SHELVES).filter(function (k) { return SHELVES[k](direct); })[0] || 'young'; document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x.dataset.t === tab); }); renderShelf(); setTimeout(function () { openStory(direct); }, 300); }
   var m = location.hash.match(/^#ep(\d+)$/);
   if (m) {
     var s = LIST.filter(function (x) { return x.series === 'ella' && x.ep === +m[1]; })[0];

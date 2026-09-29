@@ -34,10 +34,17 @@
   .lib-head { display: flex; align-items: center; gap: 12px; padding-left: 84px; }
   .lib-head h1 { font: 900 clamp(28px, 4vw, 46px)/1 var(--h-font); color: #fff; -webkit-text-stroke: 4px var(--h-ink); paint-order: stroke fill; text-shadow: 4px 5px 0 var(--h-magenta); }
   .lib-head .count { margin-inline-start: auto; padding: 8px 16px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); box-shadow: 0 4px 0 var(--h-ink); font: 900 18px/1 var(--h-font); white-space: nowrap; }
-  .tabs { display: flex; gap: 10px; flex-wrap: wrap; }
-  .tab { padding: 10px 18px; border: 4px solid var(--h-ink); border-radius: 999px; background: #fff; box-shadow: 0 4px 0 var(--h-ink); font: 900 18px/1 var(--h-font); }
-  .tab.on { background: linear-gradient(180deg, #ff7ec2, #ff2e93); color: #fff; }
-  .shelf { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; align-content: start; padding: 6px 4px 20px; scrollbar-width: none; }
+  /* סיידבר מדפים (אנכי, בצד) */
+  .lib-body { flex: 1; min-height: 0; display: grid; grid-template-columns: clamp(150px, 16vw, 200px) minmax(0, 1fr); gap: clamp(10px, 1.4vw, 18px); }
+  .tabs { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; overflow-x: hidden; padding: 10px 2px 10px 14px; }
+  .tab { position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; padding: 9px 10px; border: 4px solid var(--h-ink); border-radius: 20px;
+    background: #fff; box-shadow: 0 5px 0 var(--h-ink); text-align: right; color: var(--h-ink); transition: transform .15s var(--h-spring); }
+  .tab .ti { grid-row: 1 / 3; font-size: clamp(28px, 3vw, 36px); line-height: 1; }
+  .tab b { font: 900 clamp(15px, 1.6vw, 19px)/1.1 var(--h-font); } .tab small { font: 800 12px/1.2 var(--h-font); color: #6a5d87; }
+  .tab .tc { position: absolute; bottom: -9px; left: -6px; padding: 1px 7px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff3c4; font: 900 12px/18px var(--h-font); font-style: normal; }
+  .tab.on { background: linear-gradient(180deg, #ffd0ea, #ff7ec2); transform: translateX(-8px); box-shadow: 0 5px 0 var(--h-ink), 0 0 0 4px rgba(255,255,255,.6); }
+  .tab:active { transform: translateY(3px); }
+  .shelf { min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(170px, 17vw, 210px), 1fr)); gap: 16px; align-content: start; padding: 6px 4px 20px; scrollbar-width: none; }
   .shelf::-webkit-scrollbar { display: none; }
   .book { position: relative; display: grid; grid-template-rows: auto auto; border: 5px solid var(--h-ink); border-radius: 24px; background: var(--h-paper); box-shadow: 0 6px 0 var(--h-ink), 0 14px 26px rgba(0,0,0,.35); overflow: hidden; text-align: right; transition: transform .15s var(--h-spring); animation: pop-in .5s var(--h-spring) both; }
   @keyframes pop-in { from { transform: scale(.7) translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -120,12 +127,17 @@
   <!-- ===== מסך הספרייה ===== -->
   <section class="screen show" id="libScreen">
     <div class="lib-head"><h1>📚 ספריית הסיפורים</h1><span class="count" id="readCount">⭐ 0</span></div>
-    <div class="tabs" id="tabs">
-      <button class="tab on" type="button" data-t="he">📖 סיפורים</button>
-      <button class="tab" type="button" data-t="ella">🦸‍♀️ הרפתקאות אלה</button>
-      <button class="tab" type="button" data-t="en">🇬🇧 English</button>
+    <!-- סיידבר מדפים: לקטנים / לגדולים / סיפורי חג / הרפתקאות אלה / English — במרכז רק הספרים של המדף שנבחר -->
+    <div class="lib-body">
+      <nav class="tabs" id="tabs" role="tablist" aria-label="מדפים">
+        <button class="tab" type="button" data-t="young"><span class="ti">🌱</span><b>לקטנים</b><small>גילאי 5–6</small><i class="tc"></i></button>
+        <button class="tab" type="button" data-t="big"><span class="ti">🚀</span><b>לגדולים</b><small>גילאי 7–8</small><i class="tc"></i></button>
+        <button class="tab" type="button" data-t="holiday"><span class="ti">🎉</span><b>סיפורי חג</b><small>חגי ישראל</small><i class="tc"></i></button>
+        <button class="tab" type="button" data-t="ella"><span class="ti">🦸‍♀️</span><b>הרפתקאות אלה</b><small>סדרה בפרקים</small><i class="tc"></i></button>
+        <button class="tab" type="button" data-t="en"><span class="ti">🇬🇧</span><b>English</b><small>סיפורים באנגלית</small><i class="tc"></i></button>
+      </nav>
+      <div class="shelf" id="shelf"></div>
     </div>
-    <div class="shelf" id="shelf"></div>
   </section>
 
   <!-- ===== מסך הקריאה ===== -->

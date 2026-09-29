@@ -37,7 +37,9 @@
 
   /* --- פרק ב: סרגל עליון --- */
   #top { position: fixed; top: max(10px, env(safe-area-inset-top)); right: 12px; left: 96px; height: 70px; display: flex; align-items: center; gap: 10px; z-index: 20; }
-  .modes { display: flex; gap: 6px; padding: 5px; border: 4px solid var(--h-ink); border-radius: 22px; background: var(--h-paper); box-shadow: 0 4px 0 var(--h-ink); }
+  /* מצבי הסטודיו — בראש העמודה הימנית (סיידבר), 2×2, מעל הכלים */
+  .modes { position: fixed; right: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 84px); width: 124px; z-index: 19; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; border: 4px solid var(--h-ink); border-radius: 22px; background: var(--h-paper); box-shadow: 0 4px 0 var(--h-ink); }
+  .modes .mode { width: auto; height: 58px; }
   .mode { display: grid; place-items: center; gap: 1px; width: 74px; height: 52px; border: 0; border-radius: 15px; background: transparent; cursor: pointer; font-size: 24px; line-height: 1; transition: transform .15s var(--h-spring); }
   .mode small { font: 800 12px/1 var(--h-font); color: var(--h-text-soft); }
   .mode.on { background: linear-gradient(180deg, #ff7ec2, #ff2e93); box-shadow: inset 0 0 0 3px var(--h-ink); transform: scale(1.04); }
@@ -61,7 +63,7 @@
   @keyframes nudge { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3); box-shadow: 0 0 0 6px var(--h-gold); } }
 
   /* --- פרק ד: לוח כלים --- */
-  #tools { position: fixed; right: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 84px); bottom: 10px; width: 124px; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; scrollbar-width: none; border: 4px solid var(--h-ink); border-radius: 24px; background: rgba(255,250,240,.12); z-index: 15; }
+  #tools { position: fixed; right: 10px; top: calc(max(10px, env(safe-area-inset-top)) + 84px + 148px); bottom: 10px; width: 124px; padding: 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; scrollbar-width: none; border: 4px solid var(--h-ink); border-radius: 24px; background: rgba(255,250,240,.12); z-index: 15; }
   #tools::-webkit-scrollbar { display: none; }
   .tgroup { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
   .tlabel { grid-column: 1 / -1; font: 900 13px/1 var(--h-font); color: #fff; text-align: center; opacity: .9; margin-top: 2px; }
@@ -109,6 +111,13 @@
   .ov-head { display: flex; align-items: center; gap: 10px; }
   .ov-head h2 { flex: 1; font: 900 clamp(22px, 3vw, 32px)/1 var(--h-font); }
   .ov-x { width: 52px; height: 52px; border: 4px solid var(--h-ink); border-radius: 50%; background: var(--h-magenta); color: #fff; font: 900 22px/1 var(--h-font); box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; flex: 0 0 auto; }
+  /* חלון הדפים: חבילות כסיידבר אנכי + רשת הדפים של החבילה שנבחרה */
+  #pagesOv .ov-card { display: grid; grid-template-columns: clamp(150px, 17vw, 210px) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); column-gap: 14px; height: min(92vh, 720px); }
+  #pagesOv .ov-head { grid-column: 1 / -1; }
+  #pagesOv .packs { flex-direction: column; overflow-x: hidden; overflow-y: auto; padding: 6px 2px 8px 12px; }
+  #pagesOv .pack { white-space: normal; border-radius: 18px; border-width: 4px; padding: 10px 12px; box-shadow: 0 4px 0 var(--h-ink); text-align: right; }
+  #pagesOv .pack.on { transform: translateX(-6px); }
+  #pagesOv .grid { align-content: start; }
   .packs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 4px 2px 8px; }
   .packs::-webkit-scrollbar { display: none; }
   .pack { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff; box-shadow: 0 3px 0 var(--h-ink); font: 800 16px/1 var(--h-font); cursor: pointer; white-space: nowrap; }
@@ -148,6 +157,8 @@
     #top { flex-wrap: wrap; height: auto; left: 90px; }
     .page-chip { order: 3; flex-basis: 100%; height: 44px; }
     .mode { width: 60px; }
+    .modes { top: 84px; width: auto; left: auto; grid-template-columns: repeat(4, 60px); }
+    #tools { top: auto; }
     .act { width: 48px; height: 48px; font-size: 20px; }
     #pal { top: auto; left: 10px; right: 10px; bottom: 10px; width: auto; height: 70px; display: flex; overflow-x: auto; overflow-y: hidden; padding: 6px 8px; }
     .sw { flex: 0 0 48px; }
@@ -165,12 +176,7 @@
 
   <!-- ===== סרגל עליון: מצבים · שם הדף · פעולות ===== -->
   <div id="top">
-    <div class="modes" id="modes">
-      <button class="mode" data-m="color" type="button">🖍️<small>צביעה</small></button>
-      <button class="mode" data-m="draw" type="button">✏️<small>ציור חופשי</small></button>
-      <button class="mode" data-m="cbn" type="button">🔢<small>לפי מספר</small></button>
-      <button class="mode" data-m="dots" type="button">✨<small>נקודות</small></button>
-    </div>
+
     <button class="page-chip" id="pageChip" type="button"><span class="pc-ico">📚</span><span id="pageName">דפי ציור</span></button>
     <div class="acts">
       <button class="act" id="btnIdea" type="button" aria-label="רעיון">💡</button>
@@ -181,6 +187,13 @@
     </div>
   </div>
 
+  <!-- ===== סיידבר ימני: מצבי הסטודיו (למעלה) + כלים (מתחת) ===== -->
+  <div class="modes" id="modes" role="tablist" aria-label="מצבי הסטודיו">
+      <button class="mode" data-m="color" type="button">🖍️<small>צביעה</small></button>
+      <button class="mode" data-m="draw" type="button">✏️<small>ציור חופשי</small></button>
+      <button class="mode" data-m="cbn" type="button">🔢<small>לפי מספר</small></button>
+      <button class="mode" data-m="dots" type="button">✨<small>נקודות</small></button>
+    </div>
   <!-- ===== פלטה (שמאל) + כלים (ימין) — נבנים ב-JS לפי המצב ===== -->
   <div id="pal"></div>
   <div id="tools"></div>
