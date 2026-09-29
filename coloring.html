@@ -84,6 +84,23 @@
   #lineArt { pointer-events: none; display: none; z-index: 3; }
   #bgCanvas, #drawCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
   #drawCanvas { z-index: 2; touch-action: none; }
+  /* שכבת מדבקות זזות (ציור חופשי): מדבקה = אלמנט עם SVG/אימוג'י; במצב מדבקות אפשר לגרור, לסובב ולהגדיל (↻) ולמחוק (✖) */
+  #stkLayer { position: absolute; inset: 0; z-index: 4; pointer-events: none; display: none; overflow: hidden; }
+  body.m-draw #stkLayer { display: block; }
+  .stko { position: absolute; touch-action: none; pointer-events: none; transform-origin: 50% 50%; }
+  body.stk-edit .stko { pointer-events: auto; cursor: grab; }
+  .stko svg { width: 100%; height: 100%; display: block; overflow: visible; pointer-events: none; }
+  .stko.emo { display: grid; place-items: center; line-height: 1; font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; }
+  .stko.sel { outline: 3px dashed #ff2e93; outline-offset: 6px; border-radius: 12px; }
+  .stko .hd { position: absolute; width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--h-ink); background: #fff; box-shadow: 0 3px 0 var(--h-ink); display: none; place-items: center; font-size: 18px; }
+  .stko.sel .hd { display: grid; }
+  .stko .h-rot { right: -26px; bottom: -26px; background: #fff3b0; }
+  .stko .h-del { left: -26px; top: -26px; background: #ffd6e8; }
+  .stk-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .stk-tabs button { padding: 7px 12px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff; font: 900 14px/1 var(--h-font); color: var(--h-ink); cursor: pointer; }
+  .stk-tabs button.on { background: linear-gradient(180deg, #ff7ec2, #ff2e93); color: #fff; }
+  .stk svg { width: 44px; height: 44px; }
+  .stk-tip { margin-top: 8px; font: 800 13px/1.35 var(--h-font); color: var(--h-text-soft); }
   #fxCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; }
   body.m-draw #bgCanvas, body.m-draw #drawCanvas { display: block; }
   body.m-draw #svgHolder { display: none; }
@@ -129,6 +146,13 @@
   .card .th { aspect-ratio: 1; display: grid; place-items: center; border-radius: 12px; background: #fffaf0; overflow: hidden; }
   .card .th svg, .card .th img { width: 92%; height: 92%; object-fit: contain; }
   .card.cur { box-shadow: 0 4px 0 var(--h-ink), 0 0 0 4px var(--h-gold); }
+  /* רמות קושי: שורת סינון מעל הדפים ותג בפינת כל כרטיס */
+  .lvbar { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 2px 0 4px; }
+  .lvbar button { padding: 8px 14px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff; box-shadow: 0 3px 0 var(--h-ink); font: 900 15px/1 var(--h-font); color: var(--h-ink); cursor: pointer; }
+  .lvbar button.on { background: linear-gradient(180deg, #fff3b0, #ffc93c); }
+  .lvbar span { font: 800 14px/1.2 var(--h-font); color: var(--h-text-soft); margin-inline-start: auto; }
+  .card { position: relative; }
+  .card .lv { position: absolute; top: 4px; left: 4px; font-size: 16px; line-height: 1; filter: drop-shadow(0 1px 0 #fff); }
   .card.surprise .th { font-size: 60px; background: linear-gradient(135deg, #ffd95a, #ff7ec2, #8b5cff); }
   .gal-item { position: relative; }
   .gal-big { display: grid; place-items: center; max-height: 62vh; overflow: hidden; border: 4px solid var(--h-ink); border-radius: 20px; background: #fffaf0; }
@@ -138,8 +162,15 @@
   .pop.show { display: block; animation: h-card-in .35s var(--h-spring) both; }
   .pop h3 { font: 900 18px/1 var(--h-font); margin-bottom: 8px; }
   .stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; }
-  .stk { height: 54px; border: 3px solid var(--h-ink); border-radius: 14px; background: #fff; font-size: 30px; cursor: pointer; }
+  .stk { height: 54px; display: grid; place-items: center; border: 3px solid var(--h-ink); border-radius: 14px; background: #fff; font-size: 30px; cursor: pointer; }
   .stk.on { background: #fff3b0; box-shadow: 0 0 0 3px var(--h-magenta); }
+  /* חלון "כל המכחולים": כרטיס לכל מכחול עם דוגמת משיכה ושם */
+  .brushes { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .brc { display: grid; justify-items: center; gap: 2px; padding: 6px 4px; border: 3px solid var(--h-ink); border-radius: 14px; background: #fff; cursor: pointer; font: 800 13px/1.1 var(--h-font); color: var(--h-ink); }
+  .brc canvas { width: 100%; height: 38px; }
+  .brc b { font-size: 22px; line-height: 1; }
+  .brc.on { background: #fff3b0; box-shadow: 0 0 0 3px var(--h-magenta); }
+  .pen-tip { margin-top: 10px; font: 800 14px/1.4 var(--h-font); color: var(--h-text-soft); }
   .bgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
   .bgc { display: grid; gap: 3px; padding: 4px; border: 3px solid var(--h-ink); border-radius: 14px; background: #fff; cursor: pointer; font: 800 13px/1 var(--h-font); }
   .bgc canvas { width: 100%; aspect-ratio: 4/3; border-radius: 9px; border: 2px solid var(--h-ink); }
@@ -149,6 +180,8 @@
   #idea.show { display: block; animation: h-card-in .35s var(--h-spring) both; }
   #idea svg, #idea img { width: 100%; height: 100%; object-fit: contain; }
   #idea::before { content: "💡 רעיון"; position: absolute; top: -16px; right: 10px; padding: 3px 10px; border: 3px solid var(--h-ink); border-radius: 999px; background: var(--h-gold); font: 900 13px/1 var(--h-font); }
+  /* כפתור סדנת העט — זהוב כדי שיבלוט */
+  .act.motor { background: linear-gradient(180deg, #fff3b0, #ffc93c); }
   .toast { position: fixed; left: 50%; top: 18%; transform: translate(-50%, 0); z-index: 70; padding: 12px 22px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); box-shadow: 0 5px 0 var(--h-ink); font: 900 clamp(18px, 2.4vw, 26px)/1 var(--h-font); pointer-events: none; animation: toast 1.8s ease forwards; white-space: nowrap; }
   @keyframes toast { 0% { opacity: 0; transform: translate(-50%, 20px) scale(.7); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -20px); } }
 
@@ -179,6 +212,7 @@
 
     <button class="page-chip" id="pageChip" type="button"><span class="pc-ico">📚</span><span id="pageName">דפי ציור</span></button>
     <div class="acts">
+      <button class="act motor" id="btnMotor" type="button" aria-label="סדנת עט">✍️</button>
       <button class="act" id="btnIdea" type="button" aria-label="רעיון">💡</button>
       <button class="act" id="btnUndo" type="button" aria-label="ביטול">↩️</button>
       <button class="act" id="btnClear" type="button" aria-label="ניקוי">🗑️</button>
@@ -204,6 +238,7 @@
     <canvas id="bgCanvas"></canvas>
     <canvas id="drawCanvas"></canvas>
     <div id="lineArt"></div>
+    <div id="stkLayer"></div>
     <canvas id="fxCanvas"></canvas>
     <div id="idea"></div>
   </div>
@@ -233,7 +268,8 @@
   </div>
 
   <!-- ===== חלונות קופצים: מדבקות ורקעים ===== -->
-  <div class="pop h-panel" id="stkPop"><h3>⭐ מדבקות — בוחרים ונוגעים בדף</h3><div class="stickers" id="stickers"></div></div>
+  <div class="pop h-panel" id="brPop"><h3>🖌️ כל המכחולים — 18 סוגים</h3><div class="brushes" id="brushes"></div><p class="pen-tip">✍️ עם עט: לוחצים חזק = קו עבה, לוחצים חלש = קו דק. מטים את העט = צבע שעווה על הצד</p></div>
+  <div class="pop h-panel" id="stkPop"><h3>⭐ מדבקות — בוחרים ונוגעים בדף</h3><div class="stk-tabs" id="stkTabs"></div><div class="stickers" id="stickers"></div><p class="stk-tip">גוררים מדבקה כדי להזיז · ↻ מסובב ומגדיל · ✖ מוחק. אפשר לבנות חדר שלם!</p></div>
   <div class="pop h-panel" id="bgPop"><h3>🖼️ רקע לציור</h3><div class="bgs" id="bgs"></div><button class="h-btn cyan line-toggle" id="lineToggle" type="button">✏️ קווי דף צביעה מעל הציור</button></div>
 
   <script src="shared/profile.js"></script>
@@ -248,7 +284,9 @@
   <script src="shared/stickers.js"></script>
   <script src="shared/share.js"></script>
   <script src="js/art-pages.js"></script>
+  <script src="js/art-series.js"></script>
   <script src="js/coloring.js"></script>
+  <script src="js/motor.js"></script>
   <script>
     window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
     if ('serviceWorker' in navigator) {
