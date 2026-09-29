@@ -89,7 +89,7 @@
   document.addEventListener('pointerdown', function () { Sound.unlock(); }, { once: true });
 
   /* ---------- פרק 4 — כרטיסי משימה ---------- */
-  Array.prototype.forEach.call(document.querySelectorAll('.mission'), function (card) {
+  Array.prototype.forEach.call(document.querySelectorAll('.mission[data-go]'), function (card) {
     card.addEventListener('click', function () {
       Sound.happy();
       Voice.say(card.dataset.say);
@@ -97,6 +97,45 @@
       setTimeout(function () { KidsUI.PageFade.go(card.dataset.go); }, 380);
     });
   });
+
+  /* ---------- פרק 4.5 — סיידבר קבוצות ----------
+     5 קבוצות בצד; במרכז רק הכרטיסים של הקבוצה שנבחרה (בלי גלילה). הקבוצה האחרונה נשמרת במכשיר.
+     כרטיסי "הגיבורה שלי" (data-act) לוחצים על הכפתורים המקוריים (תחפושות / שדרוגים / אלבום) — אותה התנהגות בדיוק. */
+  var GROUPS = [
+    { id: 'learn', ico: '📚', he: 'ללמוד', g1: '#fff3c4', g2: '#ffc93c' },
+    { id: 'dragon', ico: '🐉', he: 'הדרקון', g1: '#ffe0c4', g2: '#ff9f5a' },
+    { id: 'play', ico: '🎮', he: 'לשחק', g1: '#d6f7ff', g2: '#5cc8ff' },
+    { id: 'create', ico: '🎨', he: 'ליצור', g1: '#eadcff', g2: '#b48cff' },
+    { id: 'me', ico: '🦸‍♀️', he: 'הגיבורה שלי', g1: '#ffe0f0', g2: '#ff7ec2' }
+  ];
+  var RKEY = 'ella-hub-group', rail = $('rail');
+  function showGroup(id, speak) {
+    Array.prototype.forEach.call(document.querySelectorAll('.missions .mission'), function (c) { c.classList.toggle('off', c.dataset.group !== id); c.classList.remove('wide'); });
+    /* מספר אי-זוגי של כרטיסים (בלי הכרטיס הראשי) → האחרון ברוחב מלא, בלי חור */
+    var vis = Array.prototype.filter.call(document.querySelectorAll('.missions .mission'), function (c) { return c.dataset.group === id; });
+    var small = vis.filter(function (c) { return !c.classList.contains('main'); });
+    var main = vis.filter(function (c) { return c.classList.contains('main'); })[0];
+    if (main) main.classList.toggle('narrow', small.length % 2 === 1);      /* ראשי + 3 = רשת 2×2 */
+    else if (small.length % 2 === 1) small[small.length - 1].classList.add('wide');
+    Array.prototype.forEach.call(rail.children, function (b) { b.classList.toggle('on', b.dataset.g === id); b.setAttribute('aria-selected', b.dataset.g === id); });
+    try { localStorage.setItem(RKEY, id); } catch (e) {}
+    if (speak) { var g = GROUPS.filter(function (x) { return x.id === id; })[0]; Sound.tap(); Voice.say(g.he + '!', { interrupt: true }); }
+  }
+  GROUPS.forEach(function (g) {
+    var b = document.createElement('button'); b.type = 'button'; b.dataset.g = g.id; b.setAttribute('role', 'tab');
+    b.style.setProperty('--g1', g.g1); b.style.setProperty('--g2', g.g2);
+    var n = document.querySelectorAll('.missions .mission[data-group="' + g.id + '"]').length;
+    b.innerHTML = '<span class="ri">' + g.ico + '</span><span>' + g.he + '</span>';
+    b.addEventListener('click', function () { showGroup(g.id, true); });
+    rail.appendChild(b); void n;
+  });
+  /* תג על "הדרקון" כשהדרקון צריך משהו (🎁 / מחלה / צורך נמוך) */
+  try { if (window.Pet && Pet.state.color && Pet.stage() > 0) { var need = Pet.state.sick ? '🩺' : Pet.state.boxes > 0 ? '🎁' : Pet.lowest().v < 35 ? Pet.NEED_INFO[Pet.lowest().k].ico : ''; if (need) rail.querySelector('[data-g="dragon"]').insertAdjacentHTML('beforeend', '<span class="rb">' + need + '</span>'); } } catch (e) {}
+  Array.prototype.forEach.call(document.querySelectorAll('.mission[data-act]'), function (card) {
+    card.addEventListener('click', function () { var t = $(card.dataset.act); if (t && !t.hidden) t.click(); });
+  });
+  var saved = null; try { saved = localStorage.getItem(RKEY); } catch (e) {}
+  showGroup(GROUPS.some(function (g) { return g.id === saved; }) ? saved : 'learn', false);
 
   /* ---------- פרק 5 — סרגל עליון ---------- */
   HeroRewards.mountHUD($('hudSlot'));
@@ -161,7 +200,8 @@
     var ac = $('albumCount'), upd = function () { ac.textContent = Stickers.count() + '/' + Stickers.total; };
     upd(); window.addEventListener('progress:track', function () { setTimeout(upd, 50); });
     $('albumBtn').addEventListener('click', function () { Sound.tap(); Voice.say('אלבום המדבקות!'); Stickers.open(); });
-  } else $('albumBtn').hidden = true;
+    try { $('albumCard').textContent = 'אספת ' + $('albumCount').textContent + ' מדבקות'; } catch (e) {}
+  } else { $('albumBtn').hidden = true; var ac3 = document.querySelector('.mission.me3'); if (ac3) ac3.remove(); }
   /* 5.2 אזור הורים (שער הורים → לוח מעקב וזמן מסך) */
   $('parentsBtn').addEventListener('click', function () { Sound.tap(); if (window.Parents) Parents.open(); });
 
