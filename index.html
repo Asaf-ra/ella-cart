@@ -51,7 +51,18 @@
   @keyframes gift { 0%,100% { transform: rotate(-4deg) scale(1); } 50% { transform: rotate(4deg) scale(1.08); } }
 
   /* --- פרק ג: הגיבורה + לוגו --- */
-  .stage { display: grid; grid-template-columns: 1.35fr 1fr; gap: 2.5vw; align-items: center; min-height: 0; }
+  .stage { display: grid; grid-template-columns: auto 1.35fr 1fr; gap: 2vw; align-items: center; min-height: 0; }
+  /* --- פרק ג0: סיידבר קבוצות --- */
+  .topbar .in-rail { display: none; }                         /* תחפושות/שדרוגים/אלבום עברו לקבוצה "הגיבורה שלי" */
+  .rail { display: flex; flex-direction: column; gap: clamp(8px, 1.4vh, 14px); align-self: center; }
+  .rail button { position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; width: clamp(132px, 13.5vw, 178px); min-height: clamp(58px, 9vh, 78px); padding: 8px 12px;
+    border: 4px solid var(--h-ink); border-radius: 22px; background: var(--h-paper); color: var(--h-ink); font: 900 clamp(16px, 1.75vw, 22px)/1.1 var(--h-font); text-align: right;
+    box-shadow: 0 5px 0 var(--h-ink); cursor: pointer; transition: transform .16s var(--h-spring), background .2s; }
+  .rail button .ri { font-size: clamp(28px, 3vw, 38px); line-height: 1; }
+  .rail button:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--h-ink); }
+  .rail button.on { background: linear-gradient(180deg, var(--g1, #fff3c4), var(--g2, #ffc93c)); transform: translateX(-10px); box-shadow: 0 5px 0 var(--h-ink), 0 0 0 4px rgba(255,255,255,.55); }
+  .rail button .rb { position: absolute; top: -8px; left: -8px; min-width: 26px; height: 26px; padding: 0 5px; border: 3px solid var(--h-ink); border-radius: 999px; background: var(--h-magenta); color: #fff; font: 900 13px/20px var(--h-font); text-align: center; }
+  .missions .mission.off { display: none; }
   .hero-col { position: relative; display: grid; grid-template-rows: auto 1fr; justify-items: center; align-items: center; gap: 1vh; height: 100%; min-height: 0; }
   .spot { /* זרקור מאחורי הגיבורה */
     position: absolute; top: 18%; width: min(34vw, 52vh); aspect-ratio: 1; border-radius: 50%;
@@ -79,7 +90,8 @@
   .logo p { margin-top: 1vh; font-weight: 800; font-size: clamp(16px, 2vw, 24px); color: #ffd9f0; }
 
   /* --- פרק ד: כרטיסי משימה --- */
-  .missions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1.4vw, 18px); }
+  .missions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 20px); }
+  .missions .mission { min-height: clamp(120px, 22vh, 200px); }
   .mission {
     --c1: #ff4fa3; --c2: #8b1a8f;
     position: relative; overflow: hidden; min-height: clamp(96px, 17vh, 160px);
@@ -122,6 +134,13 @@
   @keyframes dg-wiggle { 50% { transform: rotate(-8deg) scale(1.08); } }
   .mission.flight { --c1: #3ff2b0; --c2: #0f7a8c; }
   .mission.stories { --c1: #ff9f6b; --c2: #d6336c; }
+  .mission.enmis { --c1: #5cc8ff; --c2: #2a4fd8; } .mission.words { --c1: #3ff2b0; --c2: #1b8a6a; }
+  .missions .mission.wide { grid-column: span 2; }
+  .missions .mission.main.narrow { grid-column: auto; min-height: clamp(120px, 22vh, 200px); }
+  .missions .mission.main.narrow h2 { font-size: clamp(20px, 2.3vw, 30px); } .missions .mission.main.narrow .m-ico { font-size: clamp(42px, 4.8vw, 66px); } .missions .mission.main.narrow p { font-size: clamp(12px, 1.2vw, 15px); }
+  .mission.kitchen { --c1: #ffd95a; --c2: #ff7a1c; color: var(--h-ink); } .mission.kitchen h2 { color: #fff; }
+  .mission.clinic { --c1: #8fe9ff; --c2: #2a8fd8; }
+  .mission.me { --c1: #ff5fb0; --c2: #8b1a8f; } .mission.me2 { --c1: #ffc93c; --c2: #ff7a1c; } .mission.me3 { --c1: #3ff2b0; --c2: #0f7a8c; }
   .mission.boss { --c1: #8b5cff; --c2: #2a0b5e; }
   .mission.boss.won { --c1: #ffd95a; --c2: #3ff2b0; }
   .mission .m-tag.hot { background: var(--h-gold); }
@@ -208,44 +227,64 @@
       <div id="hudSlot"></div>
       <div class="spacer"></div>
       <button type="button" class="h-btn gold icon-btn small gift-btn" id="giftBtn" aria-label="הפתעה יומית" hidden><span class="ico">🎁</span></button>
-      <button type="button" class="h-btn violet icon-btn" id="wardrobeBtn"><span class="ico">🦸‍♀️</span><span>תחפושות</span></button>
-      <button type="button" class="h-btn gold icon-btn" id="shopBtn"><span class="ico">🛒</span><span>שדרוגים</span></button>
-      <button type="button" class="h-btn gold icon-btn small" id="albumBtn" aria-label="אלבום המדבקות"><span class="ico">📒</span><span id="albumCount">0</span></button>
+      <button type="button" class="h-btn violet icon-btn in-rail" id="wardrobeBtn"><span class="ico">🦸‍♀️</span><span>תחפושות</span></button>
+      <button type="button" class="h-btn gold icon-btn in-rail" id="shopBtn"><span class="ico">🛒</span><span>שדרוגים</span></button>
+      <button type="button" class="h-btn gold icon-btn small in-rail" id="albumBtn" aria-label="אלבום המדבקות"><span class="ico">📒</span><span id="albumCount">0</span></button>
       <button type="button" class="h-btn cyan icon-btn small" id="switchBtn" aria-label="החלפת ילדה" hidden><span class="ico">👭</span></button>
       <button type="button" class="h-btn violet icon-btn small" id="parentsBtn" aria-label="אזור הורים"><span class="ico">👨‍👩‍👧</span></button>
       <button type="button" class="h-btn cyan icon-btn small" id="soundBtn" aria-label="צליל"><span class="ico">🔊</span></button>
     </header>
 
     <section class="stage">
+      <!-- סיידבר: קבוצות (ללמוד / הדרקון / לשחק / ליצור / הגיבורה שלי) — במרכז רק הכרטיסים של הקבוצה שנבחרה -->
+      <nav class="rail" id="rail" role="tablist" aria-label="קבוצות"></nav>
       <!-- משימות (בצד ימין ב-RTL) -->
       <div>
         <div class="logo"><h1>העולם של <em>אלה</em></h1><p>גיבורת-העל שלומדת, יוצרת ומשחקת ⚡</p></div>
         <nav class="missions" id="missions">
-          <button type="button" class="mission main" data-go="./learning.html" data-say="אקדמיית הגיבורים!">
+          <button type="button" class="mission main" data-group="learn" data-go="./learning.html" data-say="אקדמיית הגיבורים!">
             <span class="m-text"><span class="m-tag">משימה ראשית ⭐</span><h2>אקדמיית הגיבורים</h2><p>לומדים, צוברים אנרגיה ופותחים תחפושות וכוחות!</p></span>
             <span class="m-ico">📚</span>
           </button>
-          <button type="button" class="mission dragon" data-go="./dragon.html" data-say="מאורת הדרקון!">
+          <button type="button" class="mission dragon" data-group="dragon" data-go="./dragon.html" data-say="מאורת הדרקון!">
             <span class="m-text"><span class="m-tag hot">חדש! 🐉</span><h2>מאורת הדרקון</h2><p>משימות אנגלית שמגדלות את הדרקון</p></span><span class="m-ico">🐉</span>
           </button>
-          <button type="button" class="mission cart" data-go="./cart.html" data-say="העגלה של אלה!">
+          <button type="button" class="mission cart" data-group="play" data-go="./cart.html" data-say="העגלה של אלה!">
             <span class="m-text"><h2>העגלה</h2><p>מכינים אוכל ללקוחות</p></span><span class="m-ico">🍔</span>
           </button>
-          <button type="button" class="mission color" data-go="./coloring.html" data-say="סטודיו הציור!">
+          <button type="button" class="mission color" data-group="create" data-go="./coloring.html" data-say="סטודיו הציור!">
             <span class="m-text"><span class="m-tag hot">חדש! ✨</span><h2>סטודיו ציור</h2><p>צביעה, ציור חופשי ונקודות</p></span><span class="m-ico">🎨</span>
           </button>
-          <button type="button" class="mission stories" data-go="./stories.html" data-say="ספריית הסיפורים!">
+          <button type="button" class="mission stories" data-group="learn" data-go="./stories.html" data-say="ספריית הסיפורים!">
             <span class="m-text"><span class="m-tag hot">חדש! 📚</span><h2>סיפורים</h2><p>שומעים, קוראים ועונים</p></span><span class="m-ico">📖</span>
           </button>
-          <button type="button" class="mission balloons" data-go="./balloons.html" data-say="בלונים!">
+          <button type="button" class="mission balloons" data-group="play" data-go="./balloons.html" data-say="בלונים!">
             <span class="m-text"><h2>בלונים</h2><p>מפוצצים וצוברים מטבעות</p></span><span class="m-ico">🎈</span>
           </button>
-          <button type="button" class="mission flight" data-go="./flight.html" data-say="טיסת גיבורה!">
+          <button type="button" class="mission flight" data-group="play" data-go="./flight.html" data-say="טיסת גיבורה!">
             <span class="m-text"><h2>טיסת גיבורה</h2><p>טסים ומצילים חתולים</p></span><span class="m-ico">🦸‍♀️</span>
           </button>
-          <button type="button" class="mission boss" id="bossCard" data-go="./learning.html#boss" data-say="נבל השבוע! קדימה לקרב!">
+          <button type="button" class="mission boss" data-group="play" id="bossCard" data-go="./learning.html#boss" data-say="נבל השבוע! קדימה לקרב!">
             <span class="m-text"><span class="m-tag" id="bossTag">⚔️ השבוע</span><h2 id="bossName">נבל השבוע</h2><p id="bossText">מנצחים בעזרת תשובות</p></span><span class="m-ico" id="bossIco">🧙‍♂️</span>
           </button>
+          <!-- קבוצת "ללמוד": גם משימות האנגלית וספר המילים של הדרקון -->
+          <button type="button" class="mission enmis" data-group="learn" data-go="./dragon.html#missions" data-say="משימות אנגלית!">
+            <span class="m-text"><h2>משימות אנגלית</h2><p>שומעים, רואים ולומדים מילים</p></span><span class="m-ico">🇬🇧</span>
+          </button>
+          <button type="button" class="mission words" data-group="learn" data-go="./dragon.html#words" data-say="המילים שלי!">
+            <span class="m-text"><h2>המילים שלי</h2><p>כל המילים שלמדתי באנגלית</p></span><span class="m-ico">📖</span>
+          </button>
+          <!-- קבוצת "הדרקון": מטבח ומרפאה (dragon.html#cook / #vet) -->
+          <button type="button" class="mission kitchen" data-group="dragon" data-go="./dragon.html#cook" data-say="המטבח של הדרקון!">
+            <span class="m-text"><h2>המטבח</h2><p>מבשלים לדרקון מתכונים באנגלית</p></span><span class="m-ico">🍳</span>
+          </button>
+          <button type="button" class="mission clinic" data-group="dragon" data-go="./dragon.html#vet" data-say="המרפאה של ד״ר אלה!">
+            <span class="m-text"><h2>המרפאה של ד״ר אלה</h2><p>רוקחים תרופה ומקלחים את הדרקון</p></span><span class="m-ico">🩺</span>
+          </button>
+          <!-- קבוצת "הגיבורה שלי": אותם כפתורים של הסרגל העליון (data-act = הכפתור שנלחץ) -->
+          <button type="button" class="mission me" data-group="me" data-act="wardrobeBtn"><span class="m-text"><h2>תחפושות</h2><p>מלבישים את הגיבורה</p></span><span class="m-ico">🦸‍♀️</span></button>
+          <button type="button" class="mission me2" data-group="me" data-act="shopBtn"><span class="m-text"><h2>שדרוגים</h2><p>קונים במטבעות</p></span><span class="m-ico">🛒</span></button>
+          <button type="button" class="mission me3" data-group="me" data-act="albumBtn"><span class="m-text"><h2>אלבום מדבקות</h2><p id="albumCard">אוספים מדבקות</p></span><span class="m-ico">📒</span></button>
         </nav>
       </div>
       <!-- הגיבורה (בצד שמאל ב-RTL) -->

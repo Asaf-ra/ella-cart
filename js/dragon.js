@@ -642,6 +642,15 @@
 
   /* ---------- התחלה ---------- */
   renderLair({ fresh: true }); refreshChips();
+  /* קישור ישיר ממסך הבית: #cook (מטבח) · #vet (מרפאה) · #missions / #words / #toys (לשונית) */
+  (function () {
+    const h = (location.hash || '').slice(1);
+    if (!h || !P().color) return;
+    history.replaceState(null, '', location.pathname);
+    if (h === 'cook') setTimeout(() => $('#cook') && $('#cook').click(), 500);
+    else if (h === 'vet') setTimeout(() => $('#vet') && $('#vet').click(), 500);
+    else if ($('.tab[data-tab="' + h + '"]')) $('.tab[data-tab="' + h + '"]').click();
+  })();
   if (/#missions/.test(location.hash)) $('.tab[data-tab="missions"]').click();
   window.DragonLair = { startSet, openToy, ceremony, render, state: D, openGift, closet };
 })();

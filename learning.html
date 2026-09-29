@@ -357,6 +357,32 @@
     .ch-lbl { display: block; margin-top: 4px; font: 800 12px/1 var(--h-font); color: var(--h-text-soft); }
     .course-rail .course-stars { flex-direction: column; align-items: center; }
     @keyframes ch-pulse { 50% { transform: scale(1.15); } }
+    /* ===== סיידבר קטגוריות (במפה) + פס צד צר (בשיעור) ===== */
+    .learning-shell { grid-template-columns: auto minmax(0, 1fr); gap: clamp(8px, 1vw, 14px); }
+    .map-body { flex: 1; min-height: 0; display: grid; grid-template-columns: clamp(150px, 16vw, 210px) minmax(0, 1fr); gap: clamp(10px, 1.4vw, 18px); }
+    .cat-rail { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding: 4px 2px 8px; }
+    .cat-tab { position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 8px; row-gap: 5px; align-items: center; padding: 9px 10px; border: 4px solid var(--h-ink); border-radius: 20px;
+      background: #fff; color: var(--h-ink); box-shadow: 0 5px 0 var(--h-ink); cursor: pointer; text-align: right; font-family: var(--h-font); transition: transform .15s var(--h-spring); }
+    .cat-tab .ci { grid-row: 1 / 3; width: 44px; height: 44px; display: grid; place-items: center; font-size: 26px; border: 3px solid var(--h-ink); border-radius: 14px; background: color-mix(in srgb, var(--cat-color) 30%, #fff); }
+    .cat-tab b { font: 900 clamp(15px, 1.6vw, 19px)/1.1 var(--h-font); }
+    .cat-tab .cb { display: flex; align-items: center; gap: 5px; font: 900 12px/1 var(--h-font); }
+    .cat-tab .cb i { flex: 1; height: 10px; border: 2px solid var(--h-ink); border-radius: 999px; background: #fff; overflow: hidden; } .cat-tab .cb i span { display: block; height: 100%; background: linear-gradient(90deg, #ffc93c, #ff9f1c); }
+    .cat-tab.on { background: linear-gradient(180deg, #fff, color-mix(in srgb, var(--cat-color) 45%, #fff)); transform: translateX(-8px); box-shadow: 0 5px 0 var(--h-ink), 0 0 0 4px var(--cat-color); }
+    .cat-tab:active { transform: translateY(3px); }
+    .cat-tab.act { background: linear-gradient(135deg, var(--cat-color), color-mix(in srgb, var(--cat-color) 60%, #1b1036)); color: #fff; }
+    .cat-tab.act .ci { background: #fff; }
+    .map-main { min-height: 0; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; padding: 4px 4px 10px; }
+    .map-main .boss-course { display: none; }
+    .map-main .map-tip { flex: 1 1 100%; margin: 0; }
+    .map-main .course-list { flex: 1 1 100%; overflow: visible; }
+    .course-list .cat { display: none; } .course-list .cat.show { display: block; animation: map-in .3s var(--h-spring) both; }
+    .mini-rail { display: flex; flex-direction: column; gap: 10px; align-self: center; padding: 10px 6px; border: 4px solid var(--h-ink); border-radius: 26px; background: var(--h-paper); box-shadow: 5px 6px 0 var(--h-ink); }
+    .mini-rail button { position: relative; width: clamp(52px, 5.4vw, 64px); height: clamp(52px, 5.4vw, 64px); display: grid; place-items: center; font-size: clamp(26px, 2.8vw, 32px); border: 3px solid var(--h-ink); border-radius: 18px;
+      background: color-mix(in srgb, var(--cat-color, #fff) 25%, #fff); box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; }
+    .mini-rail button.on { background: color-mix(in srgb, var(--cat-color) 70%, #fff); box-shadow: 0 4px 0 var(--h-ink), 0 0 0 4px var(--cat-color); }
+    .mini-rail button.map { background: linear-gradient(180deg, #b6ffdc, #3ff2b0); }
+    .mini-rail button small { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); padding: 0 5px; border: 2px solid var(--h-ink); border-radius: 999px; background: #fff; font: 900 10px/14px var(--h-font); white-space: nowrap; }
+    @media (max-height: 640px) { .mini-rail { gap: 6px; } .mini-rail button { width: 46px; height: 46px; font-size: 24px; } }
   </style>
 </head>
 <body>
@@ -373,8 +399,10 @@
       <aside class="course-rail" aria-label="בחירת פעילות לימודית">
         <h2 class="map-title">🗺️ לאן טסים היום?</h2>
         <div class="profile"><div class="journey" aria-label="ההתקדמות באקדמיה"><span class="journey-label">תחנות</span><div class="journey-track"><div class="journey-fill" id="journeyFill"></div></div><span class="journey-score" id="journeyScore">0/14</span></div><div class="profile-level" id="profileLevel">גיבורה מתחילה</div></div>
-        <nav class="course-list" id="courseList"></nav><div class="rail-footer">אין לחץ — נסו שוב כמה שרוצים.<br />כל הכבוד על כל ניסיון! ✨</div>
+        <div class="map-body"><nav class="cat-rail" id="catRail" role="tablist" aria-label="קטגוריות"></nav><div class="map-main" id="mapMain"><nav class="course-list" id="courseList"></nav></div></div><div class="rail-footer">אין לחץ — נסו שוב כמה שרוצים.<br />כל הכבוד על כל ניסיון! ✨</div>
       </aside>
+      <!-- פס צד צר בזמן שיעור: 🗺️ + אייקון לכל קטגוריה (הנוכחית מודגשת) — קפיצה ישירה לקטגוריה במפה -->
+      <nav class="mini-rail" id="miniRail" aria-label="קטגוריות"></nav>
       <section class="lesson-stage" aria-live="polite">
         <div class="lesson-head"><button class="map-button" id="mapButton" type="button">🗺️ תחנות</button><div class="lesson-name"><div><span class="lesson-kicker" id="lessonKicker">תחנה 1 במסע</span><strong class="lesson-title" id="lessonTitle">סופרים ביחד</strong></div></div><nav class="chapter-strip" id="chapterStrip" aria-label="פרקים"></nav><button class="listen-button" id="listenButton" type="button">🔊 הקשיבו</button></div>
         <div class="prompt-card"><div class="mascot-wrap"><div class="mascot-hero" id="mascotHero" aria-hidden="true"></div><div class="mascot" id="mascot" aria-hidden="true">🦄</div></div><div class="prompt-content"><div class="instruction" id="instruction">כמה פירות יש כאן?</div><div class="target" id="target"></div><div class="helper" id="helper">נסו לספור לאט בקול.</div></div></div>
@@ -437,12 +465,27 @@ const young={};Object.keys(saved.progress||{}).forEach(function(k){const p=Math.
       function stepsHTML(key){const c=chapOf(key),d=doneCount(key);return '<span class="ch-path">'+[0,1,2,3,4].map(function(i){const done=c.stars[i]>=GOAL,cur=!done&&i===Math.min(c.open,4);return'<i class="ch-dot'+(done?' done':cur?' cur':i>c.open?' lock':'')+'">'+(done?'★':i+1)+'</i>'}).join('')+'</span><span class="ch-lbl">'+(d>=5?'🏆 הושלם!':'שלב '+(Math.min(c.open,4)+1)+' מתוך 5')+'</span>'}
       function catHead(cat){const keys=cat.keys.filter(function(k){return modules[k]}),tot=keys.length*5,done=keys.reduce(function(a,k){return a+doneCount(k)},0),pct=Math.round(done/Math.max(1,tot)*100);return'<span class="cat-ico">'+cat.icon+'</span><span class="cat-name">'+cat.name+'</span><span class="cat-bar"><span style="width:'+pct+'%"></span></span><span class="cat-num">'+done+'/'+tot+' ★</span>'}
       function buildCourseList(){el.courseList.innerHTML='';const used={};CATS.concat([{id:'more',name:'עוד תחנות',icon:'✨',color:'#b28dff',keys:Object.keys(modules)}]).forEach(function(cat){const keys=cat.keys.filter(function(k){return modules[k]&&!used[k]});if(!keys.length)return;const sec=document.createElement('section');sec.className='cat';sec.dataset.cat=cat.id;sec.style.setProperty('--cat-color',cat.color);sec.innerHTML='<div class="cat-head">'+catHead(cat)+'</div><div class="cat-grid"></div>';sec._cat=cat;const grid=sec.querySelector('.cat-grid');keys.forEach(function(key){used[key]=1;const info=modules[key],item=document.createElement('button');item.type='button';item.dataset.key=key;item.className='course';item.style.setProperty('--course-color',info.color);item.innerHTML='<span class="course-icon">'+info.icon+'</span><span><span class="course-name">'+info.name+'</span><span class="course-sub">'+info.subtitle+'</span></span><span class="course-stars">'+stepsHTML(key)+'</span>';item.addEventListener('click',function(){select(key)});grid.appendChild(item)});el.courseList.appendChild(sec)})}
-      function updateCourseList(){el.courseList.querySelectorAll('.course').forEach(function(item){const key=item.dataset.key,active=key===state.active;item.classList.toggle('active',active);item.setAttribute('aria-pressed',active?'true':'false');item.querySelector('.course-stars').innerHTML=stepsHTML(key)});el.courseList.querySelectorAll('.cat').forEach(function(sec){if(sec._cat)sec.querySelector('.cat-head').innerHTML=catHead(sec._cat)});markWeak()}
+      function updateCourseList(){if(document.getElementById('miniRail'))setTimeout(buildMiniRail,0);el.courseList.querySelectorAll('.course').forEach(function(item){const key=item.dataset.key,active=key===state.active;item.classList.toggle('active',active);item.setAttribute('aria-pressed',active?'true':'false');item.querySelector('.course-stars').innerHTML=stepsHTML(key)});el.courseList.querySelectorAll('.cat').forEach(function(sec){if(sec._cat)sec.querySelector('.cat-head').innerHTML=catHead(sec._cat)});markWeak()}
       function chrome(){const progress=state.progress[state.active],module=modules[state.active],total=Object.keys(modules).length;el.journeyFill.style.width=(completedCount()/total*100)+'%';el.journeyScore.textContent=completedCount()+'/'+total;el.profileLevel.textContent=levelText()+' · ⭐ '+state.stars;{const c=chapOf(state.active),list=chapterList(state.active);el.lessonKicker.textContent='תחנה '+(Object.keys(modules).indexOf(state.active)+1)+(list?' · פרק '+(c.cur+1)+': '+list[c.cur].n+' · '+c.stars[c.cur]+'/'+GOAL+' ⭐':'')};el.lessonTitle.textContent=module.title;el.mascot.textContent=module.mascot;updateCourseList()}
       function resetMessage(){el.feedback.className='feedback';el.feedback.textContent='לחצו על התשובה שנראית לכם נכונה.';el.next.disabled=true;el.next.textContent='שאלה חדשה'}
       /* select — בחירת תחנה: סוגרת את מפת התחנות ומתחילה שאלה (אם זו אותה תחנה — רק סוגרת את המפה) */
       function select(key){if(!modules[key])return;closeMap();if(boss){endBoss();currentRound=null}if(key===state.active&&currentRound)return;state.active=key;save();chrome();round();sound('bubble')}
-      function openMap(){updateCourseList();addBossCourse();addDragonCourse();document.querySelector('.app').classList.add('map-open');say('לאן טסים היום? בחרו תחנה.',{interrupt:true})}
+      /* ---------- סיידבר קטגוריות ----------
+         catRail — טאב לכל קטגוריה (אייקון, שם, סרגל התקדמות) + "נבל השבוע" ו"משימות הדרקון"; רק הקטגוריה שנבחרה מוצגת.
+         miniRail — פס צר בזמן שיעור: 🗺️ ואייקון לכל קטגוריה (של התחנה הנוכחית מודגש). */
+      const CKEY='ella-academy-cat';
+      function catOf(key){const sec=el.courseList.querySelector('.course[data-key="'+key+'"]');return sec?sec.closest('.cat').dataset.cat:'en'}
+      function catStats(sec){const c=sec._cat,keys=Array.prototype.map.call(sec.querySelectorAll('.course'),function(b){return b.dataset.key}),tot=keys.length*5,done=keys.reduce(function(a,k){return a+doneCount(k)},0);return{c:c,tot:tot,done:done,pct:Math.round(done/Math.max(1,tot)*100)}}
+      function showCat(id,speak){el.courseList.querySelectorAll('.cat').forEach(function(sec){sec.classList.toggle('show',sec.dataset.cat===id)});document.querySelectorAll('#catRail .cat-tab[data-cat]').forEach(function(b){b.classList.toggle('on',b.dataset.cat===id);b.setAttribute('aria-selected',b.dataset.cat===id)});try{localStorage.setItem(CKEY,id)}catch(e){}if(speak){const sec=el.courseList.querySelector('.cat[data-cat="'+id+'"]');if(sec)say(sec._cat.name+'! בחרו תחנה.',{interrupt:true});sound('tap')}}
+      function buildCatRail(){const r=document.getElementById('catRail');r.innerHTML='';el.courseList.querySelectorAll('.cat').forEach(function(sec){const st=catStats(sec),b=document.createElement('button');b.type='button';b.className='cat-tab';b.dataset.cat=sec.dataset.cat;b.setAttribute('role','tab');b.style.setProperty('--cat-color',st.c.color);b.innerHTML='<span class="ci">'+st.c.icon+'</span><b>'+st.c.name+'</b><span class="cb"><i><span style="width:'+st.pct+'%"></span></i>'+st.done+'/'+st.tot+'</span>';b.addEventListener('click',function(){showCat(sec.dataset.cat,true)});r.appendChild(b)});
+        /* פעולות מיוחדות: נבל השבוע + משימות הדרקון (לוחצים על הבאנרים המקוריים) */
+        const bc=document.getElementById('bossCourse');if(bc){const b=document.createElement('button');b.type='button';b.className='cat-tab act';b.style.setProperty('--cat-color','#8b5cff');b.innerHTML='<span class="ci">'+(bc.querySelector('.bc-ico')?bc.querySelector('.bc-ico').textContent:'⚔️')+'</span><b>נבל השבוע</b><span class="cb">'+(bc.classList.contains('won')?'🏆 ניצחת!':'⚔️ לקרב!')+'</span>';b.addEventListener('click',function(){bc.click()});r.appendChild(b)}
+        const dc=document.getElementById('dragonCourse');if(dc){const b=document.createElement('button');b.type='button';b.className='cat-tab act';b.style.setProperty('--cat-color','#ff7ec2');b.innerHTML='<span class="ci">🐉</span><b>משימות הדרקון</b><span class="cb">אנגלית וחשבון</span>';b.addEventListener('click',function(){location.href=dc.href});r.appendChild(b)}
+        /* איזו קטגוריה לפתוח: מה שנלחץ בפס הצר → הקטגוריה האחרונה שנשמרה → הקטגוריה של התחנה הנוכחית */
+        const mr=document.getElementById('miniRail');let saved=null;try{saved=localStorage.getItem(CKEY)}catch(e){}
+        const pick=(mr&&mr._pick)||(saved&&el.courseList.querySelector('.cat[data-cat="'+saved+'"]')?saved:catOf(state.active));if(mr)mr._pick=null;showCat(pick,false)}
+      function buildMiniRail(){const r=document.getElementById('miniRail');if(!r)return;const cur=catOf(state.active);r.innerHTML='<button type="button" class="map" aria-label="מפת התחנות">🗺️</button>';el.courseList.querySelectorAll('.cat').forEach(function(sec){const b=document.createElement('button');b.type='button';b.dataset.cat=sec.dataset.cat;b.title=sec._cat.name;b.style.setProperty('--cat-color',sec._cat.color);b.className=sec.dataset.cat===cur?'on':'';b.innerHTML=sec._cat.icon+(sec.dataset.cat===cur?'<small>כאן</small>':'');b.addEventListener('click',function(){r._pick=sec.dataset.cat;sound('bubble');openMap()});r.appendChild(b)});r.querySelector('.map').addEventListener('click',function(){r._pick=catOf(state.active);sound('bubble');openMap()})}
+      function openMap(){updateCourseList();addBossCourse();addDragonCourse();buildCatRail();document.querySelector('.app').classList.add('map-open');say('לאן טסים היום? בחרו תחנה.',{interrupt:true})}
       function closeMap(){document.querySelector('.app').classList.remove('map-open')}
       /* ===== חיבור לאקדמיה: רמת קושי, api לתחנות החדשות, פרסי גיבורה ===== */
       /* big() — האם נבחרה רמת 7–8 */
@@ -580,7 +623,7 @@ el.celebration.classList.add('visible')}
       el.next.addEventListener('click',function(){if(!el.next.disabled)round()});el.listen.addEventListener('click',function(){if(currentRound&&currentRound.replay){speakPrompt(true);setTimeout(currentRound.replay,1200);sound('bubble');return}if(currentRound){speakPrompt(true);sound('bubble');return}if(currentRound){if(currentRound.read)readParts(currentRound.read);else say(currentRound.speak);sound('bubble')}});el.sound.addEventListener('click',function(){if(window.Sound&&Sound.toggle){const on=Sound.toggle();el.sound.textContent=on?'🔊':'🔇';el.sound.classList.toggle('off',!on)}});document.getElementById('celebrationClose').addEventListener('click',function(){el.celebration.classList.remove('visible');round()});document.addEventListener('pointerdown',function(){if(window.Sound)Sound.unlock()},{once:true});if(window.KidsUI&&KidsUI.HomeButton)KidsUI.HomeButton.attach()
 /* מפת התחנות: נפתחת בכניסה לאקדמיה ובכפתור 🗺️ */
 document.getElementById('mapButton').addEventListener('click',function(){sound('bubble');openMap()})
-document.querySelector('.app').classList.add('map-open')
+addBossCourse();addDragonCourse();document.querySelector('.app').classList.add('map-open')
 /* הגדרות קול להורה */
 document.getElementById('voiceButton').addEventListener('click',function(){if(window.VoiceSettings)VoiceSettings.open()})
 /* 💡 רמז — מעלים תשובה שגויה אחת (כשנשארו לפחות 3 אפשרויות) */
@@ -594,7 +637,7 @@ gradeBtn.addEventListener('click',function(){state.grade=big()?'young':'big';sav
 function drawHeroes(){if(!window.HeroAvatar||!window.HeroRewards)return;const o=HeroRewards.outfit;document.getElementById('brandHero').innerHTML=HeroAvatar.svg(o);document.getElementById('mascotHero').innerHTML=HeroAvatar.svg(o);document.getElementById('celebrationHero').innerHTML=HeroAvatar.svg(o)}
 drawHeroes()
 window.addEventListener('hero:outfit',drawHeroes)
-if(window.HeroRewards){HeroRewards.mountHUD(document.getElementById('hudSlot'));document.getElementById('hudSlot').addEventListener('click',function(){HeroRewards.openWardrobe()})};if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});buildCourseList();chrome();addBossCourse();
+if(window.HeroRewards){HeroRewards.mountHUD(document.getElementById('hudSlot'));document.getElementById('hudSlot').addEventListener('click',function(){HeroRewards.openWardrobe()})};if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(function(){});buildCourseList();chrome();buildCatRail();buildMiniRail();addBossCourse();
 /* חיית המחמד בפינת כרטיס השאלה — קופצת ומקבלת 🍎 על כל תשובה */
 if(window.Pet)Pet.mini(document.querySelector('.mascot-wrap'),{size:Math.round(Math.min(innerWidth*.07,86))});
 if(location.hash==='#boss')startBoss();else round();
