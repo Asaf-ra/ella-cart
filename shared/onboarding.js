@@ -54,7 +54,10 @@
     opts = opts || {};
     var edit = opts.editId ? Profile.list.filter(function (p) { return p.id === opts.editId; })[0] : null;
     var D = edit ? JSON.parse(JSON.stringify(edit)) : { name: '', look: { skin: 0, hair: 0, style: 'pony' }, color: COLORS[0], grade: 'young', bday: null };
-    if (!edit && !Profile.has && !opts.fresh) D.name = 'אלה';     // המכשיר המקורי — השם כבר מוכן (אפשר לשנות)
+    /* השם מוכן מראש רק במכשיר המקורי — שכבר יש בו התקדמות שמורה מלפני הפרופילים (כוכבים / דרקון / אקדמיה).
+       מכשיר חדש של חברים נפתח עם שדה ריק, כדי שכל ילדה תכתוב את השם שלה */
+    var legacy = false; try { legacy = Object.keys(localStorage).some(function (k) { return /^ella(-progress|-pet|_cart_save|-shop|-stars|-academy)/.test(k); }); } catch (e) {}
+    if (!edit && !Profile.has && !opts.fresh && legacy) D.name = 'אלה';
     var step = 0, STEPS = edit ? ['name', 'look', 'color', 'bday', 'done'] : ['name', 'look', 'color', 'age', 'bday', 'done'];
     var ov = el('div', 'ob'), card = el('div', 'ob-card h-panel');
     ov.dataset.noname = '1';                 // השם שמוקלד כאן לא יוחלף בשם הילדה הפעילה
