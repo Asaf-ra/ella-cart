@@ -2,7 +2,7 @@
    פרק 1 — רשימת קבצים לשמירה מראש (דפים, קוד, גופנים, ציורים)
    פרק 2 — הקלטות הקול באנגלית: הרשימה נקראת מ-js/voice-en.js (אותו מניפסט שהאפליקציה משתמשת בו)
    פרק 3 — התקנה / ניקוי מטמונים ישנים / הגשה מהמטמון (cache-first) */
-const CACHE = 'ella-cart-v51';
+const CACHE = 'ella-cart-v52';
 const ART = [
   'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
   'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',
