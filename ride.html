@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#1d0b4a" />
+<meta name="apple-mobile-web-app-title" content="רכיבה על סוסים" />
+<title>רכיבה על סוסים — העולם של אלה</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<link rel="stylesheet" href="shared/theme.css" />
+<style>
+  /* ===== רכיבה על סוסים — עיצוב =====
+     פרק א — בסיס וקנבס | פרק ב — HUD, שאלה וכפתורי טריקים | פרק ג — מסכי פתיחה/השהיה/תוצאות
+     פרק ד — החווה (אורווה, מדדים, כלים) | פרק ה — ארון עיצוב | פרק ו — סיבוב מסך */
+
+  /* --- פרק א: בסיס --- */
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  html { background: var(--h-night); }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { font-family: var(--h-font); color: #fff; touch-action: none; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+  #rideCv { position: fixed; inset: 0; display: block; }
+
+  /* --- פרק ב: HUD --- */
+  .hud { position: fixed; top: max(10px, env(safe-area-inset-top)); right: 14px; left: 90px; display: flex; gap: 10px; align-items: center; z-index: 10; pointer-events: none; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); color: var(--h-ink); font-weight: 900; font-size: clamp(16px, 2vw, 22px); box-shadow: 0 4px 0 var(--h-ink); }
+  #hCombo { background: linear-gradient(180deg, #ffe7a0, #ffb13b); }
+  .hud .sp { flex: 1; }
+  .hbtn { pointer-events: auto; width: 56px; height: 56px; border: 4px solid var(--h-ink); border-radius: 50%; background: var(--h-paper); font-size: 24px; box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; }
+  .hbtn.on { background: linear-gradient(180deg, #b6ffdc, #3ff2b0); }
+  .timebar { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 64px); right: 14px; left: 90px; height: 14px; border: 3px solid var(--h-ink); border-radius: 999px; background: #2a1a4f; overflow: hidden; z-index: 10; }
+  .timebar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--h-gold), var(--h-magenta)); transition: width .25s linear; }
+  /* שאלת שער הלמידה — באנר גדול */
+  #rQ { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 92px); left: 50%; transform: translate(-50%, -20px); opacity: 0; z-index: 12; padding: 10px 24px; border: 5px solid var(--h-ink); border-radius: 26px; background: linear-gradient(180deg, #fff, #fff3b0); color: var(--h-ink); font: 900 clamp(22px, 3.4vw, 40px)/1.1 var(--h-font); box-shadow: 0 6px 0 var(--h-ink); transition: .3s var(--h-spring); pointer-events: none; white-space: nowrap; }
+  #rQ.show { opacity: 1; transform: translate(-50%, 0); }
+  /* כפתורי טריקים בתחתית (גדולים לאצבע של ילד/ה) */
+  /* עמודה בצד ימין — לא מסתירה את הסוס ואת הידיים באמצע */
+  #tricks { position: fixed; bottom: max(12px, env(safe-area-inset-bottom)); right: 14px; display: flex; flex-direction: column-reverse; gap: 8px; z-index: 10; }
+  .tb { width: clamp(70px, 8vw, 88px); height: clamp(66px, 10vh, 84px); border: 4px solid var(--h-ink); border-radius: 24px; background: var(--h-paper); box-shadow: 0 5px 0 var(--h-ink); color: var(--h-ink); display: grid; place-items: center; align-content: center; gap: 2px; cursor: pointer; font-family: var(--h-font); touch-action: none; }
+  .tb b { font-size: clamp(26px, 3.4vw, 36px); line-height: 1; }
+  .tb span { font: 800 clamp(11px, 1.2vw, 13px)/1 var(--h-font); }
+  .tb:active { transform: translateY(4px) scale(.94); }
+  .tb.hot { background: linear-gradient(180deg, #fff3b0, #ffc93c); animation: hot .5s ease-in-out infinite alternate; }
+  .tb.dim, .tb.lock { opacity: .5; }
+  @keyframes hot { to { transform: scale(1.08); } }
+
+  /* --- פרק ג: מסכים --- */
+  .overlay { position: fixed; inset: 0; z-index: 50; display: none; place-items: center; padding: 16px; background: radial-gradient(circle at 50% 40%, rgba(58,17,119,.8), rgba(10,4,30,.92)); }
+  .overlay.show { display: grid; }
+  .card { width: min(96vw, 980px); max-height: 96vh; overflow: auto; padding: 18px 22px; text-align: center; color: var(--h-ink); }
+  .card h1 { font-size: clamp(30px, 4.6vw, 54px); font-weight: 900; color: #fff; -webkit-text-stroke: 4px var(--h-ink); paint-order: stroke fill; text-shadow: 4px 5px 0 var(--h-magenta); }
+  .card p { font-weight: 700; font-size: clamp(14px, 1.8vw, 19px); color: var(--h-text-soft); margin: 4px 0 10px; }
+  .start-grid { display: grid; grid-template-columns: minmax(220px, .8fr) 1.4fr; gap: 16px; align-items: center; text-align: right; }
+  .hprev { border: 4px solid var(--h-ink); border-radius: 26px; background: linear-gradient(180deg, #bfe8ff, #d8f5c8 70%, #8ee07a 70%); padding: 6px; box-shadow: inset 0 0 0 4px #fff; }
+  .hprev svg { width: 100%; height: auto; display: block; animation: h-float 2.4s ease-in-out infinite alternate; }
+  .hname { font: 900 clamp(22px, 2.8vw, 32px)/1 var(--h-font); margin: 8px 0 2px; text-align: center; }
+  .hmood { font: 800 15px/1.3 var(--h-font); color: var(--h-text-soft); text-align: center; }
+  .tracks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 10px 0 12px; }
+  .trk { position: relative; min-height: 96px; border: 4px solid var(--h-ink); border-radius: 20px; color: var(--h-ink); font: 900 clamp(14px, 1.6vw, 17px)/1.1 var(--h-font); cursor: pointer; box-shadow: 0 5px 0 var(--h-ink); display: grid; place-items: center; align-content: center; gap: 4px; padding: 8px; text-shadow: 0 1px 0 #fff; }
+  .trk .t-ico { font-size: 36px; line-height: 1; }
+  .trk small { font: 800 13px/1 var(--h-font); background: rgba(255,255,255,.8); border-radius: 999px; padding: 3px 8px; }
+  .trk.sel { transform: translateY(-4px) scale(1.04); box-shadow: 0 7px 0 var(--h-ink), 0 0 0 4px var(--h-gold); }
+  .trk.locked { filter: grayscale(.85) brightness(.75); }
+  .trk .lock { position: absolute; top: 6px; left: 8px; font-size: 18px; }
+  .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; font: 800 clamp(12px, 1.4vw, 15px)/1.3 var(--h-font); color: var(--h-text-soft); margin: 2px 0 10px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
+  .stat { border: 4px solid var(--h-ink); border-radius: 20px; background: #fff; padding: 8px; box-shadow: 0 4px 0 var(--h-ink); }
+  .stat b { display: block; font-size: 34px; line-height: 1.1; }
+  .stat span { font-weight: 800; color: var(--h-text-soft); }
+  .medal { display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .medal b { font-size: 72px; line-height: 1; animation: h-float 1.6s ease-in-out infinite alternate; }
+  .medal span { font-size: clamp(22px, 3vw, 32px); font-weight: 900; }
+
+  /* --- פרק ד: החווה --- */
+  #farm { position: fixed; inset: 0; z-index: 40; display: none; grid-template-columns: 1fr clamp(190px, 22vw, 250px); gap: 12px; padding: max(10px, env(safe-area-inset-top)) 12px 12px 12px;
+    background: linear-gradient(180deg, #9fdcff 0, #d6f1ff 45%, #c98b4f 45%, #b5773f 100%); color: var(--h-ink); }
+  #farm.show { display: grid; }
+  #farmStage { position: relative; border: 5px solid var(--h-ink); border-radius: 28px; overflow: hidden; box-shadow: 0 6px 0 var(--h-ink);
+    background: repeating-linear-gradient(90deg, #d9a06a 0 60px, #c98b4f 60px 64px), linear-gradient(#e8b882, #c98b4f); display: grid; grid-template-rows: auto 1fr; }
+  #farmStage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%; background: repeating-linear-gradient(-20deg, #ffe08a 0 6px, #f3cf6a 6px 12px); border-top: 5px solid var(--h-ink); z-index: 0; }
+  .farm-top { position: relative; z-index: 2; display: flex; gap: 10px; align-items: center; padding: 10px 12px 0 90px; flex-wrap: wrap; }
+  .farm-top h2 { font: 900 clamp(22px, 3vw, 34px)/1 var(--h-font); color: #fff; -webkit-text-stroke: 3px var(--h-ink); paint-order: stroke fill; text-shadow: 3px 4px 0 var(--h-magenta); margin-inline-end: auto; }
+  .meter { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border: 3px solid var(--h-ink); border-radius: 999px; background: #fff; font: 900 16px/1 var(--h-font); }
+  .meter em { display: block; width: 70px; height: 12px; border: 2px solid var(--h-ink); border-radius: 999px; background: #eee; overflow: hidden; }
+  .meter i { display: block; height: 100%; background: linear-gradient(90deg, #3ff2b0, #2fb85a); transition: width .4s; }
+  .meter.low i { background: linear-gradient(90deg, #ffb36b, #ff3b3b); }
+  .meter.low { animation: hot .6s ease-in-out infinite alternate; }
+  #farmHorse { position: relative; z-index: 1; display: grid; place-items: end center; padding-bottom: 2%; touch-action: none; }
+  #farmHorse svg { width: min(92%, 760px); height: auto; max-height: 100%; }
+  .ffx { position: absolute; bottom: 35%; font-size: 64px; z-index: 3; animation: ffx 1.4s ease-out forwards; pointer-events: none; }
+  @keyframes ffx { from { transform: translateY(0) scale(.6); opacity: 1; } to { transform: translateY(-160px) scale(1.3); opacity: 0; } }
+  .rub { position: absolute; font-size: 28px; z-index: 3; pointer-events: none; animation: rub .9s ease-out forwards; }
+  @keyframes rub { to { transform: translateY(-50px) scale(1.4); opacity: 0; } }
+  .farm-side { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding: 10px; border: 5px solid var(--h-ink); border-radius: 26px; background: var(--h-paper); box-shadow: 0 6px 0 var(--h-ink); }
+  .farm-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ft { display: grid; place-items: center; gap: 2px; padding: 8px 4px; border: 3px solid var(--h-ink); border-radius: 18px; background: #fff; box-shadow: 0 4px 0 var(--h-ink); font: 800 14px/1 var(--h-font); color: var(--h-ink); cursor: pointer; }
+  .ft b { font-size: 30px; line-height: 1; }
+  .ft.on { background: linear-gradient(180deg, #fff3b0, #ffc93c); }
+  .farm-side .h-btn { width: 100%; justify-content: center; }
+
+  /* --- פרק ה: ארון --- */
+  #closetOv .card { text-align: right; }
+  #closet h4 { font: 900 18px/1 var(--h-font); margin: 12px 0 6px; }
+  .crow { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cb { display: grid; justify-items: center; gap: 3px; min-width: 86px; padding: 8px 6px; border: 3px solid var(--h-ink); border-radius: 16px; background: #fff; box-shadow: 0 3px 0 var(--h-ink); font: 800 13px/1.1 var(--h-font); color: var(--h-ink); cursor: pointer; }
+  .cb i { display: block; width: 34px; height: 34px; border: 3px solid var(--h-ink); border-radius: 50%; }
+  .cb i.em { border: 0; font-style: normal; font-size: 30px; line-height: 34px; }
+  .cb small { font-weight: 900; color: #b36b00; }
+  .cb.on { background: linear-gradient(180deg, #fff3b0, #ffc93c); box-shadow: 0 3px 0 var(--h-ink), 0 0 0 3px var(--h-magenta); }
+  .cb.buy { background: #f4f0ff; }
+  .cname { font: 900 24px var(--h-font); padding: 8px 14px; border: 4px solid var(--h-ink); border-radius: 16px; width: min(100%, 320px); text-align: center; color: var(--h-ink); user-select: text; -webkit-user-select: text; }
+
+  /* --- פרק ו: סיבוב מסך --- */
+  .rotate { display: none; }
+  @media (orientation: portrait) { .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 12px; text-align: center; background: var(--h-night); font-size: 26px; font-weight: 900; } }
+  @media (max-width: 760px) { .start-grid { grid-template-columns: 1fr; } .tracks { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+  <canvas id="rideCv"></canvas>
+
+  <!-- HUD -->
+  <div class="hud" id="rHud">
+    <span class="chip" id="hS">⭐ 0</span><span class="chip" id="hF">🥕 0</span><span class="chip" id="hC">🪙 0</span><span class="chip" id="hCombo" style="display:none"></span>
+    <span class="sp"></span>
+    <button class="hbtn" id="tiltBtn" type="button" aria-label="הטיה">📱</button>
+    <button class="hbtn" id="pauseBtn" type="button" aria-label="השהיה">⏸</button>
+  </div>
+  <div class="timebar"><i id="rTime"></i></div>
+  <div id="rQ"></div>
+  <div id="tricks"></div>
+
+  <!-- פתיחה -->
+  <div class="overlay" id="startScreen">
+    <div class="card h-panel">
+      <h1>🐴 רכיבה על סוסים</h1>
+      <div class="start-grid">
+        <div><div class="hprev" id="horsePrev"></div><div class="hname" id="horseName"></div><div class="hmood" id="horseMood"></div></div>
+        <div>
+          <p>גוררים ימינה ושמאלה 👈👉 · מחליקים למעלה = קפיצה ⬆️ · למטה = האטה · כפתורי טריקים למטה ✨</p>
+          <div class="legend"><span>🪵 גדר / בול עץ — קופצים</span><span>🌾 🪨 — עוקפים</span><span>🌈 קשת טריקים = ×2</span><span>🎨🔢 שער — רוכבים לתשובה הנכונה</span></div>
+          <div class="tracks" id="tracks"></div>
+          <div class="row"><button class="h-btn gold" id="goBtn" type="button">רוכבים! 🏇</button><button class="h-btn cyan" id="farmBtn" type="button">🧺 לחווה</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- השהיה -->
+  <div class="overlay" id="pauseScreen"><div class="card h-panel"><h1>הפסקה ⏸</h1><p>הסוס נח רגע…</p>
+    <div class="row"><button class="h-btn gold" id="resumeBtn" type="button">ממשיכים ▶</button><button class="h-btn violet" id="quitBtn" type="button">למסלולים</button></div></div></div>
+
+  <!-- תוצאות -->
+  <div class="overlay" id="endScreen">
+    <div class="card h-panel">
+      <span class="h-modal-kicker">הרכיבה הסתיימה!</span>
+      <div class="medal"><b id="rMedal">🥉</b><span id="rMedalT"></span></div>
+      <div class="stats">
+        <div class="stat"><b id="eS">0</b><span>כוכבים ⭐</span></div>
+        <div class="stat"><b id="eT">0</b><span>טריקים ✨</span></div>
+        <div class="stat"><b id="eG">0</b><span>שערים נכונים 🎨</span></div>
+        <div class="stat"><b id="eJ">0</b><span>קפיצות נקיות ⬆️</span></div>
+        <div class="stat"><b id="eF">0</b><span>פירות לסוס 🥕</span></div>
+        <div class="stat"><b id="eC">0</b><span>מטבעות 🪙</span></div>
+      </div>
+      <p id="endText"></p>
+      <div class="row"><button class="h-btn gold" id="againBtn" type="button">עוד רכיבה! 🏇</button><button class="h-btn cyan" id="endFarmBtn" type="button">🧺 לחווה</button><button class="h-btn violet" id="tracksBtn" type="button">מסלולים</button></div>
+    </div>
+  </div>
+
+  <!-- החווה -->
+  <div id="farm">
+    <div id="farmStage">
+      <div class="farm-top"><h2>🧺 החווה של <span id="farmName"></span></h2>
+        <span class="meter" id="m_food">🥕<em><i></i></em></span><span class="meter" id="m_clean">🪮<em><i></i></em></span><span class="meter" id="m_happy">💖<em><i></i></em></span><span class="meter" id="m_energy">⚡<em><i></i></em></span></div>
+      <div id="farmHorse"></div>
+    </div>
+    <div class="farm-side"><div class="farm-tools" id="farmTools"></div><button class="h-btn gold" id="farmBack" type="button">🏇 לרכיבה</button></div>
+  </div>
+
+  <!-- ארון עיצוב -->
+  <div class="overlay" id="closetOv"><div class="card h-panel"><div class="row" style="justify-content:space-between"><h1 style="font-size:32px">🎨 הארון של הסוס</h1><button class="h-btn violet" id="closetX" type="button">✖ סגירה</button></div><div id="closet"></div></div></div>
+
+  <div class="rotate"><div style="font-size:70px">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
+
+  <script src="shared/profile.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/voice-en.js"></script>
+  <script src="js/voice-en-slow.js"></script>
+  <script src="shared/kids-ui.js"></script>
+  <script src="shared/wallet.js"></script>
+  <script src="shared/hero-avatar.js"></script>
+  <script src="shared/hero-rewards.js"></script>
+  <script src="shared/progress.js"></script>
+  <script src="shared/stickers.js"></script>
+  <script src="shared/share.js"></script>
+  <script src="js/horse.js"></script>
+  <script src="js/ride-data.js"></script>
+  <script src="js/ride.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
+    if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+  </script>
+</body>
+</html>
