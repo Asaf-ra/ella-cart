@@ -307,7 +307,7 @@
   function attr(o) { return Object.keys(o).map(function (k) { return k + '="' + o[k] + '"'; }).join(' '); }
   /* shapeSVG — צורה צביעה: לבן + קו דיו; data-c = הצבע המומלץ */
   function shapeSVG(sh, i) {
-    var base = { 'class': 'colorable', fill: '#ffffff', stroke: INK, 'stroke-width': 3.5, 'stroke-linejoin': 'round', 'data-c': sh[sh.length - 1], 'data-i': i };
+    var base = { 'class': 'colorable', fill: '#ffffff', stroke: INK, 'stroke-width': sh.w || 3.5, 'stroke-linejoin': 'round', 'data-c': sh[sh.length - 1], 'data-i': i };
     if (sh[0] === 'c') return '<circle ' + attr(Object.assign(base, { cx: sh[1], cy: sh[2], r: sh[3] })) + '/>';
     if (sh[0] === 'e') return '<ellipse ' + attr(Object.assign(base, { cx: sh[1], cy: sh[2], rx: sh[3], ry: sh[4] })) + '/>';
     if (sh[0] === 'r') return '<rect ' + attr(Object.assign(base, { x: sh[1], y: sh[2], width: sh[3], height: sh[4], rx: sh[5] })) + '/>';
@@ -316,7 +316,8 @@
     return '';
   }
   function decoSVG(d) {
-    if (d[0] === 'p') return '<path d="' + d[1] + '" fill="none" stroke="' + INK + '" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>';
+    /* ['p', d, עובי?] — עובי אופציונלי (ברירת מחדל 4): בסדרות החדשות דמויות קטנות מקבלות קו דק יותר */
+    if (d[0] === 'p') return '<path d="' + d[1] + '" fill="none" stroke="' + INK + '" stroke-width="' + (d[2] || 4) + '" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>';
     if (d[0] === 'o') return '<circle cx="' + d[1] + '" cy="' + d[2] + '" r="' + d[3] + '" fill="' + INK + '" pointer-events="none"/>';
     if (d[0] === 't') return '<text x="' + d[1] + '" y="' + d[2] + '" font-size="' + d[3] + '" text-anchor="middle" font-family="Rubik,sans-serif" font-weight="900" fill="' + INK + '" pointer-events="none">' + d[4] + '</text>';
     return '';

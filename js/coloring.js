@@ -8,7 +8,8 @@
    פרק 5  — מצב צביעה: הקשה צובעת אזור בצבע ובסגנון (רגיל/מעבר/נצנצים/נקודות/פסים/לבבות)
    פרק 6  — מצב צבע-לפי-מספר: מספור אזורים, פלטה ממוספרת, בדיקה עדינה וחגיגה
    פרק 7  — מצב חבר-את-הנקודות: 1-2-3 / א-ב-ג / A-B-C, קו שגדל, חשיפת הציור
-   פרק 8  — מצב ציור חופשי: 9 מכחולים, 3 גדלים, מראה, מדבקות, 8 רקעים, קווי דף מעל
+   פרק 8  — מצב ציור חופשי: 18 מכחולים, 3 גדלים, מראה, קליידוסקופ, מדבקות, רקעים, קווי דף מעל
+   פרק 8.5 — עט (Apple Pencil): לחץ = עובי, הטיה = צד הגיר/השעווה, "רק עט" = כף היד לא מציירת
    פרק 9  — סרגלים: פלטה (שמאל) וכלים (ימין) לפי המצב
    פרק 10 — ביטול / ניקוי / רעיון
    פרק 11 — שמירה לגלריה + פרסים; גלריה: צפייה, המשך צביעה, מחיקה
@@ -36,13 +37,20 @@
   /* סגנונות מילוי במצב צביעה */
   var FILLS = [['solid', 'רגיל'], ['grad', 'מעבר קסום'], ['glitter', 'נצנצים'], ['dots', 'נקודות'], ['stripes', 'פסים'], ['hearts', 'לבבות']];
   /* מכחולים במצב ציור חופשי */
+  /* 18 מכחולים. QUICK = 8 שמוצגים תמיד בעמודת הכלים; כל השאר בחלון "כל המכחולים" */
   var BRUSHES = [['pencil', '✏️', 'עיפרון'], ['marker', '🖊️', 'טוש'], ['crayon', '🖍️', 'צבע שעווה'], ['spray', '💨', 'ספריי'], ['rainbow', '🌈', 'קשת'],
-                 ['glitter', '✨', 'נצנצים'], ['neon', '💡', 'ניאון'], ['stamp', '⭐', 'מדבקות'], ['eraser', '🧽', 'מחק']];
+                 ['glitter', '✨', 'נצנצים'], ['neon', '💡', 'ניאון'], ['stamp', '⭐', 'מדבקות'], ['eraser', '🧽', 'מחק'],
+                 /* חדשים: */
+                 ['water', '💧', 'צבעי מים'], ['chalk', '🩶', 'גיר'], ['oil', '🎨', 'צבע שמן'], ['callig', '🖋️', 'קליגרפיה'], ['glue', '🫧', 'דבק נצנצים'],
+                 ['stars', '🌟', 'שובל כוכבים'], ['hearts', '💕', 'שרשרת לבבות'], ['washi', '🎀', 'סרט קישוט'], ['grass', '🌿', 'דשא ופרווה']];
+  var QUICK = ['pencil', 'marker', 'crayon', 'water', 'glitter', 'rainbow', 'stamp', 'eraser'];
+  function brushOf(id) { return BRUSHES.filter(function (b) { return b[0] === id; })[0] || BRUSHES[1]; }
   var SIZES = [7, 16, 30];                  // עובי מכחול: קטן / בינוני / גדול
   var STAMP_SIZES = [44, 72, 110];          // גודל מדבקה לפי אותו בורר
   var STICKERS = ['⭐', '🌟', '💖', '🦄', '🌈', '🦋', '🌸', '🌻', '🍓', '🍭', '🧁', '🎈', '🎀', '👑', '💎', '🐱', '🐶', '🐰', '🐼', '🦊',
                   '🐸', '🐙', '🐠', '🐬', '🦕', '🚀', '🪐', '🌙', '☀️', '☁️', '⚡', '🔥', '❄️', '🍀', '🌳', '🏠', '🚗', '🎵', '🦸‍♀️', '✨'];
-  var BGS = [['plain', 'לבן'], ['lines', 'מחברת'], ['grid', 'משבצות'], ['meadow', 'אחו'], ['sea', 'ים'], ['night', 'לילה'], ['space', 'חלל'], ['rainbow', 'קשת']];
+  var BGS = [['plain', 'לבן'], ['lines', 'מחברת'], ['grid', 'משבצות'], ['meadow', 'אחו'], ['sea', 'ים'], ['night', 'לילה'], ['space', 'חלל'], ['rainbow', 'קשת']]
+    .concat((window.ArtPages && ArtPages.BGS2) || []);         // +16 רקעים מ-js/art-series.js (חדר בובות, מטבח, חוף, במה, לוח גיר…)
   /* רעיונות לציור חופשי (כפתור 💡) — מעודדים דמיון */
   var PROMPTS = ['ציירי חתול עם כתר 👑🐱', 'ציירי בית על עץ 🌳🏠', 'ציירי דג שעף בשמיים 🐟☁️', 'ציירי את המשפחה שלך 👨‍👩‍👧', 'ציירי רובוט שאוהב פרחים 🤖🌸',
                  'ציירי ארמון של ממתקים 🍭🏰', 'ציירי חד-קרן על קשת 🦄🌈', 'ציירי את אלה עפה מעל העיר 🦸‍♀️', 'ציירי מפלצת חמודה 👾', 'ציירי גן חיות בחלל 🚀🦁',
@@ -59,7 +67,7 @@
   function writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
   /* S — ההעדפות האחרונות: מצב, דף, מכחול, גודל, רקע, סגנון מילוי, צבע */
   var S = Object.assign({ mode: 'color', page: 'hero:1', dot: 'd_star', brush: 'marker', size: 1, bg: 'plain', fill: 'solid', color: 0,
-                          dotStyle: 'num', line: false, mirror: false, sticker: '⭐', hue: 0 }, readJSON(KEY) || {});
+                          dotStyle: 'num', line: false, mirror: false, kal: false, penOnly: false, penSeen: false, sticker: '⭐', hue: 0 }, readJSON(KEY) || {});
   if (S.color >= COLORS.length) S.color = 0;
   function saveState() { writeJSON(KEY, S); }
   /* work — צביעה בתהליך: { מפתח-דף: { אינדקס-אזור: "סגנון|צבע" } } — חוזרים לדף ומוצאים את העבודה */
@@ -85,7 +93,7 @@
   function award(n, origin, word) { try { if (window.HeroRewards) HeroRewards.award(n, origin || $('stage'), { word: word }); } catch (e) {} }
   function confetti() { try { if (window.HeroRewards) HeroRewards.confetti(); } catch (e) {} }
   /* toast — הודעה קופצת קצרה במרכז המסך */
-  function toast(t) { var d = el('div', 'toast', t); document.body.appendChild(d); setTimeout(function () { d.remove(); }, 1900); }
+  function toast(t) { document.querySelectorAll('.toast').forEach(function (x) { x.remove(); }); var d = el('div', 'toast', t); document.body.appendChild(d); setTimeout(function () { d.remove(); }, 1900); }
   /* mix — ערבוב צבע hex עם לבן (t>0) או שחור (t<0) */
   function mix(hex, t) {
     var h = hex.replace('#', ''); if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
@@ -277,6 +285,7 @@
   }
   /* הקשה על אזור בבמה — לפי המצב */
   holder.addEventListener('pointerdown', function (ev) {
+    if (!penGate(ev)) return;                    // "רק עט": כף היד לא צובעת בטעות
     var t = ev.target.closest && ev.target.closest('.colorable');
     if (!t || (S.mode === 'dots' && (!dots || !dots.done))) return;
     ev.preventDefault();
@@ -313,7 +322,10 @@
     var labels = [];
     shapes.forEach(function (s) {
       var c = (s.dataset.c || '').toLowerCase(); if (!c || c === '#ffffff') return;
-      var bb = s.getBBox(), p = visiblePoint(s, Math.max(13, Math.min(30, Math.min(bb.width, bb.height) * .45))); if (!p) return;
+      var bb = s.getBBox();
+      /* אזור זעיר (עין, אף, כפתור) — נצבע מראש בצבע הנכון: מספר שם היה צפוף ולא קריא, ואצבע קטנה לא תפגע בו */
+      if (Math.min(bb.width, bb.height) < 22) { applyFill(s, 'solid', c); return; }
+      var p = visiblePoint(s, Math.max(13, Math.min(30, Math.min(bb.width, bb.height) * .45))); if (!p) { applyFill(s, 'solid', c); return; }
       var n = cbn.colors.indexOf(c) + 1, fs = p[2];
       var t = svgEl('text', { x: p[0], y: p[1] + fs * .36, 'font-size': fs, 'text-anchor': 'middle', 'class': 'cbn-num' }); t.textContent = n;
       labels.push(t); s._lbl = t; cbn.need.set(s, n); cbn.left++;
@@ -430,7 +442,7 @@
       award(1, stage, 'יש!'); track('art:dots'); buildTools();
     }, 450);
   }
-  holder.addEventListener('pointerdown', function (ev) { if (S.mode === 'dots' && dots && !dots.done) { ev.preventDefault(); dotsDown = true; tryConnect(ev, true); } });
+  holder.addEventListener('pointerdown', function (ev) { if (S.mode === 'dots' && dots && !dots.done && penGate(ev)) { ev.preventDefault(); dotsDown = true; tryConnect(ev, true); } });
   var dotsDown = false;
   holder.addEventListener('pointermove', function (ev) { if (dotsDown && S.mode === 'dots') tryConnect(ev, false); });
   window.addEventListener('pointerup', function () { dotsDown = false; });
@@ -438,10 +450,30 @@
   /* ================= פרק 8 — ציור חופשי ================= */
   var strokes = [], cur = null, activeId = null, cleared = null;
   /* drawBg — מצייר רקע לציור (גם לתמונות הממוזערות בבורר) */
+  var bgImgs = {};
   function drawBg(c, type, w, h) {
     var R = rng(7), g, i;
     c.save(); c.clearRect(0, 0, w, h);
     c.fillStyle = '#fffaf0'; c.fillRect(0, 0, w, h);
+    /* רקעי סצנה (SVG צבעוני): נטען פעם אחת כתמונה ונמתח "כיסוי" לכל הבמה; עד שנטען — מצוירים שוב כשהוא מוכן */
+    var svgBg = window.ArtPages && ArtPages.bgSvg && ArtPages.bgSvg(type);
+    if (svgBg) {
+      var im = bgImgs[type];
+      if (!im) { im = bgImgs[type] = new Image(); im.onload = function () { drawBg(c, type, w, h); }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgBg); }
+      if (im.complete && im.naturalWidth) { var sc = Math.max(w / 400, h / 400), dw = 400 * sc, dh = 400 * sc; c.drawImage(im, (w - dw) / 2, (h - dh) * .6, dw, dh); }
+      else { var fn = im.onload; im.onload = function () { if (fn) fn(); drawBg(c, type, w, h); }; }
+      c.restore(); return;
+    }
+    if (type === 'chalk') {                  /* לוח גיר ירוק עם מסגרת עץ — מושלם למכחול הגיר */
+      c.fillStyle = '#1f5a44'; c.fillRect(0, 0, w, h);
+      for (i = 0; i < 40; i++) { c.fillStyle = 'rgba(255,255,255,' + (.02 + R() * .04) + ')'; c.beginPath(); c.ellipse(R() * w, R() * h, 30 + R() * 90, 10 + R() * 30, R() * 3, 0, 7); c.fill(); }
+      c.strokeStyle = '#9c6b3f'; c.lineWidth = 18; c.strokeRect(9, 9, w - 18, h - 18); c.restore(); return;
+    }
+    if (type === 'kraft') {                  /* נייר חום עם סיבים */
+      c.fillStyle = '#d9b88a'; c.fillRect(0, 0, w, h);
+      for (i = 0; i < 260; i++) { c.strokeStyle = 'rgba(120,80,40,' + (.06 + R() * .1) + ')'; c.lineWidth = 1; var fx = R() * w, fy = R() * h, fa = R() * 6.28; c.beginPath(); c.moveTo(fx, fy); c.lineTo(fx + Math.cos(fa) * 14, fy + Math.sin(fa) * 14); c.stroke(); }
+      c.restore(); return;
+    }
     if (type === 'lines') {
       c.fillStyle = '#ffffff'; c.fillRect(0, 0, w, h); c.strokeStyle = '#a9c8ff'; c.lineWidth = 1.5;
       for (var y = 44; y < h; y += 34) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
@@ -478,18 +510,23 @@
     }
     c.restore();
   }
-  /* seg — מצייר קטע אחד של משיכה לפי סוג המכחול */
-  function seg(c, st, a, b, i) {
-    var R = rng(st.seed * 997 + i), sz = st.s, col = st.c;
+  /* seg — מצייר קטע אחד של משיכה לפי סוג המכחול.
+     a, b = נקודות { x, y, f (מכפיל עובי מלחץ העט), t (הטיה 0–1) }; i = מספר הקטע (לאקראי קבוע);
+     acc = מונה מרחק לכל עותק (למכחולים שמטביעים צורה כל כמה פיקסלים: כוכבים, לבבות, דשא) */
+  function seg(c, st, a, b, i, acc) {
+    var R = rng(st.seed * 997 + i), f = ((a.f || 1) + (b.f || 1)) / 2, sz = st.s * f, col = st.c;
+    var d = Math.hypot(b.x - a.x, b.y - a.y);
     c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
     switch (st.b) {
       case 'pencil':
-        c.globalAlpha = .9; c.strokeStyle = col; c.lineWidth = Math.max(2, sz * .32); line(c, a, b); break;
+        c.globalAlpha = .9; c.strokeStyle = col; c.lineWidth = Math.max(1.5, sz * .32); line(c, a, b); break;
       case 'marker':
         c.strokeStyle = col; c.lineWidth = sz; line(c, a, b); break;
       case 'crayon': {
-        c.fillStyle = col; var d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.max(3, d * sz / 5);
-        for (var k = 0; k < n; k++) { var t = R(), ox = (R() - .5) * sz, oy = (R() - .5) * sz; c.globalAlpha = .35 + R() * .45; c.fillRect(a.x + (b.x - a.x) * t + ox, a.y + (b.y - a.y) * t + oy, 1.5 + R() * 2.2, 1.5 + R() * 2.2); }
+        /* הטיה של העט = מניחים את השעווה על הצד: פס רחב ודליל יותר */
+        var tw = sz * (1 + (b.t || 0) * 1.6);
+        c.fillStyle = col; var n = Math.max(3, d * tw / 5);
+        for (var k = 0; k < n; k++) { var t = R(), ox = (R() - .5) * tw, oy = (R() - .5) * tw; c.globalAlpha = (.35 + R() * .45) * (1 - (b.t || 0) * .35); c.fillRect(a.x + (b.x - a.x) * t + ox, a.y + (b.y - a.y) * t + oy, 1.5 + R() * 2.2, 1.5 + R() * 2.2); }
         break;
       }
       case 'spray': {
@@ -504,9 +541,7 @@
       }
       case 'glitter': {
         c.globalAlpha = .85; c.strokeStyle = col; c.lineWidth = sz * .7; line(c, a, b);
-        var gl = ['#ffffff', '#fff3b0', '#ffd6ec', '#d9fbff'];
-        for (var g2 = 0; g2 < 3; g2++) { c.globalAlpha = .9; c.fillStyle = gl[(R() * 4) | 0]; var gx = b.x + (R() - .5) * sz * 1.8, gy = b.y + (R() - .5) * sz * 1.8, gr = 1 + R() * sz * .12;
-          c.beginPath(); c.moveTo(gx, gy - gr * 2.2); c.lineTo(gx + gr * .6, gy - gr * .6); c.lineTo(gx + gr * 2.2, gy); c.lineTo(gx + gr * .6, gy + gr * .6); c.lineTo(gx, gy + gr * 2.2); c.lineTo(gx - gr * .6, gy + gr * .6); c.lineTo(gx - gr * 2.2, gy); c.lineTo(gx - gr * .6, gy - gr * .6); c.fill(); }
+        for (var g2 = 0; g2 < 3; g2++) sparkStar(c, b.x + (R() - .5) * sz * 1.8, b.y + (R() - .5) * sz * 1.8, 1 + R() * sz * .12, ['#ffffff', '#fff3b0', '#ffd6ec', '#d9fbff'][(R() * 4) | 0], .9);
         break;
       }
       case 'neon':
@@ -515,52 +550,218 @@
         c.globalAlpha = 1; c.strokeStyle = mix(col, .75); c.lineWidth = Math.max(2, sz * .38); line(c, a, b); break;
       case 'eraser':
         c.globalCompositeOperation = 'destination-out'; c.strokeStyle = '#000'; c.lineWidth = sz * 1.7; line(c, a, b); break;
+      /* ---- מכחולים חדשים ---- */
+      case 'water':
+        /* צבעי מים: שכבות שקופות ורחבות שנערמות — איפה שעוברים פעמיים הצבע מעמיק. קצה "רטוב" כהה מעט */
+        c.globalAlpha = .07; c.strokeStyle = col; c.lineWidth = sz * 2.6; line(c, a, b);
+        c.globalAlpha = .09; c.lineWidth = sz * 1.9; line(c, { x: a.x + (R() - .5) * 3, y: a.y + (R() - .5) * 3 }, { x: b.x + (R() - .5) * 3, y: b.y + (R() - .5) * 3 });
+        c.globalAlpha = .05; c.strokeStyle = mix(col, -.25); c.lineWidth = sz * 2.7; c.setLineDash([2, 9]); line(c, a, b); break;
+      case 'chalk': {
+        /* גיר: גרגרים לבנבנים וקצוות "שבורים" — נראה מעולה במיוחד על רקע לילה או לוח */
+        var cn = Math.max(4, d * sz / 3.5);
+        for (var q = 0; q < cn; q++) { var tt = R(), rx = (R() - .5) * sz * 1.1, ry = (R() - .5) * sz * 1.1; c.globalAlpha = .25 + R() * .55; c.fillStyle = R() < .25 ? mix(col, .6) : col; c.fillRect(a.x + (b.x - a.x) * tt + rx, a.y + (b.y - a.y) * tt + ry, 1 + R() * 3, 1 + R() * 1.6); }
+        break;
+      }
+      case 'oil':
+        /* צבע שמן: קו עבה עם צל כהה בצד אחד והברקה בצד השני — נראה "עבה" ובולט */
+        c.strokeStyle = mix(col, -.3); c.lineWidth = sz * 1.25; line(c, { x: a.x + 1.5, y: a.y + 1.5 }, { x: b.x + 1.5, y: b.y + 1.5 });
+        c.strokeStyle = col; c.lineWidth = sz * 1.15; line(c, a, b);
+        c.globalAlpha = .55; c.strokeStyle = mix(col, .55); c.lineWidth = Math.max(1.5, sz * .22); line(c, { x: a.x - sz * .22, y: a.y - sz * .22 }, { x: b.x - sz * .22, y: b.y - sz * .22 }); break;
+      case 'callig': {
+        /* קליגרפיה: ציפורן שטוחה ב-45° — קו רחב בכיוון אחד ודק בכיוון השני, כמו עט ציפורן אמיתי */
+        var nx = Math.cos(-Math.PI / 4) * sz * .75, ny = Math.sin(-Math.PI / 4) * sz * .75;
+        c.fillStyle = col; c.beginPath(); c.moveTo(a.x - nx, a.y - ny); c.lineTo(a.x + nx, a.y + ny); c.lineTo(b.x + nx, b.y + ny); c.lineTo(b.x - nx, b.y - ny); c.closePath(); c.fill();
+        break;
+      }
+      case 'glue':
+        /* דבק נצנצים: פס שקוף-למחצה ועבה עם הברקה לבנה ונצנצים צבעוניים בפנים */
+        c.globalAlpha = .45; c.strokeStyle = col; c.lineWidth = sz * 1.3; line(c, a, b);
+        c.globalAlpha = .7; c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1.5, sz * .18); line(c, { x: a.x - sz * .25, y: a.y - sz * .25 }, { x: b.x - sz * .25, y: b.y - sz * .25 });
+        for (var gg = 0; gg < 4; gg++) { c.globalAlpha = 1; c.fillStyle = [mix(col, .5), '#fff', mix(col, -.2), '#ffe27a'][(R() * 4) | 0]; c.fillRect(b.x + (R() - .5) * sz, b.y + (R() - .5) * sz, 2, 2); }
+        break;
+      case 'stars': case 'hearts': case 'grass': {
+        /* מכחולי "הטבעה": כל X פיקסלים של תנועה מטביעים צורה — מרווח קבוע גם בתנועה מהירה */
+        var gap = st.b === 'grass' ? Math.max(3, sz * .35) : sz * 1.5;
+        acc.d += d;
+        while (acc.d >= gap || i === 0) {
+          var k2 = i === 0 ? 1 : 1 - (acc.d - gap) / (d || 1), px = a.x + (b.x - a.x) * Math.max(0, Math.min(1, k2)), py = a.y + (b.y - a.y) * Math.max(0, Math.min(1, k2));
+          acc.n++;
+          if (st.b === 'stars') sparkStar(c, px, py, sz * (.35 + R() * .3), acc.n % 3 ? col : mix(col, .6), 1, true);
+          else if (st.b === 'hearts') heart(c, px, py, sz * (.55 + (acc.n % 2) * .2), acc.n % 2 ? col : mix(col, .45));
+          else { var ga = -Math.PI / 2 + (R() - .5) * 1.1, gl = sz * (1.2 + R() * 1.4); c.globalAlpha = .9; c.strokeStyle = R() < .5 ? col : mix(col, R() < .5 ? .35 : -.25); c.lineWidth = 1.6 + R() * 1.4; c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + Math.cos(ga) * gl * .5 + (R() - .5) * 6, py + Math.sin(ga) * gl * .5, px + Math.cos(ga) * gl, py + Math.sin(ga) * gl); c.stroke(); }
+          if (i === 0) break;
+          acc.d -= gap;
+        }
+        break;
+      }
+      case 'washi': {
+        /* סרט קישוט (washi tape): רצועה רחבה עם פסים אלכסוניים בצבע בהיר — כמו מדבקת סרט */
+        var ang2 = Math.atan2(b.y - a.y, b.x - a.x), wd = sz * 1.6;
+        c.translate(a.x, a.y); c.rotate(ang2);
+        c.globalAlpha = .85; c.fillStyle = col; c.fillRect(0, -wd / 2, d + 1, wd);
+        c.fillStyle = mix(col, .6); c.globalAlpha = .9;
+        for (var sx = -((acc.d) % 12); sx < d + 1; sx += 12) { c.beginPath(); c.moveTo(sx, -wd / 2); c.lineTo(sx + 5, -wd / 2); c.lineTo(sx + 5 - wd * .5, wd / 2); c.lineTo(sx - wd * .5, wd / 2); c.fill(); }
+        acc.d += d; break;
+      }
     }
     c.restore();
   }
   function line(c, a, b) { c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x + (a === b ? .01 : 0), b.y); c.stroke(); }
-  /* stamp — מדבקת אימוג'י */
+  /* sparkStar — כוכב נצנץ 4 קצוות (או 5 קצוות כש-five) */
+  function sparkStar(c, x, y, r, color, alpha, five) {
+    c.save(); c.globalAlpha = alpha; c.fillStyle = color; c.beginPath();
+    if (five) { for (var k = 0; k < 10; k++) { var an = -Math.PI / 2 + k * Math.PI / 5, q = k % 2 ? r * .45 : r; c.lineTo(x + Math.cos(an) * q, y + Math.sin(an) * q); } }
+    else { c.moveTo(x, y - r * 2.2); c.lineTo(x + r * .6, y - r * .6); c.lineTo(x + r * 2.2, y); c.lineTo(x + r * .6, y + r * .6); c.lineTo(x, y + r * 2.2); c.lineTo(x - r * .6, y + r * .6); c.lineTo(x - r * 2.2, y); c.lineTo(x - r * .6, y - r * .6); }
+    c.closePath(); c.fill(); if (five) { c.globalAlpha = .9; c.strokeStyle = INK; c.lineWidth = 1.5; c.stroke(); } c.restore();
+  }
+  function heart(c, x, y, r, color) {
+    c.save(); c.fillStyle = color; c.strokeStyle = INK; c.lineWidth = 1.5; c.beginPath();
+    c.moveTo(x, y + r * .9); c.bezierCurveTo(x - r * 1.4, y, x - r * .8, y - r * 1.1, x, y - r * .35); c.bezierCurveTo(x + r * .8, y - r * 1.1, x + r * 1.4, y, x, y + r * .9);
+    c.fill(); c.stroke(); c.restore();
+  }
+  /* stamp — מדבקת אימוג'י (עם כל העותקים של מראה / קליידוסקופ) */
   function stamp(c, st) {
     c.save(); c.font = st.s + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText(st.e, st.x, st.y); if (st.m) c.fillText(st.e, st.w - st.x, st.y); c.restore();
+    copies(st).forEach(function (T) { var q = T({ x: st.x, y: st.y }); c.fillText(st.e, q.x, q.y); }); c.restore();
   }
-  /* segMirror — קטע + השתקפות (מצב מראה 🪞: מה שמציירים בצד אחד מופיע גם בשני) */
+  /* copies(st) — רשימת פונקציות המרה לנקודה: המקור, השתקפות (מראה 🪞), ו-6 סיבובים סביב המרכז (קליידוסקופ ❄️).
+     st.w / st.h = גודל הבמה בזמן הציור (כדי שביטול/שינוי גודל יציירו אותו דבר) */
+  function copies(st) {
+    var list = [function (p) { return p; }];
+    if (st.k) {
+      var cx = st.w / 2, cy = (st.h || H) / 2; list = [];
+      for (var j = 0; j < 6; j++) (function (an) {
+        var co = Math.cos(an), si = Math.sin(an);
+        list.push(function (p) { var dx = p.x - cx, dy = p.y - cy; return { x: cx + dx * co - dy * si, y: cy + dx * si + dy * co, f: p.f, t: p.t }; });
+      })(j * Math.PI / 3);
+    }
+    if (st.m) list = list.concat(list.map(function (T) { return function (p) { var q = T(p); return { x: st.w - q.x, y: q.y, f: q.f, t: q.t }; }; }));
+    return list;
+  }
+  /* segM — קטע אחד בכל העותקים (מראה / קליידוסקופ). לכל עותק מונה מרחק משלו */
   function segM(c, st, a, b, i) {
-    seg(c, st, a, b, i);
-    if (st.m) { var fa = { x: st.w - a.x, y: a.y }, fb = a === b ? fa : { x: st.w - b.x, y: b.y }; seg(c, st, fa, fb, i + 5000); }
+    var cs = copies(st); if (!st.acc || i === 0) st.acc = cs.map(function () { return { d: 0, n: 0 }; });
+    cs.forEach(function (T, j) { var A = T(a), B = a === b ? A : T(b); seg(c, st, A, B, i + j * 5000, st.acc[j]); });
   }
   /* replay — מצייר מחדש את כל המשיכות (אחרי ביטול / שינוי גודל) */
   function replay() {
     dctx.clearRect(0, 0, W, H);
+    syncStk();
     strokes.forEach(function (st) {
+      if (st.b === 'stk' || st.b === 'del') return;   // מדבקה זזה — בשכבת המדבקות, לא בקנבס
       if (st.b === 'stamp') { stamp(dctx, st); return; }
       var p = st.pts; segM(dctx, st, p[0], p[0], 0);
       for (var i = 1; i < p.length; i++) segM(dctx, st, p[i - 1], p[i], i);
     });
   }
-  drawCanvas.addEventListener('pointerdown', function (e) {
-    if (activeId !== null) return;              // אצבע אחת בכל פעם (כף יד לא מקלקלת)
-    closePops(); activeId = e.pointerId; drawCanvas.setPointerCapture(e.pointerId);
+
+  /* ================= פרק 8.3 — מדבקות זזות ================= */
+  /* כל מדבקה היא "משיכה" מסוג stk ברשימת strokes: { b:'stk', v (אימוג'י או 'svg:מזהה'), x, y (מרכז), s (גודל), r (סיבוב) }
+     כך ביטול ↩️ וניקוי 🗑️ עובדים עליהן בדיוק כמו על קווים. syncStk בונה את השכבה מחדש מהרשימה */
+  var stkLayer = $('stkLayer'), selStk = null;
+  function stkHtml(v) { return v.indexOf('svg:') === 0 ? ArtPages.sticker(v.slice(4)) : v; }
+  function placeStk(o) {
+    var n = o.node || (o.node = el('div', 'stko' + (o.v.indexOf('svg:') === 0 ? '' : ' emo')));
+    if (!n.firstChild) { n.innerHTML = stkHtml(o.v) + '<span class="hd h-del">✖</span><span class="hd h-rot">↻</span>'; bindStk(n, o); }
+    n.style.left = (o.x - o.s / 2) + 'px'; n.style.top = (o.y - o.s / 2) + 'px'; n.style.width = n.style.height = o.s + 'px';
+    n.style.fontSize = (o.s * .82) + 'px'; n.style.transform = 'rotate(' + o.r + 'deg)';
+    n.classList.toggle('sel', o === selStk);
+    if (n.parentNode !== stkLayer) stkLayer.appendChild(n);
+  }
+  function syncStk() {
+    var live = strokes.filter(function (st) { return st.b === 'stk'; });
+    Array.prototype.slice.call(stkLayer.children).forEach(function (n) { if (!live.some(function (o) { return o.node === n; })) n.remove(); });
+    if (selStk && live.indexOf(selStk) < 0) selStk = null;
+    live.forEach(placeStk);
+  }
+  function selectStk(o) { selStk = o; strokes.forEach(function (st) { if (st.b === 'stk' && st.node) st.node.classList.toggle('sel', st === o); }); }
+  /* bindStk — גרירה מזיזה; ↻ = סיבוב + הגדלה לפי המרחק מהמרכז; ✖ = מחיקה (נרשמת כפעולה 'del' — ↩️ מחזיר את המדבקה) */
+  function bindStk(n, o) {
+    n.addEventListener('pointerdown', function (e) {
+      if (!penGate(e)) return;
+      e.preventDefault(); e.stopPropagation(); selectStk(o); tap(700);
+      if (e.target.classList.contains('h-del')) { var at = strokes.indexOf(o); strokes.splice(at, 1); strokes.push({ b: 'del', o: o, i: at }); syncStk(); snd('pop'); return; }
+      var p0 = stagePos(e), rot = e.target.classList.contains('h-rot'), x0 = o.x, y0 = o.y, s0 = o.s, r0 = o.r;
+      var a0 = Math.atan2(p0.y - o.y, p0.x - o.x), d0 = Math.hypot(p0.x - o.x, p0.y - o.y) || 1;
+      function mv(ev) {
+        var p = stagePos(ev);
+        if (rot) { o.r = r0 + (Math.atan2(p.y - y0, p.x - x0) - a0) * 180 / Math.PI; o.s = Math.max(30, Math.min(Math.min(W, H) * .9, s0 * Math.hypot(p.x - x0, p.y - y0) / d0)); }
+        else { o.x = Math.max(0, Math.min(W, x0 + p.x - p0.x)); o.y = Math.max(0, Math.min(H, y0 + p.y - p0.y)); }
+        placeStk(o);
+      }
+      function up() { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); }
+      window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    });
+  }
+  /* stkEditMode — המדבקות "תופסות" אצבע רק כשמכחול המדבקות נבחר; אחרת מציירים מעליהן בחופשיות */
+  function stkEditMode() { document.body.classList.toggle('stk-edit', S.mode === 'draw' && S.brush === 'stamp'); if (S.brush !== 'stamp') selectStk(null); }
+  /* drawStickers(c, k, cb) — מצייר את כל המדבקות על קנבס (לשמירה בגלריה); k = יחס הקטנה */
+  function drawStickers(c, k, cb) {
+    var list = strokes.filter(function (st) { return st.b === 'stk'; }), i = 0;
+    (function next() {
+      if (i >= list.length) { cb(); return; }
+      var o = list[i++];
+      c.save(); c.translate(o.x * k, o.y * k); c.rotate(o.r * Math.PI / 180);
+      if (o.v.indexOf('svg:') !== 0) { c.font = (o.s * .82 * k) + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(o.v, 0, 0); c.restore(); next(); return; }
+      var im = new Image();
+      im.onload = function () { c.drawImage(im, -o.s * k / 2, -o.s * k / 2, o.s * k, o.s * k); c.restore(); next(); };
+      im.onerror = function () { c.restore(); next(); };
+      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(stkHtml(o.v).replace('<svg ', '<svg width="200" height="200" '));
+    })();
+  }
+
+  /* ================= פרק 8.5 — עט (Apple Pencil) ================= */
+  /* penPoint — נקודה עם לחץ והטיה. עט: לחץ 0→1 הופך לעובי ×0.35 עד ×1.7; אצבע/עכבר: עובי רגיל (×1).
+     הטיה: altitudeAngle (Safari) או tiltX/tiltY — עט שוכב = t קרוב ל-1 */
+  function penPoint(e) {
     var p = stagePos(e);
-    if (S.brush === 'stamp') {
-      var st = { b: 'stamp', e: S.sticker, x: p.x, y: p.y, s: STAMP_SIZES[S.size], m: S.mirror, w: W };
-      strokes.push(st); stamp(dctx, st); sparkle(p.x, p.y, '#ffc93c', 12); snd('pop'); cleared = null; return;
+    if (e.pointerType === 'pen') {
+      var pr = e.pressure || .5; p.f = +(.35 + pr * 1.35).toFixed(2);
+      var tilt = 0;
+      if (typeof e.altitudeAngle === 'number') tilt = 1 - e.altitudeAngle / (Math.PI / 2);
+      else if (e.tiltX || e.tiltY) tilt = Math.min(1, Math.hypot(e.tiltX || 0, e.tiltY || 0) / 60);
+      p.t = +Math.max(0, Math.min(1, tilt)).toFixed(2);
     }
-    cur = { b: S.brush, c: COLORS[S.color][0], s: SIZES[S.size], m: S.mirror, w: W, seed: (Math.random() * 1e6) | 0, hue: S.hue, pts: [p] };
+    return p;
+  }
+  /* penGate — "רק עט": אחרי שזיהינו עט, מגע של אצבע/כף יד על הבמה מתעלם (כף היד יכולה לנוח על המסך).
+     בפעם הראשונה שעט נוגע — מדליקים אוטומטית ומודיעים. אפשר לכבות בכפתור ✍️ */
+  function penGate(e) {
+    if (e.pointerType === 'pen' && !S.penSeen) {
+      S.penSeen = true; S.penOnly = true; saveState(); buildTools();
+      toast('✍️ זיהינו עט! עכשיו כף היד יכולה לנוח על המסך'); say('זיהינו עט! עכשיו כף היד יכולה לנוח על המסך');
+    }
+    return !(S.penOnly && e.pointerType === 'touch');
+  }
+  drawCanvas.addEventListener('pointerdown', function (e) {
+    if (!penGate(e)) return;
+    if (activeId !== null) return;              // אצבע אחת בכל פעם (כף יד לא מקלקלת)
+    closePops(); activeId = e.pointerId; try { drawCanvas.setPointerCapture(e.pointerId); } catch (x) {}
+    var p = penPoint(e);
+    if (S.brush === 'stamp') {
+      /* נגיעה בדף ריק: אם יש מדבקה מסומנת — רק מבטלים סימון; אחרת מדביקים מדבקה חדשה (זזה) */
+      activeId = null;
+      if (selStk) { selectStk(null); return; }
+      var big = S.sticker.indexOf('svg:') === 0 ? 2.1 : 1;       // מדבקה מצוירת ממלאת ~60% מהמסגרת — מגדילים
+      var st = { b: 'stk', v: S.sticker, x: p.x, y: p.y, s: STAMP_SIZES[S.size] * big, r: 0 };
+      strokes.push(st); selStk = st; syncStk(); sparkle(p.x, p.y, '#ffc93c', 12); snd('pop'); cleared = null; return;
+    }
+    cur = { b: S.brush, c: COLORS[S.color][0], s: SIZES[S.size], m: S.mirror, k: S.kal, w: W, h: H, seed: (Math.random() * 1e6) | 0, hue: S.hue, pts: [p] };
     strokes.push(cur); cleared = null;
     segM(dctx, cur, p, p, 0);
     if (S.brush !== 'eraser') snd('sparkle');
   });
   drawCanvas.addEventListener('pointermove', function (e) {
     if (!cur || e.pointerId !== activeId) return;
-    var list = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];       // תנועה חלקה (עט / אצבע מהירה)
+    var list = e.getCoalescedEvents ? e.getCoalescedEvents() : [];        // תנועה חלקה (עט / אצבע מהירה)
+    if (!list.length) list = [e];                                           // יש דפדפנים שמחזירים רשימה ריקה
     for (var k = 0; k < list.length; k++) {
-      var p = stagePos(list[k]), last = cur.pts[cur.pts.length - 1];
+      var p = penPoint(list[k]), last = cur.pts[cur.pts.length - 1];
       if (Math.hypot(p.x - last.x, p.y - last.y) < 2.5) continue;
       cur.pts.push(p); segM(dctx, cur, last, p, cur.pts.length - 1);
     }
     var lp = cur.pts[cur.pts.length - 1];
-    if (cur.b === 'glitter' || cur.b === 'rainbow' || cur.b === 'neon') sparkle(lp.x, lp.y, cur.b === 'rainbow' ? 'hsl(' + ((cur.hue + cur.pts.length * 5) % 360) + ',95%,70%)' : cur.c, 1);
+    if (cur.b === 'glitter' || cur.b === 'rainbow' || cur.b === 'neon' || cur.b === 'glue' || cur.b === 'stars') sparkle(lp.x, lp.y, cur.b === 'rainbow' ? 'hsl(' + ((cur.hue + cur.pts.length * 5) % 360) + ',95%,70%)' : cur.c, 1);
   });
   ['pointerup', 'pointercancel'].forEach(function (evn) {
     drawCanvas.addEventListener(evn, function (e) {
@@ -639,19 +840,23 @@
       toolBtn(g, '🎲 דף הפתעה', false, surprise, 'wide');
     } else if (S.mode === 'draw') {
       g = group('מכחולים');
-      BRUSHES.forEach(function (br) {
-        var b = toolBtn(g, br[1], S.brush === br[0], function () {
-          S.brush = br[0]; saveState(); tap(640); say(br[2]); buildTools();
-          if (br[0] === 'stamp') openPop('stkPop'); else closePops();
-        });
+      /* 8 מכחולים מהירים; אם נבחר מכחול מהחלון שאינו ברשימה — הוא מחליף את המקום לפני המחק */
+      var quick = QUICK.slice(); if (quick.indexOf(S.brush) < 0) quick.splice(6, 1, S.brush);
+      quick.forEach(function (id) {
+        var br = brushOf(id);
+        var b = toolBtn(g, br[1], S.brush === br[0], function () { pickBrush(br[0]); });
         b.setAttribute('aria-label', br[2]);
       });
+      toolBtn(g, '🖌️ כל המכחולים', false, function () { tap(640); openPop('brPop'); }, 'wide');
       g = group('גודל');
       SIZES.forEach(function (sz, i) { toolBtn(g, '<span class="dot" style="width:' + (8 + i * 9) + 'px;height:' + (8 + i * 9) + 'px"></span>', S.size === i, function () { S.size = i; saveState(); tap(500 + i * 90); buildTools(); }); });
       g.appendChild(el('div'));
       g = group('קסמים');
       toolBtn(g, '🪞', S.mirror, function () { S.mirror = !S.mirror; saveState(); tap(700); say(S.mirror ? 'מראה קסם! מה שמציירים בצד אחד מופיע גם בשני' : 'בלי מראה'); buildTools(); }).setAttribute('aria-label', 'מראה');
+      toolBtn(g, '❄️', S.kal, function () { S.kal = !S.kal; saveState(); tap(720); say(S.kal ? 'קליידוסקופ! כל קו מופיע שש פעמים, כמו פתית שלג' : 'בלי קליידוסקופ'); if (S.kal) toast('❄️ מציירים ליד המרכז — ורואים פתית שלג!'); buildTools(); }).setAttribute('aria-label', 'קליידוסקופ');
       toolBtn(g, '🖼️', false, function () { openPop('bgPop'); }).setAttribute('aria-label', 'רקע');
+      toolBtn(g, '✍️', S.penOnly, togglePen).setAttribute('aria-label', 'רק עט');
+      stkEditMode();
       toolBtn(g, '📚 דף מתחת', S.line, function () { openPages(); }, 'wide');
     } else if (S.mode === 'cbn') {
       g = group('');
@@ -680,18 +885,56 @@
       toolBtn(g, '📚 כל הציורים', false, function () { openPages(); }, 'wide');
     }
   }
+  /* pickBrush — בחירת מכחול (מהעמודה או מהחלון) */
+  function pickBrush(id) {
+    var br = brushOf(id); S.brush = id; saveState(); tap(640); say(br[2]); buildTools(); markBrushPop();
+    if (id === 'stamp') openPop('stkPop'); else closePops();
+  }
+  /* togglePen — "רק עט": כף יד/אצבע לא מציירות ולא צובעות. עובד גם בלי עט שזוהה (למשל עט של צד שלישי) */
+  function togglePen() {
+    S.penOnly = !S.penOnly; saveState(); tap(700);
+    say(S.penOnly ? 'רק עט: כף היד יכולה לנוח על המסך' : 'אפשר לצייר גם עם האצבע'); toast(S.penOnly ? '✍️ רק עט — כף היד נחה בשקט' : '👆 גם אצבע מציירת'); buildTools();
+  }
   function nextDots() { var L = ArtPages.DOTS, i = L.map(function (d) { return d.id; }).indexOf(S.dot); snd('happy'); loadDots(L[(i + 1) % L.length].id); }
 
   /* חלונות קופצים: מדבקות ורקעים */
   function openPop(id) { closePops(); $(id).classList.add('show'); }
-  function closePops() { ['stkPop', 'bgPop'].forEach(function (id) { $(id).classList.remove('show'); }); }
+  function closePops() { ['stkPop', 'bgPop', 'brPop'].forEach(function (id) { $(id).classList.remove('show'); }); }
+  /* markBrushPop — מסמן את המכחול הנבחר בחלון */
+  function markBrushPop() { document.querySelectorAll('.brc').forEach(function (b) { b.classList.toggle('on', b.dataset.b === S.brush); }); }
   (function buildPops() {
-    var sk = $('stickers');
-    STICKERS.forEach(function (s) {
-      var b = el('button', 'stk' + (s === S.sticker ? ' on' : ''), s); b.type = 'button';
-      b.addEventListener('pointerdown', function () { S.sticker = s; saveState(); sk.querySelectorAll('.stk').forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); tap(760); setTimeout(closePops, 180); });
-      sk.appendChild(b);
+    /* חלון המכחולים: לכל מכחול דוגמת משיכה אמיתית (אותו מנוע ציור) בצבע ורוד */
+    var bw = $('brushes');
+    BRUSHES.forEach(function (br) {
+      var b = el('button', 'brc' + (br[0] === S.brush ? ' on' : '')); b.type = 'button'; b.dataset.b = br[0];
+      var cv = document.createElement('canvas'); cv.width = 180; cv.height = 76; b.appendChild(cv);
+      b.appendChild(el('b', '', br[1])); b.appendChild(el('span', '', br[2]));
+      var c = cv.getContext('2d'), st = { b: br[0], c: br[0] === 'eraser' ? '#9aa0ab' : '#ff2e93', s: 14, w: 180, h: 76, seed: 7, hue: 300, pts: [] };
+      for (var k = 0; k <= 30; k++) st.pts.push({ x: 16 + k * 5, y: 38 + Math.sin(k / 4.5) * 16, f: .6 + k / 40 });
+      if (br[0] === 'stamp') { c.font = '44px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('⭐', 60, 40); c.fillText('🦄', 120, 40); }
+      else if (br[0] === 'eraser') { c.fillStyle = '#ff5ca8'; c.fillRect(10, 18, 160, 40); c.save(); c.globalCompositeOperation = 'destination-out'; c.lineWidth = 16; c.lineCap = 'round'; c.beginPath(); st.pts.forEach(function (p) { c.lineTo(p.x, p.y); }); c.stroke(); c.restore(); }
+      else { segM(c, st, st.pts[0], st.pts[0], 0); for (var i = 1; i < st.pts.length; i++) segM(c, st, st.pts[i - 1], st.pts[i], i); }
+      b.addEventListener('pointerdown', function () { pickBrush(br[0]); });
+      bw.appendChild(b);
     });
+    /* חלון המדבקות: לשוניות (אימוג'י / בית ורהיטים / חיות / ממתקים / קסם) — מדבקות מצוירות מהסדרות */
+    var sk = $('stickers'), tabsEl = $('stkTabs'), TABS = (window.ArtPages && ArtPages.STK_TABS) || [['emoji', '😀', 'אימוג׳י']];
+    var curTab = S.sticker.indexOf('svg:') === 0 ? (TABS.filter(function (t) { return t[0] !== 'emoji' && ArtPages.stickersIn(t[0]).indexOf(S.sticker.slice(4)) >= 0; })[0] || TABS[0])[0] : 'emoji';
+    function fillStk() {
+      sk.innerHTML = '';
+      var list = curTab === 'emoji' ? STICKERS : ArtPages.stickersIn(curTab).map(function (id) { return 'svg:' + id; });
+      list.forEach(function (v) {
+        var b = el('button', 'stk' + (v === S.sticker ? ' on' : ''), stkHtml(v)); b.type = 'button';
+        b.addEventListener('pointerdown', function () { S.sticker = v; saveState(); sk.querySelectorAll('.stk').forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); tap(760); setTimeout(closePops, 180); toast('נוגעים בדף כדי להדביק ⭐'); });
+        sk.appendChild(b);
+      });
+    }
+    TABS.forEach(function (t) {
+      var b = el('button', t[0] === curTab ? 'on' : '', t[1] + ' ' + t[2]); b.type = 'button';
+      b.addEventListener('pointerdown', function () { curTab = t[0]; tabsEl.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); tap(640); say(t[2]); fillStk(); });
+      tabsEl.appendChild(b);
+    });
+    fillStk();
     var bg = $('bgs');
     BGS.forEach(function (x) {
       var b = el('button', 'bgc' + (x[0] === S.bg ? ' on' : '')); b.type = 'button';
@@ -707,7 +950,7 @@
   $('btnUndo').addEventListener('pointerdown', function () {
     tap(520);
     if (S.mode === 'draw') {
-      if (strokes.length) strokes.pop(); else if (cleared) { strokes = cleared; cleared = null; }
+      if (strokes.length) { var last = strokes.pop(); if (last.b === 'del') strokes.splice(last.i, 0, last.o); } else if (cleared) { strokes = cleared; cleared = null; }
       replay(); return;
     }
     var u = undo.pop(); if (!u) return;
@@ -757,11 +1000,16 @@
   function composite(cb) {
     var w = 560, h = Math.round(560 * H / W), cv = document.createElement('canvas'); cv.width = w; cv.height = h;
     var c = cv.getContext('2d'); c.drawImage(bgCanvas, 0, 0, w, h); c.drawImage(drawCanvas, 0, 0, w, h);
+    compositeLines(c, cv, w, cb);
+  }
+  /* compositeLines — קווי הדף מעל הציור, ואז המדבקות מעל הכול (כמו שרואים על המסך) */
+  function compositeLines(c, cv, w, cb) {
+    function fin() { drawStickers(c, w / W, function () { cb(cv.toDataURL('image/jpeg', .86)); }); }
     var s = S.line && lineArt.querySelector('svg');
-    if (!s) { cb(cv.toDataURL('image/jpeg', .86)); return; }
+    if (!s) { fin(); return; }
     var img = new Image(), r = s.getBoundingClientRect(), sr = stage.getBoundingClientRect(), k = w / W;
-    img.onload = function () { c.drawImage(img, (r.left - sr.left) * k, (r.top - sr.top) * k, r.width * k, r.height * k); cb(cv.toDataURL('image/jpeg', .86)); };
-    img.onerror = function () { cb(cv.toDataURL('image/jpeg', .86)); };
+    img.onload = function () { c.drawImage(img, (r.left - sr.left) * k, (r.top - sr.top) * k, r.width * k, r.height * k); fin(); };
+    img.onerror = fin;
     var clone = s.cloneNode(true); clone.setAttribute('width', 400); clone.setAttribute('height', 400);
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clone.outerHTML);
   }
@@ -777,7 +1025,7 @@
       S.saved = (S.saved || 0) + 1; saveState();
       if (window.Share && [5, 10, 20, 30].indexOf(S.saved) >= 0) setTimeout(function () { Share.award({ key: 'art:' + S.saved, line: 'ציירה ' + S.saved + ' ציורים', ico: '🎨' }); }, 1200);
     }
-    if (S.mode === 'draw') { if (!strokes.length) { toast('קודם מציירים משהו 🎨'); return; } composite(function (d) { done({ type: 'img', data: d }); }); return; }
+    if (S.mode === 'draw') { selectStk(null); if (!strokes.length) { toast('קודם מציירים משהו 🎨'); return; } composite(function (d) { done({ type: 'img', data: d }); }); return; }
     if (!curSvg) return;
     var item = { type: 'svg', data: cleanSvg() };
     if (S.mode === 'color' && curInfo) { item.key = curInfo.key; item.work = Object.assign({}, work[curInfo.key] || {}); }
@@ -834,7 +1082,7 @@
         var o = charOutfit(k); return '<img alt="" src="' + (o ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(HeroAvatar.svg(o)) : 'assets/art/' + k + '.svg') + '">'; } };
     });
     return ArtPages.pagesIn(pack).map(function (p) {
-      return { key: p.id, name: p.name, thumb: function () { var t = ''; coloredSvg(pageInfo(p.id), function (s) { t = s; }); return t; } };
+      return { key: p.id, name: p.name, lv: p.lv, thumb: function () { var t = ''; coloredSvg(pageInfo(p.id), function (s) { t = s; }); return t; } };
     });
   }
   function openPages() {
@@ -853,13 +1101,26 @@
     $('pagesOv').classList.add('show');
     setTimeout(function () { var on = bar.querySelector('.pack.on'); if (on && on.scrollIntoView) on.scrollIntoView({ inline: 'center', block: 'nearest' }); }, 30);
   }
+  /* renderGrid — הכרטיסים של החבילה. בסדרות הסדנה יש שורת רמות: הכל / 🟢 קל / 🟡 בינוני / 🔴 מאתגר */
   function renderGrid(curKey) {
     var grid = $('pagesGrid'), items = itemsOf(curPack); grid.innerHTML = '';
+    var LV = ArtPages.LEVELS || {};
+    if (items.some(function (it) { return it.lv; })) {
+      var bar = el('div', 'lvbar'), lvl = S.lvl || 0;
+      [[0, '✨ הכל']].concat([1, 2, 3].map(function (n) { return [n, LV[n][0] + ' ' + LV[n][1]]; })).forEach(function (o) {
+        var b = el('button', lvl === o[0] ? 'on' : '', o[1]); b.type = 'button';
+        b.addEventListener('click', function () { S.lvl = o[0]; saveState(); tap(600 + o[0] * 60); if (o[0]) say(LV[o[0]][1]); renderGrid(curKey); });
+        bar.appendChild(b);
+      });
+      bar.appendChild(el('span', '', lvl === 3 ? '🔴 הרבה פרטים קטנים — עם עט זה הכי כיף!' : lvl === 1 ? '🟢 אזורים גדולים — מתאים לקטנים' : ''));
+      grid.appendChild(bar);
+      if (lvl) items = items.filter(function (it) { return it.lv === lvl; });
+    }
     var sp = el('button', 'card surprise', '<div class="th">🎲</div>הפתעה!'); sp.type = 'button';
     sp.addEventListener('click', function () { choose(items[(Math.random() * items.length) | 0].key); });
     grid.appendChild(sp);
     items.forEach(function (it) {
-      var c = el('button', 'card' + (it.key === curKey ? ' cur' : ''), '<div class="th">' + it.thumb() + '</div>' + it.name); c.type = 'button';
+      var c = el('button', 'card' + (it.key === curKey ? ' cur' : ''), (it.lv && LV[it.lv] ? '<i class="lv">' + LV[it.lv][0] + '</i>' : '') + '<div class="th">' + it.thumb() + '</div>' + it.name); c.type = 'button';
       c.addEventListener('click', function () { choose(it.key); });
       grid.appendChild(c);
     });
@@ -896,7 +1157,7 @@
       if (!artById[key] && !CHAR_NAMES[key] && key.indexOf(':') < 0) key = 'hero:1';
       loadPage(key, true);
     }
-    buildPalette(); buildTools();
+    buildPalette(); buildTools(); stkEditMode();
   }
   document.querySelectorAll('.mode').forEach(function (b) {
     b.addEventListener('pointerdown', function () { if (S.mode === b.dataset.m) return; tap(600); setMode(b.dataset.m); say(MODE_NAMES[b.dataset.m]); });
