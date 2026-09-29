@@ -58,7 +58,7 @@
   /* מתנות שנאספות באוויר: מגנט ורקטה פעילים לזמן קצוב, מגן לפגיעה אחת, ומטר כוכבים */
   var PICKUPS = { magnet: { ico: '🧲', dur: 7, say: 'מגנט!' }, rocket: { ico: '🚀', dur: 4.5, say: 'רקטה!' }, shield: { ico: '🛡️', dur: 0, say: 'מגן!' }, shower: { ico: '🌠', dur: 0, say: 'מטר כוכבים!' } };
 
-  var PRAISE = ['אלוף!', 'מדהים!', 'וואו!', 'איזו טייסת!', 'סופר!', HERO_WORD];
+  var PRAISE = ['אלופה!', 'מדהים!', 'וואו!', 'איזו טייסת!', 'סופר!', HERO_WORD];
 
   /* שמירה: כמה אזורים פתוחים + שיאים */
   var DEF = { open: 1, best: 0, cats: 0, zone: 0, words: 0, bestCombo: 0, bossWins: 0 };
