@@ -131,7 +131,7 @@
   /* מבנים (בקואורדינטות עולם) */
   function house(c) {
     var x = 3300, y = GROUND - 250;
-    rrect(c, x, y + 60, 250, 190, 8, '#ffb3de'); path(c, [[x - 24, y + 70], [x + 125, y - 50], [x + 274, y + 70]], '#9b5cff');
+    rrect(c, x, y + 60, 250, 190, 8, BOY ? '#bfe3ff' : '#ffb3de'); path(c, [[x - 24, y + 70], [x + 125, y - 50], [x + 274, y + 70]], BOY ? '#2f6bff' : '#9b5cff');   /* בית תכלת לבנים, ורוד לבנות */
     rrect(c, x + 180, y - 30, 34, 70, 4, '#c98b4f');
     win(c, x + 26, y + 100, 60, 50); win(c, x + 164, y + 100, 60, 50);
     rrect(c, x + 98, y + 150, 54, 100, 26, '#ff5ca8'); circle(c, x + 140, y + 205, 5, '#ffc93c', 3);
@@ -169,7 +169,7 @@
   /* park — "הגן הקסום": שביל אבנים ושלט; הקישוטים שנקנים מופיעים כאן */
   function park(c) {
     for (var i = 0; i < 9; i++) ell(c, 3860 + i * 56, GROUND + 40 + (i % 2) * 8, 22, 9, '#e8dcc8', 3);
-    rrect(c, 3810, GROUND - 120, 10, 120, 3, '#9c6b3f'); rrect(c, 3745, GROUND - 150, 140, 44, 10, '#fff3dc'); c.font = '900 20px ' + FONT; c.textAlign = 'center'; c.fillStyle = INK; c.fillText('🎡 הגן הקסום', 3815, GROUND - 121);
+    rrect(c, 3965, GROUND - 120, 10, 120, 3, '#9c6b3f'); rrect(c, 3900, GROUND - 150, 140, 44, 10, '#fff3dc', 3); c.font = '900 20px ' + FONT; c.textAlign = 'center'; c.fillStyle = INK; c.fillText('🎡 הגן הקסום', 3970, GROUND - 121);   /* השלט מימין לדוכן, לא עליו */
     if (ST.deco.filter(function (d) { return ['swing', 'fence', 'fountain', 'treehouse'].indexOf(d) >= 0; }).length === 0) { c.globalAlpha = .55; drawEmo(c, '🛒', 4100, GROUND - 60, 60); c.globalAlpha = 1; c.font = '800 18px ' + FONT; c.fillStyle = INK; c.fillText('קונים קישוטים בדוכן השוק', 4100, GROUND); }
   }
   function stable(c) { var x = 70, y = GROUND - 230; rrect(c, x, y + 60, 280, 170, 6, '#c98b4f'); path(c, [[x - 14, y + 68], [x + 140, y - 10], [x + 294, y + 68]], '#7a4a22'); for (var i = 0; i < 6; i++) rrect(c, x + 10 + i * 46, y + 70, 6, 150, 2, '#9c6b3f', 0); rrect(c, x + 100, y + 110, 80, 120, 4, '#5a3a1a'); c.font = '900 22px ' + FONT; c.textAlign = 'center'; c.fillStyle = '#fff'; c.strokeStyle = INK; c.lineWidth = 5; c.strokeText('🐴 ' + (window.Horse ? Horse.state.name : ''), x + 140, y + 100); c.fillText('🐴 ' + (window.Horse ? Horse.state.name : ''), x + 140, y + 100); }
