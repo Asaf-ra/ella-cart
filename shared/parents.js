@@ -152,6 +152,8 @@
         '<div class="pa-tile"><b>' + sumWeek('art:save') + '</b><span>ציורים שנשמרו השבוע</span></div>' +
         '<div class="pa-tile"><b>' + sumWeek('motor:done') + '</b><span>תרגילי עט השבוע (מוטוריקה)</span></div>' +
         '<div class="pa-tile"><b>' + sumWeek('ride:done') + '</b><span>רכיבות על סוס השבוע</span></div>' +
+        '<div class="pa-tile"><b>' + sumWeek('farm:act') + '</b><span>טיפולים בחיות החווה השבוע</span></div>' +
+        '<div class="pa-tile"><b>' + sumWeek('farm:chores') + '</b><span>ימי "משימות בוקר" מושלמים בחווה</span></div>' +
         (window.Motor ? '<div class="pa-tile"><b>' + Motor.EX.filter(function (id) { return Motor.stars(id) > 0; }).length + '/' + Motor.EX.length + '</b><span>תרגילי סדנת העט שהושלמו</span></div>' : '') +
         (H ? '<div class="pa-tile"><b>' + H.level + '</b><span>רמת גיבורה</span></div>' : '') +
         '<div class="pa-tile"><b>' + (P.boss().won ? '🏆' : P.boss().hp + '❤️') + '</b><span>נבל השבוע</span></div>' +

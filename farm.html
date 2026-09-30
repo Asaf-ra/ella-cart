@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#1d0b4a" />
+<meta name="apple-mobile-web-app-title" content="החווה של אלה" />
+<title>החווה של אלה</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<link rel="stylesheet" href="shared/theme.css" />
+<style>
+  /* ===== החווה של אלה — עיצוב =====
+     פרק א — בסיס וקנבס | פרק ב — HUD עליון, סל ומפת אזורים | פרק ג — לוח האזור (בזום)
+     פרק ד — חלונות: משימות, שוק, אלבום, שם | פרק ה — אפקטים (הודעה, פלאש, מעוף לסל) | פרק ו — סיבוב מסך */
+  /* --- פרק א --- */
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  html { background: #6ec3ff; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { font-family: var(--h-font); color: var(--h-ink); touch-action: none; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+  #farmCv { position: fixed; inset: 0; display: block; }
+  /* --- פרק ב --- */
+  .top { position: fixed; top: max(10px, env(safe-area-inset-top)); right: 14px; left: 90px; display: flex; gap: 8px; align-items: center; z-index: 10; pointer-events: none; }
+  .top h1 { font: 900 clamp(22px, 3vw, 34px)/1 var(--h-font); color: #fff; -webkit-text-stroke: 4px var(--h-ink); paint-order: stroke fill; text-shadow: 3px 4px 0 var(--h-magenta); margin-inline-end: auto; white-space: nowrap; }
+  .chip { pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); color: var(--h-ink); font: 900 clamp(14px, 1.7vw, 19px)/1 var(--h-font); box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; white-space: nowrap; }
+  .chip.gold { background: linear-gradient(180deg, #fff3b0, #ffc93c); }
+  #invBar { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 62px); right: 14px; display: flex; gap: 6px; z-index: 10; pointer-events: none; }
+  #invBar span { padding: 4px 10px; border: 3px solid var(--h-ink); border-radius: 999px; background: rgba(255,255,255,.92); font: 900 16px/1.1 var(--h-font); }
+  #zoneNav { position: fixed; bottom: max(12px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; gap: 6px; padding: 6px 10px; border: 4px solid var(--h-ink); border-radius: 999px; background: rgba(255,250,240,.92); box-shadow: 0 5px 0 var(--h-ink); z-index: 10; transition: transform .4s var(--h-spring), opacity .3s; }
+  .zn { width: clamp(42px, 5vw, 54px); height: clamp(42px, 5vw, 54px); border: 3px solid var(--h-ink); border-radius: 50%; background: #fff; font-size: clamp(20px, 2.6vw, 28px); cursor: pointer; box-shadow: 0 3px 0 var(--h-ink); }
+  .zn:active { transform: translateY(3px) scale(.92); }
+  body.zoomed #zoneNav { transform: translate(-50%, 140%); opacity: 0; }
+  .hint { position: fixed; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 76px); left: 50%; transform: translateX(-50%); z-index: 9; padding: 6px 16px; border-radius: 999px; background: rgba(27,16,54,.72); color: #fff; font: 800 15px/1.2 var(--h-font); pointer-events: none; transition: opacity .4s; }
+  body.zoomed .hint { opacity: 0; }
+  /* --- פרק ג --- */
+  #zonePanel { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 104px); right: 14px; width: clamp(200px, 22vw, 260px); max-height: calc(100vh - 130px); overflow-y: auto; z-index: 11; display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 5px solid var(--h-ink); border-radius: 26px; background: var(--h-paper); box-shadow: 0 6px 0 var(--h-ink); transform: translateX(130%); transition: transform .45s var(--h-spring); }
+  body.zoomed #zonePanel { transform: none; }
+  #zonePanel:empty { display: none; }
+  #zonePanel h3 { font: 900 22px/1.1 var(--h-font); }
+  #zonePanel p { font: 800 14px/1.35 var(--h-font); color: var(--h-text-soft); }
+  #zonePanel .tiny { font-size: 12px; }
+  #zonePanel .big { font: 900 26px/1 var(--h-font); text-align: center; padding: 6px; border-radius: 16px; background: #fff3dc; border: 3px solid var(--h-ink); }
+  .zg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .zb { display: grid; place-items: center; gap: 2px; padding: 8px 6px; border: 3px solid var(--h-ink); border-radius: 16px; background: #fff; box-shadow: 0 3px 0 var(--h-ink); font: 800 14px/1.1 var(--h-font); color: var(--h-ink); cursor: pointer; }
+  .zb b { font-size: 26px; line-height: 1; } .zb small { font-size: 12px; color: #b36b00; font-weight: 900; }
+  .zb.wide { grid-column: 1 / -1; font-size: 16px; padding: 10px; }
+  .zb.on, .zb#clapBtn.on { background: linear-gradient(180deg, #fff3b0, #ffc93c); }
+  .zb.back { background: linear-gradient(180deg, #d9c2ff, #9b5cff); color: #fff; }
+  .zb.name { background: #fff3dc; font-size: 16px; }
+  .zb.sw { height: 50px; font-size: 24px; }
+  .bar { height: 18px; border: 3px solid var(--h-ink); border-radius: 999px; background: #eee; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, #fff, #9fe0ff); transition: width .2s; }
+  /* --- פרק ד --- */
+  .ov { position: fixed; inset: 0; z-index: 60; display: none; place-items: center; padding: 16px; background: rgba(15,10,40,.62); }
+  .ov.show { display: grid; }
+  .card { width: min(94vw, 760px); max-height: 92vh; overflow: auto; padding: 18px 22px; }
+  .card h2 { font: 900 clamp(24px, 3.2vw, 34px)/1.1 var(--h-font); margin-bottom: 10px; }
+  .card h4 { font: 900 18px/1 var(--h-font); margin: 14px 0 8px; }
+  .chore { display: grid; grid-template-columns: 1fr 120px 48px; gap: 10px; align-items: center; padding: 10px 12px; margin: 8px 0; border: 3px solid var(--h-ink); border-radius: 18px; background: #fff; font: 800 17px/1.2 var(--h-font); }
+  .chore em { display: block; height: 14px; border: 3px solid var(--h-ink); border-radius: 999px; background: #eee; overflow: hidden; }
+  .chore i { display: block; height: 100%; background: linear-gradient(90deg, #3ff2b0, #2fb85a); }
+  .chore.done { background: linear-gradient(180deg, #e8fff4, #b6ffdc); }
+  .streak { font: 900 18px/1 var(--h-font); color: #ff6a00; margin-top: 8px; }
+  .mrow { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mb { display: grid; justify-items: center; gap: 2px; min-width: 104px; padding: 8px; border: 3px solid var(--h-ink); border-radius: 16px; background: #fff; box-shadow: 0 3px 0 var(--h-ink); font: 800 14px/1.1 var(--h-font); color: var(--h-ink); cursor: pointer; }
+  .mb b { font-size: 30px; } .mb small { color: #b36b00; font-weight: 900; } .mb.off { opacity: .5; } .mb.own { background: linear-gradient(180deg, #e8fff4, #b6ffdc); }
+  .coins { font: 900 22px/1 var(--h-font); }
+  .row { display: flex; gap: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+  #albumGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .alb { border: 4px solid var(--h-ink); border-radius: 16px; overflow: hidden; background: #fff; cursor: pointer; padding: 0; }
+  .alb img { width: 100%; display: block; }
+  #nameInp { width: 100%; font: 900 28px var(--h-font); padding: 10px 14px; border: 4px solid var(--h-ink); border-radius: 18px; text-align: center; color: var(--h-ink); user-select: text; -webkit-user-select: text; margin: 10px 0; }
+  /* --- פרק ה --- */
+  .toast { position: fixed; left: 50%; top: 20%; transform: translateX(-50%); z-index: 70; padding: 12px 22px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); box-shadow: 0 5px 0 var(--h-ink); font: 900 clamp(17px, 2.2vw, 24px)/1 var(--h-font); pointer-events: none; animation: h-card-in .4s var(--h-spring) both; white-space: nowrap; }
+  .flash { position: fixed; inset: 0; z-index: 80; background: #fff; pointer-events: none; animation: flash .5s ease-out forwards; }
+  @keyframes flash { from { opacity: .9; } to { opacity: 0; } }
+  .flyto { position: fixed; z-index: 75; font-size: 56px; margin: -28px 0 0 -28px; transition: transform .8s cubic-bezier(.3,.7,.3,1), opacity .8s; pointer-events: none; }
+  /* --- פרק ו --- */
+  .rotate { display: none; }
+  @media (orientation: portrait) { .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 12px; text-align: center; background: var(--h-night); color: #fff; font-size: 26px; font-weight: 900; } }
+  @media (max-width: 760px) { .top h1 { font-size: 20px; } #invBar { display: none; } }
+</style>
+</head>
+<body>
+  <canvas id="farmCv"></canvas>
+  <div class="top">
+    <h1>🏡 החווה של אלה</h1>
+    <button class="chip" id="timeChip" type="button"></button>
+    <span class="chip gold" id="coinChip">🪙 0</span>
+    <button class="chip" id="choresBtn" type="button">📋</button>
+    <button class="chip" id="photoBtn" type="button" aria-label="צילום">📸</button>
+    <button class="chip" id="albumBtn" type="button" aria-label="אלבום">🖼️</button>
+  </div>
+  <div id="invBar"></div>
+  <div id="zonePanel"></div>
+  <div class="hint">👆 גוררים כדי לטייל בחווה · נוגעים בחיה או במבנה כדי להיכנס</div>
+  <div id="zoneNav"></div>
+
+  <div class="ov" id="choresOv"><div class="card h-panel"><div class="row"><h2>📋 משימות הבוקר</h2><button class="h-btn violet" type="button" data-close="choresOv">✖ סגירה</button></div><div id="choresList"></div><div class="streak" id="choresStreak"></div></div></div>
+  <div class="ov" id="marketOv"><div class="card h-panel"><div class="row"><h2>🛒 דוכן השוק</h2><span class="coins" id="coinsBig"></span><button class="h-btn violet" type="button" data-close="marketOv">✖ סגירה</button></div><div id="marketBox"></div></div></div>
+  <div class="ov" id="albumOv"><div class="card h-panel"><div class="row"><h2>🖼️ אלבום החווה</h2><button class="h-btn violet" type="button" data-close="albumOv">✖ סגירה</button></div><p style="font-weight:800;margin-bottom:8px">נוגעים בתמונה כדי לשלוח לסבתא 💌</p><div id="albumGrid"></div></div></div>
+  <div class="ov" id="nameOv"><div class="card h-panel" style="width:min(92vw,480px)"><h2 id="nameTitle">✏️ שם חדש</h2><input id="nameInp" maxlength="12" /><div class="row"><button class="h-btn gold" id="nameOk" type="button">✔ שומרים</button><button class="h-btn violet" type="button" data-close="nameOv">ביטול</button></div></div></div>
+  <div class="rotate"><div style="font-size:70px">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
+
+  <script src="shared/profile.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/voice-en.js"></script>
+  <script src="js/voice-en-slow.js"></script>
+  <script src="shared/kids-ui.js"></script>
+  <script src="shared/wallet.js"></script>
+  <script src="shared/hero-avatar.js"></script>
+  <script src="shared/hero-rewards.js"></script>
+  <script src="shared/progress.js"></script>
+  <script src="shared/stickers.js"></script>
+  <script src="shared/share.js"></script>
+  <script src="js/horse.js"></script>
+  <script src="js/farm-data.js"></script>
+  <script src="js/farm.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
+    if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+  </script>
+</body>
+</html>
