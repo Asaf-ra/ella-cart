@@ -16,7 +16,7 @@
 <style>
   /* ===== החווה של אלה — עיצוב =====
      פרק א — בסיס וקנבס | פרק ב — HUD עליון, סל ומפת אזורים | פרק ג — לוח האזור (בזום)
-     פרק ד — חלונות: משימות, שוק, אלבום, שם | פרק ה — אפקטים (הודעה, פלאש, מעוף לסל) | פרק ו — סיבוב מסך */
+     פרק ד — חלונות: משימות, שוק, אלבום, שם | פרק ה — אפקטים (הודעה, פלאש, מעוף לסל) | פרק ז — עור קומיקס גיבורים | פרק ו — סיבוב מסך */
   /* --- פרק א --- */
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   html { background: #6ec3ff; }
@@ -75,10 +75,55 @@
   .alb img { width: 100%; display: block; }
   #nameInp { width: 100%; font: 900 28px var(--h-font); padding: 10px 14px; border: 4px solid var(--h-ink); border-radius: 18px; text-align: center; color: var(--h-ink); user-select: text; -webkit-user-select: text; margin: 10px 0; }
   /* --- פרק ה --- */
-  .toast { position: fixed; left: 50%; top: 20%; transform: translateX(-50%); z-index: 70; padding: 12px 22px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); box-shadow: 0 5px 0 var(--h-ink); font: 900 clamp(17px, 2.2vw, 24px)/1 var(--h-font); pointer-events: none; animation: h-card-in .4s var(--h-spring) both; white-space: nowrap; }
+  .toast { position: fixed; left: 0; right: 0; margin: 0 auto; width: max-content; top: 20%; z-index: 70;   /* מרכוז בלי transform — האנימציה h-card-in דורסת transform */ padding: 12px 22px; border: 4px solid var(--h-ink); border-radius: 999px; background: var(--h-paper); box-shadow: 0 5px 0 var(--h-ink); font: 900 clamp(17px, 2.2vw, 24px)/1 var(--h-font); pointer-events: none; animation: h-card-in .4s var(--h-spring) both; white-space: nowrap; }
   .flash { position: fixed; inset: 0; z-index: 80; background: #fff; pointer-events: none; animation: flash .5s ease-out forwards; }
   @keyframes flash { from { opacity: .9; } to { opacity: 0; } }
   .flyto { position: fixed; z-index: 75; font-size: 56px; margin: -28px 0 0 -28px; transition: transform .8s cubic-bezier(.3,.7,.3,1), opacity .8s; pointer-events: none; }
+  /* --- פרק ז — עור "קומיקס גיבורים" (מארוול): פאנלים מוטים, צל דיו קשיח, רסטר, בועות דיבור, תיבת קריינות ---
+     כלל: כל רכיב מקבל מסגרת דיו 4px + צל היסט קשיח + מעט רסטר. אין backdrop-filter (כבד באייפד). */
+  :root { --dots: radial-gradient(rgba(27,16,54,.13) 1.3px, transparent 1.7px); --dotsW: radial-gradient(rgba(255,255,255,.28) 1.3px, transparent 1.7px); }
+  .top h1 { position: relative; font-size: clamp(24px, 3.3vw, 38px); letter-spacing: .5px; transform: rotate(-2deg); text-shadow: 3px 4px 0 var(--h-magenta), 6px 8px 0 var(--h-ink); }
+  .top h1::after { content: "★ עולם הגיבורים ★"; position: absolute; left: 50%; bottom: -17px; transform: translateX(-50%) rotate(1.5deg); padding: 2px 10px; border: 3px solid var(--h-ink); background: var(--h-gold); color: var(--h-ink); -webkit-text-stroke: 0; text-shadow: none; font: 900 11px/1.2 var(--h-font); letter-spacing: 1px; white-space: nowrap; box-shadow: 3px 3px 0 var(--h-ink); }
+  .chip { border-radius: 14px; transform: skewX(-7deg); background-color: var(--h-paper); background-image: var(--dots); background-size: 8px 8px; box-shadow: 4px 5px 0 var(--h-ink); transition: transform .15s var(--h-spring); }
+  .chip:active { transform: skewX(-7deg) translate(3px, 4px); box-shadow: 1px 1px 0 var(--h-ink); }
+  .chip.gold { background-image: var(--dotsW), linear-gradient(180deg, #fff3b0, #ffc93c); background-size: 8px 8px, auto; }
+  #choresBtn { background-image: var(--dotsW), linear-gradient(180deg, #ffd0e8, #ff7ec2); background-size: 8px 8px, auto; }
+  #invBar span { border-radius: 10px; transform: skewX(-7deg); background: #fff; background-image: var(--dots); background-size: 8px 8px; box-shadow: 3px 3px 0 var(--h-ink); }
+  #zoneNav { border-radius: 20px; background: var(--h-ink); background-image: var(--dotsW); background-size: 9px 9px; border-color: var(--h-ink); box-shadow: 0 0 0 3px #fff, 6px 8px 0 3px var(--h-ink); padding: 7px 12px; }
+  .zn { border-radius: 14px; border-color: #fff; background: linear-gradient(180deg, #fffaf0, #ffe7c2); box-shadow: 0 4px 0 #000; transition: transform .2s var(--h-spring), background .2s; }
+  .zn.on { background: linear-gradient(180deg, #fff3b0, #ffc93c); transform: translateY(-6px) scale(1.12); box-shadow: 0 0 0 3px var(--h-magenta), 0 6px 0 #000; }
+  .hint { border-radius: 4px; transform: translateX(-50%) skewX(-6deg); background: var(--h-gold); color: var(--h-ink); border: 3px solid var(--h-ink); box-shadow: 4px 4px 0 var(--h-ink); font-weight: 900; }
+  #zonePanel { border-radius: 18px; transform: translateX(130%) rotate(1deg); background-color: var(--h-paper); background-image: var(--dots); background-size: 9px 9px; box-shadow: 8px 9px 0 var(--h-ink); padding-top: 0; overflow-x: hidden; }
+  body.zoomed #zonePanel { transform: rotate(-1deg); }
+  #zonePanel h3 { margin: 0 -12px 4px; padding: 12px 14px 10px; color: #fff; -webkit-text-stroke: 5px var(--h-ink); paint-order: stroke fill; font-size: 25px; letter-spacing: .3px;
+    background: repeating-linear-gradient(-55deg, rgba(255,255,255,.14) 0 8px, transparent 8px 20px), linear-gradient(135deg, var(--h-magenta), #9b3dff); border-bottom: 4px solid var(--h-ink); }
+  #zonePanel p { color: var(--h-ink); background: #fff; border: 3px solid var(--h-ink); border-radius: 4px 14px 14px 14px; padding: 7px 10px; box-shadow: 3px 3px 0 var(--h-ink); }
+  .zb { border-radius: 12px; background-color: #fff; background-image: var(--dots); background-size: 8px 8px; box-shadow: 3px 4px 0 var(--h-ink); transition: transform .12s var(--h-spring); }
+  .zb:active { transform: translate(3px, 4px); box-shadow: 0 0 0 var(--h-ink); }
+  .zb.wide { background-image: var(--dotsW), linear-gradient(180deg, #7ef0ff, #29b6e0); color: #fff; -webkit-text-stroke: 3px var(--h-ink); paint-order: stroke fill; font-weight: 900; }
+  .zb.back { background-image: var(--dotsW), linear-gradient(180deg, #c9a8ff, #7a3dff); }
+  .zb.name { background-image: var(--dots), linear-gradient(180deg, #fff, #fff3dc); color: var(--h-ink); -webkit-text-stroke: 0; }
+  .zb.on, .zb#clapBtn.on { background-image: var(--dotsW), linear-gradient(180deg, #fff3b0, #ffc93c); color: var(--h-ink); -webkit-text-stroke: 0; }
+  .ov { background: radial-gradient(ellipse at 50% 35%, rgba(120,50,255,.55), rgba(10,4,32,.9) 70%); overflow: hidden; }
+  .ov::before { content: ""; position: absolute; left: 50%; top: 45%; width: 240vmax; height: 240vmax; margin: -120vmax 0 0 -120vmax; background: repeating-conic-gradient(rgba(255,255,255,.07) 0 8deg, transparent 8deg 18deg); animation: rays 50s linear infinite; pointer-events: none; }
+  @keyframes rays { to { transform: rotate(360deg); } }
+  .ov .card { position: relative; border-radius: 20px; background-image: var(--dots); background-size: 9px 9px; box-shadow: 9px 10px 0 var(--h-ink), 0 30px 70px rgba(0,0,0,.45); animation: h-card-in .45s var(--h-spring) both; }
+  .card h2 { display: inline-block; padding: 6px 16px; transform: rotate(-2deg); color: #fff; -webkit-text-stroke: 5px var(--h-ink); paint-order: stroke fill; background: linear-gradient(135deg, var(--h-magenta), #9b3dff); border: 4px solid var(--h-ink); box-shadow: 4px 5px 0 var(--h-ink); }
+  .chore, .mb { border-radius: 12px; box-shadow: 4px 4px 0 var(--h-ink); }
+  /* בועת דיבור במקום הודעה עגולה */
+  .toast { border-radius: 26px; background-image: var(--dots); background-size: 8px 8px; box-shadow: 5px 6px 0 var(--h-ink); overflow: visible; }
+  .toast::after { content: ""; position: absolute; bottom: -18px; right: 34px; border: 12px solid transparent; border-top: 16px solid var(--h-ink); }
+  .toast::before { content: ""; position: absolute; bottom: -9px; right: 38px; z-index: 1; border: 8px solid transparent; border-top: 11px solid var(--h-paper); }
+  /* תיבת קריינות "בינתיים..." */
+  #capBox { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 70px); left: 96px; z-index: 12; padding: 8px 16px 9px; border: 4px solid var(--h-ink); background: var(--h-gold); background-image: var(--dotsW); background-size: 8px 8px; color: var(--h-ink); font: 900 clamp(20px, 2.6vw, 28px)/1.05 var(--h-font); box-shadow: 5px 6px 0 var(--h-ink); transform: translateX(calc(-100% - 140px)) rotate(-3deg); opacity: 0; transition: transform .5s var(--h-spring), opacity .25s; pointer-events: none; }
+  #capBox small { display: block; font: 800 14px/1.2 var(--h-font); font-style: italic; opacity: .8; }
+  #capBox.show { transform: translateX(0) rotate(-3deg); opacity: 1; }
+  /* שכבת קומיקס קבועה מעל הקנבס: רסטר נקודות בשמיים ובקרקע + ויניטה. CSS = מורכב ב-GPU, בלי עלות לכל פריים */
+  #comicFx { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 55%, rgba(20,8,50,0) 55%, rgba(20,8,50,.26) 100%),
+      radial-gradient(rgba(255,255,255,.2) 1.4px, transparent 1.9px) 0 0 / 12px 12px;
+    -webkit-mask: linear-gradient(180deg, #000 0, rgba(0,0,0,.55) 60%, rgba(0,0,0,.9) 100%); mask: linear-gradient(180deg, #000 0, rgba(0,0,0,.55) 60%, rgba(0,0,0,.9) 100%); }
+  #comicFx::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%; background: radial-gradient(rgba(27,16,54,.16) 1.4px, transparent 1.9px) 0 0 / 11px 11px; }
   /* --- פרק ו --- */
   .rotate { display: none; }
   @media (orientation: portrait) { .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 12px; text-align: center; background: var(--h-night); color: #fff; font-size: 26px; font-weight: 900; } }
@@ -87,6 +132,7 @@
 </head>
 <body>
   <canvas id="farmCv"></canvas>
+  <div id="comicFx"></div>
   <div class="top">
     <h1>🏡 החווה של אלה</h1>
     <button class="chip" id="timeChip" type="button"></button>
@@ -99,6 +145,7 @@
   <div id="zonePanel"></div>
   <div class="hint">👆 גוררים כדי לטייל בחווה · נוגעים בחיה או במבנה כדי להיכנס</div>
   <div id="zoneNav"></div>
+  <div id="capBox" aria-live="polite"></div>
 
   <div class="ov" id="choresOv"><div class="card h-panel"><div class="row"><h2>📋 משימות הבוקר</h2><button class="h-btn violet" type="button" data-close="choresOv">✖ סגירה</button></div><div id="choresList"></div><div class="streak" id="choresStreak"></div></div></div>
   <div class="ov" id="marketOv"><div class="card h-panel"><div class="row"><h2>🛒 דוכן השוק</h2><span class="coins" id="coinsBig"></span><button class="h-btn violet" type="button" data-close="marketOv">✖ סגירה</button></div><div id="marketBox"></div></div></div>
