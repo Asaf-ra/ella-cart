@@ -43,8 +43,8 @@ EXTRA = ['Great answer!', 'Great job!', 'Excellent!', 'Yes!', 'Well done!', 'Hel
 
 def collect():
     # ---------- פרק 1 — איסוף ----------
-    js = ("global.window={};global.document={createElement:()=>({})};require('./js/academy-modules.js');require('./js/story-data.js');require('./js/dragon-data.js');require('./js/care-data.js');require('./js/ride-data.js');"
-          "process.stdout.write(JSON.stringify(window.AcademyModules.englishPhrases().concat(window.STORIES.englishLines(), window.DragonData.englishLines(), window.CareData.englishLines(), window.RideData.englishLines())))")
+    js = ("global.window={};global.document={createElement:()=>({})};require('./js/academy-modules.js');require('./js/story-data.js');require('./js/dragon-data.js');require('./js/care-data.js');require('./js/ride-data.js');require('./js/farm-data.js');"
+          "process.stdout.write(JSON.stringify(window.AcademyModules.englishPhrases().concat(window.STORIES.englishLines(), window.DragonData.englishLines(), window.CareData.englishLines(), window.RideData.englishLines(), window.FarmData.englishLines())))")
     phrases = json.loads(subprocess.check_output(['node', '-e', js], cwd=ROOT))
     items = {}
     for p in phrases + EXTRA:
