@@ -2,6 +2,23 @@
 
 הקובץ מתעד שינויים מהותיים במוצר, כדי שתמיד יהיה ברור מה נוסף, מה נבדק ואיזו גרסת עדכון האייפד צריך לקבל.
 
+## 2026-10-02 — שלב 22: מרוץ המכוניות, "המסך מגיב", סגנון מארוול בכל האפליקציה ולמידה בחווה (גרסה 5.2, `sw.js` v60)
+
+**בקשה:** "לשפר ולדחוף את הפרויקטים קדימה: סטייל ריאליסטי של מארוול בתוך כל האפליקציה, משהו מרהיב בהנפשות, לחיצות על המסך לתגובות שונות ומצחיקות, למידה מעשירה עם הסברים לטיפול בחווה, אפשרות לחיצים במשחק הסוס, משחקי מכוניות עם הגה וחיצים לבחירה, ואפקטים לימודיים ומעשירים בתוך המשחקים".
+
+- **`shared/marvel-skin.css` (חדש, 6 פרקים):** `body::before` רסטר + ויניטה, `body::after` הברקת עדשה (`ms-flare`, transform בלבד), כפתורים מתכתיים (`.h-btn/.mission/.wn-btn/.rail button` — כרום + רסטר + צל דיו), פאנלים עם מסגרת כפולה ופינת רסטר (`.h-panel::before`), כותרות בצל כפול, `.ms-lines` לכניסת גיבור. כיבוי: `body[data-skin="off"]`. נטען ב-12 הדפים אחרי `theme.css`.
+- **`shared/tap-fx.js` (חדש, 7 פרקים):** `onDown` = טבעת + טיימר לחיצה ארוכה; `onUp` = הקשה קצרה בלבד → `burst` (טבעת, מילה בכוכב משונן SVG, רסיסים, צליל), קומבו (`COMBO_WORDS` 4/6/8/10/14, רעידה, קונפטי), `surprise` (12 דמויות + משפט בקול), `zap` (ברק SVG + הבזק). צלילים ב-WebAudio (`SND.pow/boing/squeak/whistle/zap/combo`). מצבים: `body[data-tapfx]` או `TapFX.set('light'|'full'|'off')`. `MAX_LIVE` 36 ומחזור DOM.
+- **`shared/learn-fx.js` (חדש, 7 פרקים):** `LearnFX.word / fact / count / sign / praise` — פאנלים מוזרקים עם `Voice.teach`; `SIGNS` ב-SVG (stop, red, yellow, green, crosswalk, school, fuel). רושם `learn:word / learn:fact / learn:sign` ב-Progress.
+- **`js/cars-data.js` (חדש):** `CARS` (6, גלידה/מונסטר לפי `CARS_BOY` (כאן false)), `TRACKS` (5), `COLORS`, `VEHICLES` (12), `SIGNS`, `LIGHT`, `SAFETY` (9), `englishLines()`.
+- **`js/cars.js` (חדש, 11 פרקים):** מנוע הטלה כמו `ride.js` (`SEG 200, ROAD_W 2200, DRAW 160`), `build()` עם קונוסים בקבוצות (`grp/n/idx`), `gate()` ב-4 סוגים כולל `countcone`, רמזור (`lightask` → `light`), `signpass`, דלק ו-`boost`. שליטה: `bindWheel` (זווית ±2.1 רדיאן → `tx`), `bindPad` (`PAD_RATE 2.4`), גרירה, הטיה, מקלדת, `bindPedals`. `lightStep` (אדום 2.2ש → צהוב 0.8ש → ירוק; `braked ≥ 1.1`). `drawCar` — 7 דגמים. `MEDAL` 30/17/7. `Progress.track('cars:done')`, `Wallet.add`, `Share.award` במסלול התחרות.
+- **`cars.html` (חדש):** HUD, `#wheel` SVG, `#pad` (`direction:ltr`), `#pedals`, `#speedo` עם מחוג, מסכי פתיחה/השהיה/סיום.
+- **`js/farm-learn.js` (חדש):** `GUIDES` (11 אזורים × 4 צעדים: [אימוג'י, מה, למה, en, he]), `FACTS` (לפי אירוע `prog()`: fetch→ball, petcat→pet, wool→shear, harvest→plant…), `QUIZ` (11 × 3).
+- **`js/farm.js` פרק 12:** `learnTip(ev)` (כל פעולה 1, 4, 7… ולא בצפיפות של 40 שניות), `openGuide`, `openQuiz` (+2 🪙, `Progress.recordAnswer('farm')`), `quizStars`; כפתורים ב-`panel()`; `ST.learn` נשמר עם החווה. **`farm.html` פרק ח:** `#guideOv`, `#quizOv`, עיצוב `.gstep/.qopt/.qwhy`.
+- **`ride.html` / `js/ride.js` פרק 5.1:** `#pad` + `#padBtn` + `#padBtn2`; `padStep(dt)` בלולאה; `setPad` שומר `<pfx>-ride-pad`; `passGate` משתמש ב-`LearnFX.word/count`; `TapFX.set('light')` בזמן רכיבה.
+- **חיבורים:** `index.html` כרטיס `.mission.cars`; `shared/whatsnew.js` 5.2 (CTA למכוניות); `sw.js` v60 (+8 קבצים); `shared/parents.js` 2 אריחים; `welcome.html` כרטיס; `coloring.html` במצב `data-tapfx="light"` (שלא יסתיר ציורים).
+- **תוקן בבדיקות:** חיצים הפוכים ב-RTL; ההגה הסתיר את המכונית; פסי נתיב רחבים מדי; מילת POW נבלעה במכסת האלמנטים; גרירה הציפה מילים; `#padBtn` ב-HUD לא נגיש מתחת למסך הפתיחה — נוסף `#padBtn2` במסך הפתיחה.
+- **בדיקות (Playwright, Chromium):** 12 דפים × 0 שגיאות; תרחישי מכוניות/רכיבה/חווה/בית כמפורט ב-README.
+
 ## 2026-09-30 — שלב 21: החווה בסגנון קומיקס גיבורים (גרסה 5.1, `sw.js` v59)
 
 **בקשה:** "עוד מקצה שיפורים לחווה — שתהיה ממש באותו סגנון 'מארוול'! יפה מאוד ועדכני".

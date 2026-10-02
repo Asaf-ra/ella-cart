@@ -116,6 +116,34 @@
     if (e.key === 'ArrowUp' || e.key === ' ') doTrick('jump'); if (e.key === 'ArrowDown') G.slow = 1.2;
     var k = { '1': 'spin', '2': 'rear', '3': D.TRICKS[3][0], '4': 'star' }[e.key]; if (k) doTrick(k);
   });
+  /* ---------- 5.1 לוח חיצים (שלב 16) ----------
+     ⬅️/➡️: הקשה = מעבר נתיב; החזקה = פנייה רציפה (G.tx זוחל לקצה בקצב PAD_RATE). ⬆️ = קפיצה. ⬇️ = האטה.
+     ההעדפה (דלוק/כבוי) נשמרת במכשיר: <pfx>-ride-pad. הלוח מוצג רק בזמן רכיבה (hud()). */
+  var PAD_KEY = (BOY ? 'eitan' : 'ella') + '-ride-pad', padOn = false, padHeld = {};
+  try { padOn = localStorage.getItem(PAD_KEY) === '1'; } catch (e) {}
+  var PAD_RATE = 2.4;                                  // כמה מהר הסוס פונה כשמחזיקים חץ (יחידות נתיב לשנייה)
+  function padStep(dt) { if (!padOn || !G || !G.run) return; var dir = (padHeld.right ? 1 : 0) - (padHeld.left ? 1 : 0); if (dir) G.tx = Math.max(-1, Math.min(1, G.tx + dir * PAD_RATE * dt)); }
+  function padPress(k) {
+    if (!G || !G.run) return;
+    if (k === 'up') doTrick('jump');
+    else if (k === 'down') { G.slow = 1.2; sayEn('Whoa!'); }
+    else { var dir = k === 'right' ? 1 : -1; padHeld[k] = { t: performance.now() }; G.tx = Math.max(-1, Math.min(1, laneOf(G.tx) + dir)) * LANES[2]; }
+    tap(k === 'up' ? 820 : 600);
+  }
+  function padRelease(k) { delete padHeld[k]; }
+  function setPad(on) { padOn = !!on; try { localStorage.setItem(PAD_KEY, padOn ? '1' : '0'); } catch (e) {} $('padBtn').classList.toggle('on', padOn); $('pad').classList.toggle('show', padOn && !!(G && G.run)); padBtn2(); }
+  function bindPad() {
+    document.querySelectorAll('#pad .pk').forEach(function (b) {
+      var k = b.dataset.k;
+      b.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); try { b.setPointerCapture(e.pointerId); } catch (x) {} b.classList.add('on'); padPress(k); });
+      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) { b.addEventListener(ev, function () { b.classList.remove('on'); padRelease(k); }); });
+    });
+    $('padBtn').addEventListener('click', function () { setPad(!padOn); say(padOn ? 'לוח חיצים: שמאלה, ימינה, למעלה קופצים, למטה מאטים' : 'לוח החיצים כבוי — גוררים על המסך'); });
+    $('padBtn').classList.toggle('on', padOn); padBtn2();
+    $('padBtn2').addEventListener('click', function () { setPad(!padOn); padBtn2(); tap(); say(padOn ? 'לוח חיצים דלוק! ⬅️ ➡️ פונים, ⬆️ קופצים, ⬇️ מאטים' : 'לוח החיצים כבוי'); });
+  }
+  /* padBtn2 — הכפתור במסך הפתיחה: מראה אם הלוח דלוק */
+  function padBtn2() { var b = $('padBtn2'); if (!b) return; b.textContent = padOn ? '🎮 חיצים: דלוק ✔' : '🎮 חיצים'; b.setAttribute('aria-pressed', padOn ? 'true' : 'false'); b.className = 'h-btn ' + (padOn ? 'gold' : 'violet'); }
   /* הטיה: באייפד צריך אישור (לחיצה על הכפתור 📱) */
   function enableTilt() {
     function on() { window.addEventListener('deviceorientation', function (e) { if (e.gamma == null) return; var ang = Math.abs(window.orientation) === 90 ? (window.orientation > 0 ? e.beta : -e.beta) : e.gamma; input.tilt = Math.max(-1, Math.min(1, ang / 22)); }); say('מטים את האייפד כדי לפנות'); }
@@ -156,8 +184,10 @@
   function passGate(ent) {
     var lane = laneOf(G.x) + 1, ok = lane === ent.ans, q = ent.q;
     $('rQ').classList.remove('show'); G.q = null; G.gates++;
-    if (ok) { G.stars += 3; G.good++; pop('✔ נכון! +3⭐', '#3ff2b0'); snd('unlock'); if (q.type === 'math') say('נכון! ' + q.heAns + '!'); else teach(q.word, 'נכון! ' + q.heAns + '!'); try { HeroRewards.award(1, $('rHud'), { word: 'נכון!' }); } catch (e) {} }
-    else { pop('כמעט! התשובה: ' + (q.type === 'math' ? q.heAns : q.heAns), '#ffc27a'); tap(260); if (q.type === 'math') say('כמעט! התשובה היא ' + q.heAns); else teach(q.word, 'כמעט! זה ה' + q.heAns + '. בפעם הבאה!'); }
+    /* אפקט לימודי (שלב 16): כרטיס המילה/המספר קופץ בצד עם הקול (shared/learn-fx.js). חשבון — התשובה כספרה גדולה */
+    var LF = window.LearnFX, wordEmo = q.type === 'color' ? '🎨' : (D.ITEMS.filter(function (i) { return i[0] === q.word; })[0] || ['', '🔎'])[1];
+    if (ok) { G.stars += 3; G.good++; pop('✔ נכון! +3⭐', '#3ff2b0'); snd('unlock'); if (q.type === 'math') { say('נכון! ' + q.heAns + '!'); if (LF) LF.count(+q.heAns, {}); } else if (LF) LF.word(q.word, q.heAns, wordEmo, { pre: 'נכון!', tag: '🇬🇧 למדנו!' }); else teach(q.word, 'נכון! ' + q.heAns + '!'); try { HeroRewards.award(1, $('rHud'), { word: 'נכון!' }); } catch (e) {} }
+    else { pop('כמעט! התשובה: ' + (q.type === 'math' ? q.heAns : q.heAns), '#ffc27a'); tap(260); if (q.type === 'math') say('כמעט! התשובה היא ' + q.heAns); else if (LF) LF.word(q.word, q.heAns, wordEmo, { pre: 'כמעט! זה', tag: '🇬🇧 נזכור לפעם הבאה' }); else teach(q.word, 'כמעט! זה ה' + q.heAns + '. בפעם הבאה!'); }
     try { if (window.Progress) Progress.track('answer'); } catch (e) {}
   }
 
@@ -192,6 +222,7 @@
     ['startScreen', 'endScreen', 'pauseScreen', 'farm'].forEach(function (id) { $(id).classList.remove('show'); });
     $('rQ').classList.remove('show'); buildTrickBar(); hud();
     say(T.name + '! גוררים ימינה ושמאלה כדי לפנות, ומחליקים למעלה כדי לקפוץ. יאללה, ' + HS.state.name + '!');
+    try { TapFX.set('light'); } catch (e) {}                                  // בזמן רכיבה: רק טבעת קלה בנגיעה, בלי מילים שמסתירות את הדרך
     neigh(.6); last = performance.now();
   }
   var last = 0;
@@ -213,6 +244,7 @@
     G.pos = (G.pos + G.speed * dt) % LEN;
     /* פנייה: הטיה או גרירה; העיקול דוחף מעט החוצה (ילדים לא צריכים להילחם בזה — חלש) */
     if (input.tilt != null && input.dragX == null) G.tx = input.tilt;
+    padStep(dt);                                                             // לוח חיצים: החזקה = פנייה רציפה
     G.x += (G.tx - G.x) * Math.min(1, dt * 7);
     var seg = segs[Math.floor((G.pos + PZ) / SEG) % segs.length];
     G.x -= seg.curve * G.speed / 12000 * dt * .35; G.x = Math.max(-1.1, Math.min(1.1, G.x));
@@ -389,6 +421,7 @@
     $('hS').textContent = '⭐ ' + G.stars; $('hF').textContent = '🥕 ' + G.food; $('hC').textContent = '🪙 ' + G.coins;
     $('hCombo').style.display = G.combo > 1 && G.time - G.lastTrick < 4 ? '' : 'none'; $('hCombo').textContent = '🔥 ×' + G.combo;
     $('rTime').style.width = Math.max(0, 100 - G.time / ROUND * 100) + '%';
+    $('pad').classList.toggle('show', padOn && G.run);                       // לוח החיצים רק בזמן רכיבה
     var air = G.jz > 20;
     document.querySelectorAll('.tb').forEach(function (b) { var t = b.dataset.t, def = D.TRICKS.filter(function (x) { return x[0] === t; })[0]; b.classList.toggle('hot', G.archT > 0 && t !== 'jump'); b.classList.toggle('dim', def[4] === 'ground' && air); });
   }
@@ -405,6 +438,7 @@
   function medalOf(st) { return st >= MEDAL.gold ? ['🥇', 'זהב'] : st >= MEDAL.silver ? ['🥈', 'כסף'] : st >= MEDAL.bronze ? ['🥉', 'ארד'] : ['🎗️', 'השתתפות']; }
   function finish() {
     G.run = false; $('rQ').classList.remove('show');
+    try { TapFX.set('full'); } catch (e) {}                                   // במסך הסיום חוזרים לתגובות המלאות
     var st = G.stars, m = medalOf(st), S = HS.state, ti = G.ti, unlocked = false;
     S.best[T.id] = Math.max(S.best[T.id] || 0, st);
     if (st >= MEDAL.bronze && S.tracks === ti + 1 && S.tracks < D.TRACKS.length) { S.tracks++; unlocked = true; }
@@ -428,6 +462,7 @@
   var selTrack = 0;
   function startScreen() {
     G = null; ['endScreen', 'pauseScreen', 'farm'].forEach(function (id) { $(id).classList.remove('show'); });
+    $('pad').classList.remove('show'); try { TapFX.set('full'); } catch (e) {}   // לוח החיצים מוסתר במסך הפתיחה
     var S = HS.state, box = $('tracks'); box.innerHTML = '';
     selTrack = Math.min(selTrack, S.tracks - 1);
     D.TRACKS.forEach(function (t, i) {
@@ -546,7 +581,7 @@
     $('farmBack').addEventListener('click', function () { tap(); startScreen(); });
     $('closetX').addEventListener('click', function () { tap(); $('closetOv').classList.remove('show'); });
     document.addEventListener('visibilitychange', function () { if (document.hidden && G && G.run) { G.run = false; $('pauseScreen').classList.add('show'); } });
-    bindFarm();
+    bindFarm(); bindPad();
   }
   resize(); bind();
   window.addEventListener('DOMContentLoaded', function () { if (location.hash === '#farm') openFarm(); else startScreen(); requestAnimationFrame(function (t) { last = t; loop(t); }); });
