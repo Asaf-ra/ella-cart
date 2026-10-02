@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#101e36" />
+<meta name="apple-mobile-web-app-title" content="מרוץ המכוניות" />
+<title>מרוץ המכוניות — העולם של אלה</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<link rel="stylesheet" href="shared/theme.css" />
+<link rel="stylesheet" href="shared/marvel-skin.css" />
+<style>
+  /* ===== מרוץ המכוניות — עיצוב (שלב 16) =====
+     פרק א — בסיס וקנבס | פרק ב — HUD: צ'יפים, מד דלק, מד מהירות, שאלת שער | פרק ג — שליטה: הגה, לוח חיצים, ברקס וטורבו
+     פרק ד — מסכים: פתיחה (מכונית, מסלול, שליטה), השהיה, תוצאות | פרק ה — סיבוב מסך */
+
+  /* --- פרק א: בסיס --- */
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  html { background: var(--h-night); }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { font-family: var(--h-font); color: #fff; touch-action: none; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+  #carsCv { position: fixed; inset: 0; display: block; }
+
+  /* --- פרק ב: HUD --- */
+  .hud { position: fixed; top: max(10px, env(safe-area-inset-top)); right: 14px; left: 90px; display: flex; gap: 10px; align-items: center; z-index: 10; pointer-events: none; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 4px solid var(--h-ink); border-radius: 14px; transform: skewX(-7deg); background: var(--h-paper); color: var(--h-ink); font-weight: 900; font-size: clamp(16px, 2vw, 22px); box-shadow: 4px 5px 0 var(--h-ink); }
+  .chip > * { display: inline-block; transform: skewX(7deg); }
+  #hCombo { background: linear-gradient(180deg, #ffe7a0, #ffb13b); }
+  .hud .sp { flex: 1; }
+  .hbtn { pointer-events: auto; width: 56px; height: 56px; border: 4px solid var(--h-ink); border-radius: 50%; background: var(--h-paper); font-size: 24px; box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; }
+  .hbtn.on { background: linear-gradient(180deg, #b6ffdc, #3ff2b0); }
+  /* מד דלק: מכל עם רקע משובץ שמתרוקן; אדום ומהבהב כשנמוך */
+  .fuel { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 4px solid var(--h-ink); border-radius: 14px; transform: skewX(-7deg); background: var(--h-paper); color: var(--h-ink); font-weight: 900; box-shadow: 4px 5px 0 var(--h-ink); }
+  .fuel em { display: block; width: clamp(70px, 9vw, 120px); height: 16px; border: 3px solid var(--h-ink); border-radius: 999px; background: #eee; overflow: hidden; }
+  .fuel i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #3ff2b0, #2fb85a); transition: width .3s; }
+  .fuel.low i { background: linear-gradient(90deg, #ffb36b, #ff3b3b); } .fuel.low { animation: hot .5s ease-in-out infinite alternate; }
+  @keyframes hot { to { transform: skewX(-7deg) scale(1.06); } }
+  .timebar { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 64px); right: 14px; left: 90px; height: 14px; border: 3px solid var(--h-ink); border-radius: 999px; background: #2a1a4f; overflow: hidden; z-index: 10; }
+  .timebar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--h-gold), var(--h-magenta)); transition: width .25s linear; }
+  /* שאלת שער / הודעת רמזור — באנר גדול */
+  #cQ { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 92px); left: 50%; transform: translate(-50%, -20px); opacity: 0; z-index: 12; padding: 10px 24px; border: 5px solid var(--h-ink); border-radius: 26px; background: linear-gradient(180deg, #fff, #fff3b0); color: var(--h-ink); font: 900 clamp(22px, 3.4vw, 40px)/1.1 var(--h-font); box-shadow: 0 6px 0 var(--h-ink); transition: .3s var(--h-spring); pointer-events: none; white-space: nowrap; }
+  #cQ.show { opacity: 1; transform: translate(-50%, 0); }
+  #cQ.red { background: linear-gradient(180deg, #ffd1c2, #ff5c5c); color: #fff; -webkit-text-stroke: 3px var(--h-ink); paint-order: stroke fill; }
+  #cQ.green { background: linear-gradient(180deg, #b6ffdc, #2fe06a); }
+  /* מד מהירות: חצי עיגול עם מחוג (SVG) בפינה הימנית-התחתונה */
+  #speedo { position: fixed; bottom: max(12px, env(safe-area-inset-bottom)); right: 14px; width: clamp(120px, 15vw, 170px); z-index: 10; pointer-events: none; filter: drop-shadow(5px 6px 0 var(--h-ink)); }
+  #speedo .kmh { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font: 900 clamp(18px, 2.4vw, 26px)/1 var(--h-font); color: var(--h-ink); direction: ltr; }
+
+  /* --- פרק ג: שליטה --- */
+  /* הגה: SVG שמסתובב לפי הגרירה; ברירת המחדל במרכז-למטה */
+  #wheel { position: fixed; bottom: max(8px, env(safe-area-inset-bottom)); left: 50%; width: clamp(170px, 24vw, 260px); height: clamp(170px, 24vw, 260px); margin-left: calc(clamp(170px, 24vw, 260px) * -1.25);   /* משמאל למכונית, כדי לא להסתיר אותה */ z-index: 11; display: none; touch-action: none; filter: drop-shadow(0 8px 0 rgba(16,30,54,.9)) drop-shadow(0 16px 24px rgba(0,0,0,.4)); }
+  #wheel.show { display: block; }
+  #wheel svg { width: 100%; height: 100%; transition: transform .06s linear; }
+  /* לוח חיצים: צלב 3×3 בפינה השמאלית-התחתונה */
+  #pad { direction: ltr; /* הדף RTL — בלי זה ⬅️ ו-➡️ מתהפכים */ position: fixed; bottom: max(12px, env(safe-area-inset-bottom)); left: max(14px, env(safe-area-inset-left)); display: none; grid-template-columns: repeat(3, clamp(62px, 7.4vw, 82px)); grid-template-rows: repeat(3, clamp(58px, 7vw, 76px)); gap: 6px; z-index: 11; }
+  #pad.show { display: grid; }
+  .pk { position: relative; border: 4px solid var(--h-ink); border-radius: 18px; background: var(--h-paper) radial-gradient(rgba(16,30,54,.12) 1.3px, transparent 1.7px) 0 0 / 8px 8px; color: var(--h-ink); font: 900 clamp(26px, 3.2vw, 36px)/1 var(--h-font); box-shadow: 0 5px 0 var(--h-ink), 0 0 0 2px rgba(255,255,255,.6) inset; cursor: pointer; touch-action: none; display: grid; place-items: center; transition: transform .1s; }
+  .pk:active, .pk.on { transform: translateY(4px); box-shadow: 0 1px 0 var(--h-ink); background: linear-gradient(180deg, #fff3b0, #ffc93c); }
+  .pk.up { grid-column: 2; grid-row: 1; background-image: radial-gradient(rgba(255,255,255,.3) 1.3px, transparent 1.7px), linear-gradient(180deg, #b6ffdc, #3ff2b0); }
+  .pk.left { grid-column: 1; grid-row: 2; } .pk.right { grid-column: 3; grid-row: 2; }
+  .pk.down { grid-column: 2; grid-row: 3; background-image: radial-gradient(rgba(255,255,255,.3) 1.3px, transparent 1.7px), linear-gradient(180deg, #ffd1c2, #ff9b7a); }
+  .pk small { position: absolute; font: 800 10px/1 var(--h-font); bottom: 4px; }
+  /* דוושות: ברקס 🛑 וטורבו ⚡ — ליד מד המהירות */
+  #pedals { position: fixed; bottom: max(12px, env(safe-area-inset-bottom)); right: calc(14px + clamp(120px, 15vw, 170px) + 12px); display: none; flex-direction: column-reverse; gap: 8px; z-index: 11; }
+  #pedals.show { display: flex; }
+  .ped { width: clamp(76px, 9vw, 98px); height: clamp(64px, 9vh, 84px); border: 4px solid var(--h-ink); border-radius: 22px; color: #fff; display: grid; place-items: center; align-content: center; gap: 2px; cursor: pointer; font-family: var(--h-font); touch-action: none; box-shadow: 0 6px 0 var(--h-ink); -webkit-text-stroke: 2px var(--h-ink); paint-order: stroke fill; }
+  .ped b { font-size: clamp(26px, 3.4vw, 36px); line-height: 1; } .ped span { font: 900 clamp(11px, 1.3vw, 14px)/1 var(--h-font); }
+  .ped:active, .ped.on { transform: translateY(4px); box-shadow: 0 2px 0 var(--h-ink); }
+  #brake { background: linear-gradient(180deg, #ff6b6b, #c40f26); }
+  #boost { background: linear-gradient(180deg, #7ef0ff, #1a9fd6); }
+  #boost.dim { opacity: .45; }
+  #boost.ready { animation: hot2 .5s ease-in-out infinite alternate; }
+  @keyframes hot2 { to { transform: scale(1.08); } }
+
+  /* --- פרק ד: מסכים --- */
+  .overlay { position: fixed; inset: 0; z-index: 50; display: none; place-items: center; padding: 16px; background: radial-gradient(circle at 50% 40%, rgba(58,17,119,.8), rgba(10,4,30,.92)); }
+  .overlay.show { display: grid; }
+  .overlay::before { content: ""; position: absolute; left: 50%; top: 45%; width: 240vmax; height: 240vmax; margin: -120vmax 0 0 -120vmax; background: repeating-conic-gradient(rgba(255,255,255,.06) 0 6deg, transparent 6deg 16deg); animation: rays 60s linear infinite; pointer-events: none; }
+  @keyframes rays { to { transform: rotate(360deg); } }
+  .card { position: relative; width: min(96vw, 1040px); max-height: 96vh; overflow: auto; padding: 16px 22px; text-align: center; color: var(--h-ink); }
+  .card h1 { font-size: clamp(30px, 4.6vw, 54px); font-weight: 900; color: #fff; -webkit-text-stroke: 4px var(--h-ink); paint-order: stroke fill; text-shadow: 4px 5px 0 var(--h-magenta); transform: rotate(-2deg); display: inline-block; }
+  .card p { font-weight: 700; font-size: clamp(14px, 1.8vw, 19px); color: var(--h-text-soft); margin: 4px 0 8px; }
+  .card h4 { font: 900 clamp(16px, 2vw, 20px)/1 var(--h-font); margin: 10px 0 6px; text-align: right; }
+  .start-grid { display: grid; grid-template-columns: minmax(230px, .9fr) 1.5fr; gap: 16px; align-items: start; text-align: right; }
+  .cprev { border: 4px solid var(--h-ink); border-radius: 26px; background: linear-gradient(180deg, #bfe8ff 0, #d8f5c8 62%, #4a4a5e 62%, #555569 100%); padding: 6px; box-shadow: inset 0 0 0 4px #fff; aspect-ratio: 1 / .9; display: grid; place-items: center; }
+  .cprev canvas { width: 100%; height: 100%; display: block; }
+  .cname { font: 900 clamp(22px, 2.8vw, 32px)/1 var(--h-font); margin: 8px 0 2px; text-align: center; }
+  .cen { font: 800 15px/1.3 var(--h-font); color: var(--h-text-soft); text-align: center; direction: ltr; }
+  .cars { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 4px 0 8px; }
+  .cc { position: relative; border: 4px solid var(--h-ink); border-radius: 18px; background: #fff; padding: 8px 4px; color: var(--h-ink); font: 900 13px/1.1 var(--h-font); cursor: pointer; box-shadow: 0 5px 0 var(--h-ink); display: grid; place-items: center; gap: 4px; }
+  .cc .ci { font-size: 36px; line-height: 1; } .cc small { font: 900 12px/1 var(--h-font); color: #b36b00; background: #fff3dc; border-radius: 999px; padding: 2px 8px; }
+  .cc.sel { transform: translateY(-4px) scale(1.04); box-shadow: 0 7px 0 var(--h-ink), 0 0 0 4px var(--h-gold); }
+  .cc.locked { filter: grayscale(.8) brightness(.8); }
+  .tracks { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 4px 0 8px; }
+  .trk { position: relative; min-height: 86px; border: 4px solid var(--h-ink); border-radius: 18px; color: var(--h-ink); font: 900 clamp(13px, 1.5vw, 16px)/1.1 var(--h-font); cursor: pointer; box-shadow: 0 5px 0 var(--h-ink); display: grid; place-items: center; align-content: center; gap: 4px; padding: 8px 4px; text-shadow: 0 1px 0 #fff; }
+  .trk .t-ico { font-size: 32px; line-height: 1; } .trk small { font: 800 12px/1 var(--h-font); background: rgba(255,255,255,.8); border-radius: 999px; padding: 3px 8px; }
+  .trk.sel { transform: translateY(-4px) scale(1.04); box-shadow: 0 7px 0 var(--h-ink), 0 0 0 4px var(--h-gold); }
+  .trk.locked { filter: grayscale(.85) brightness(.75); } .trk .lock { position: absolute; top: 6px; left: 8px; font-size: 18px; }
+  .ctrls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 4px 0 10px; }
+  .ct { border: 4px solid var(--h-ink); border-radius: 18px; background: #fff; padding: 8px 6px; color: var(--h-ink); font: 900 14px/1.15 var(--h-font); cursor: pointer; box-shadow: 0 5px 0 var(--h-ink); display: grid; place-items: center; gap: 3px; }
+  .ct b { font-size: 32px; line-height: 1; } .ct small { font: 700 11.5px/1.2 var(--h-font); color: var(--h-text-soft); }
+  .ct.sel { background: linear-gradient(180deg, #fff3b0, #ffc93c); box-shadow: 0 5px 0 var(--h-ink), 0 0 0 4px var(--h-magenta); }
+  .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; font: 800 clamp(12px, 1.4vw, 15px)/1.3 var(--h-font); color: var(--h-text-soft); margin: 2px 0 8px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
+  .stat { border: 4px solid var(--h-ink); border-radius: 20px; background: #fff; padding: 8px; box-shadow: 0 4px 0 var(--h-ink); }
+  .stat b { display: block; font-size: 34px; line-height: 1.1; } .stat span { font-weight: 800; color: var(--h-text-soft); }
+  .medal { display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .medal b { font-size: 72px; line-height: 1; animation: h-float 1.6s ease-in-out infinite alternate; } .medal span { font-size: clamp(22px, 3vw, 32px); font-weight: 900; }
+  .learned { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 4px 0 10px; }
+  .learned span { padding: 4px 12px; border: 3px solid var(--h-ink); border-radius: 999px; background: var(--h-gold); font: 900 15px/1.2 var(--h-font); direction: ltr; box-shadow: 2px 3px 0 var(--h-ink); }
+
+  /* --- פרק ה: סיבוב מסך --- */
+  .rotate { display: none; }
+  @media (orientation: portrait) { .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 12px; text-align: center; background: var(--h-night); font-size: 26px; font-weight: 900; } }
+  @media (max-width: 760px) { .start-grid { grid-template-columns: 1fr; } .cars { grid-template-columns: repeat(3, 1fr); } .tracks { grid-template-columns: repeat(3, 1fr); } .ctrls { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+  <canvas id="carsCv"></canvas>
+
+  <!-- HUD -->
+  <div class="hud" id="cHud">
+    <span class="chip" id="hS"><span>⭐ 0</span></span><span class="chip" id="hC"><span>🪙 0</span></span>
+    <span class="fuel" id="hFuel">⛽<em><i id="fuelBar"></i></em></span>
+    <span class="chip" id="hCombo" style="display:none"><span></span></span>
+    <span class="sp"></span>
+    <button class="hbtn" id="ctlBtn" type="button" aria-label="החלפת שליטה">🎮</button>
+    <button class="hbtn" id="pauseBtn" type="button" aria-label="השהיה">⏸</button>
+  </div>
+  <div class="timebar"><i id="cTime"></i></div>
+  <div id="cQ"></div>
+
+  <!-- שליטה: הגה / לוח חיצים / דוושות -->
+  <div id="wheel" aria-label="הגה"><svg viewBox="0 0 200 200" id="wheelSvg">
+    <circle cx="100" cy="100" r="92" fill="#1b1b2e" stroke="#101e36" stroke-width="8"/>
+    <circle cx="100" cy="100" r="76" fill="none" stroke="#3a3a55" stroke-width="18"/>
+    <circle cx="100" cy="100" r="76" fill="none" stroke="url(#wg)" stroke-width="10"/>
+    <path d="M100 100 L28 100 M100 100 L172 100 M100 100 L100 172" stroke="#2a2a44" stroke-width="22" stroke-linecap="round"/>
+    <path d="M100 100 L34 100 M100 100 L166 100 M100 100 L100 166" stroke="#4a4a6a" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="100" cy="100" r="30" fill="#ff3b3b" stroke="#101e36" stroke-width="6"/>
+    <circle cx="100" cy="100" r="18" fill="#fff3b0"/><text x="100" y="107" text-anchor="middle" font-size="18" font-weight="900" fill="#101e36" font-family="Rubik,Arial">⚡</text>
+    <rect x="94" y="10" width="12" height="22" rx="4" fill="#ffd93c" stroke="#101e36" stroke-width="3"/>
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient></defs>
+  </svg></div>
+  <div id="pad" aria-label="לוח חיצים">
+    <button class="pk up" type="button" data-k="up" aria-label="טורבו">⬆️<small>טורבו</small></button>
+    <button class="pk left" type="button" data-k="left" aria-label="שמאלה">⬅️</button>
+    <button class="pk right" type="button" data-k="right" aria-label="ימינה">➡️</button>
+    <button class="pk down" type="button" data-k="down" aria-label="ברקס">⬇️<small>ברקס</small></button>
+  </div>
+  <div id="pedals">
+    <button class="ped" id="brake" type="button"><b>🛑</b><span>ברקס</span></button>
+    <button class="ped dim" id="boost" type="button"><b>⚡</b><span>טורבו</span></button>
+  </div>
+  <div id="speedo"><svg viewBox="0 0 200 120" id="speedoSvg">
+    <path d="M14 108 A86 86 0 0 1 186 108" fill="#fffaf0" stroke="#101e36" stroke-width="7"/>
+    <path d="M14 108 A86 86 0 0 1 186 108" fill="none" stroke="#3ff2b0" stroke-width="12" stroke-dasharray="90 400" stroke-dashoffset="0" opacity=".9"/>
+    <path d="M14 108 A86 86 0 0 1 186 108" fill="none" stroke="#ff3b3b" stroke-width="12" stroke-dasharray="0 270 120 400" opacity=".9"/>
+    <g stroke="#101e36" stroke-width="4" stroke-linecap="round"><path d="M26 100 L36 95"/><path d="M48 60 L56 68"/><path d="M100 22 L100 32"/><path d="M152 60 L144 68"/><path d="M174 100 L164 95"/></g>
+    <line id="needle" x1="100" y1="108" x2="30" y2="100" stroke="#ff3b3b" stroke-width="7" stroke-linecap="round" style="transform-origin:100px 108px"/>
+    <circle cx="100" cy="108" r="12" fill="#101e36"/>
+  </svg><span class="kmh" id="kmh">0</span></div>
+
+  <!-- פתיחה: מכונית, מסלול, שליטה -->
+  <div class="overlay" id="startScreen">
+    <div class="card h-panel">
+      <h1>🏎️ מרוץ המכוניות</h1>
+      <div class="start-grid">
+        <div><div class="cprev"><canvas id="carPrev" width="400" height="360"></canvas></div><div class="cname" id="carName"></div><div class="cen" id="carEn"></div></div>
+        <div>
+          <h4>🚗 בוחרים מכונית</h4><div class="cars" id="cars"></div>
+          <h4>🗺️ בוחרים מסלול</h4><div class="tracks" id="tracks"></div>
+          <h4>🎮 איך נוהגים?</h4><div class="ctrls" id="ctrls"></div>
+          <div class="legend"><span>🔶 קונוס — עוקפים</span><span>🛢️ שמן — מחליקים!</span><span>🚦 אדום — ברקס 🛑</span><span>⛽ דלק — אוספים</span><span>⚡ טורבו — מעל הפס הכחול</span><span>🎨🔢 שער — נוסעים לתשובה</span></div>
+          <div class="row"><button class="h-btn gold" id="goBtn" type="button">מתניעים! 🏁</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- השהיה -->
+  <div class="overlay" id="pauseScreen"><div class="card h-panel" style="width:min(92vw,560px)"><h1>הפסקה ⏸</h1><p>המנוע נח רגע…</p>
+    <div class="row"><button class="h-btn gold" id="resumeBtn" type="button">ממשיכים ▶</button><button class="h-btn violet" id="quitBtn" type="button">למוסך</button></div></div></div>
+
+  <!-- תוצאות -->
+  <div class="overlay" id="endScreen">
+    <div class="card h-panel" style="width:min(96vw,900px)">
+      <span class="h-modal-kicker">הגענו לקו הסיום!</span>
+      <div class="medal"><b id="cMedal">🥉</b><span id="cMedalT"></span></div>
+      <div class="stats">
+        <div class="stat"><b id="eS">0</b><span>כוכבים ⭐</span></div>
+        <div class="stat"><b id="eG">0</b><span>שערים נכונים 🎨</span></div>
+        <div class="stat"><b id="eL">0</b><span>עצירות ברמזור 🚦</span></div>
+        <div class="stat"><b id="eO">0</b><span>עקיפות נקיות 🔶</span></div>
+        <div class="stat"><b id="eB">0</b><span>טורבו ⚡</span></div>
+        <div class="stat"><b id="eC">0</b><span>מטבעות 🪙</span></div>
+      </div>
+      <h4 style="text-align:center">🇬🇧 מילים שלמדנו בדרך</h4><div class="learned" id="learned"></div>
+      <p id="endText"></p>
+      <div class="row"><button class="h-btn gold" id="againBtn" type="button">עוד סיבוב! 🏁</button><button class="h-btn violet" id="garageBtn" type="button">למוסך 🔧</button></div>
+    </div>
+  </div>
+
+  <div class="rotate"><div style="font-size:70px">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
+
+  <script src="shared/profile.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/voice-en.js"></script>
+  <script src="js/voice-en-slow.js"></script>
+  <script src="shared/kids-ui.js"></script>
+  <script src="shared/wallet.js"></script>
+  <script src="shared/hero-avatar.js"></script>
+  <script src="shared/hero-rewards.js"></script>
+  <script src="shared/progress.js"></script>
+  <script src="shared/stickers.js"></script>
+  <script src="shared/share.js"></script>
+  <script src="shared/learn-fx.js"></script>
+  <script src="shared/tap-fx.js"></script>
+  <script>window.CARS_BOY = false;  /* גרסת הבנות: משאית גלידה במוסך, לשון נקבה */</script>
+  <script src="js/cars-data.js"></script>
+  <script src="js/cars.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
+    if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+  </script>
+</body>
+</html>

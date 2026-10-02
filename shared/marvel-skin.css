@@ -1,0 +1,109 @@
+/* =====================================================================
+   shared/marvel-skin.css — עור "מארוול ריאליסטי" לכל האפליקציה (שלב 16)
+   ---------------------------------------------------------------------
+   מה הקובץ עושה: שכבה אחידה שנטענת בכל דף אחרי theme.css ונותנת לכל המסכים
+   את המראה של קומיקס גיבורים מודרני: רסטר (halftone) קולנועי, ויניטה, גרעין פילם,
+   הברקת עדשה שחולפת מדי פעם, פאנלים עם צל דיו קשיח, כפתורים "מתכתיים" עם הברקה
+   כרום, וטקסט כותרת עם צל כפול. בלי backdrop-filter (כבד באייפד) ובלי תמונות.
+
+   פרק 1 — שכבות מסך קבועות: רסטר + ויניטה (body::before), הברקת עדשה (body::after)
+   פרק 2 — כפתורים מתכתיים: .h-btn / .chip / .zb / .tb / .mission / .wn-btn / .ft / .cb / .mb
+   פרק 3 — פאנלים וכרטיסים: .h-panel / .card / .wn-card — מסגרת כפולה (דיו + לבן) ורסטר פינה
+   פרק 4 — כותרות: צל כפול (מגנטה + דיו) ונטייה קלה — כמו כותרת קומיקס
+   פרק 5 — פס כניסה "קווי מהירות" (.ms-lines — נוצר ב-tap-fx.js בטעינת הדף)
+   פרק 6 — כיבוי: body[data-skin="off"] מבטל את השכבות; תנועה מופחתת מבטלת אנימציות
+
+   תקלה נפוצה: אם רכיב נראה "מוכפל" או שהשכבה מסתירה מגע — השכבות הן pointer-events:none
+   ו-z-index 1; חלונות (.ov / .h-modal / .wn-ov) יושבים הרבה מעליהן (z 50+).
+   ===================================================================== */
+
+/* ---------- פרק 1 — שכבות מסך קבועות ---------- */
+/* ms-dots: רסטר נקודות עדין (שני גדלים = תחושת הדפסה), ms-vignette: כהות בפינות כמו עדשת קולנוע */
+body:not([data-skin="off"])::before {
+  content: ""; position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(10, 6, 30, 0) 58%, rgba(10, 6, 30, .28) 100%),                        /* ויניטה */
+    radial-gradient(rgba(255, 255, 255, .07) 1.2px, transparent 1.7px) 0 0 / 9px 9px,                                /* רסטר דק */
+    radial-gradient(rgba(16, 30, 54, .07) 1.6px, transparent 2.1px) 4px 4px / 18px 18px;                            /* רסטר גס */
+  mix-blend-mode: normal;
+}
+/* ms-flare: פס אור אלכסוני שחולף על המסך פעם ב-11 שניות — "הברקת עדשה" קולנועית. transform בלבד = GPU */
+body:not([data-skin="off"])::after {
+  content: ""; position: fixed; top: -20%; bottom: -20%; left: -40%; width: 26%; z-index: 1; pointer-events: none;
+  background: linear-gradient(100deg, transparent 0, rgba(255, 255, 255, .0) 35%, rgba(255, 255, 255, .13) 50%, rgba(255, 255, 255, 0) 65%, transparent 100%);
+  transform: translateX(0) skewX(-12deg);
+  animation: ms-flare 11s cubic-bezier(.4, 0, .2, 1) 2.5s infinite;
+}
+@keyframes ms-flare { 0% { transform: translateX(0) skewX(-12deg); } 14% { transform: translateX(600vw) skewX(-12deg); } 100% { transform: translateX(600vw) skewX(-12deg); } }
+
+/* ---------- פרק 2 — כפתורים מתכתיים ---------- */
+/* כל כפתור גיבורים מקבל: הברקת כרום בחלק העליון, קו אור דק מבפנים, צל דיו קשיח + צל רך, ורסטר עדין */
+body:not([data-skin="off"]) .h-btn,
+body:not([data-skin="off"]) .wn-btn,
+body:not([data-skin="off"]) .mission,
+body:not([data-skin="off"]) .rail button {
+  background-image:
+    radial-gradient(rgba(255, 255, 255, .16) 1px, transparent 1.4px),                                               /* רסטר */
+    linear-gradient(180deg, rgba(255, 255, 255, .42) 0, rgba(255, 255, 255, .10) 38%, rgba(0, 0, 0, 0) 52%, rgba(0, 0, 0, .18) 100%),  /* כרום */
+    linear-gradient(180deg, var(--btn-a, var(--c1, #fff)), var(--btn-b, var(--c2, #ccc)));
+  background-size: 7px 7px, auto, auto;
+  box-shadow: 0 6px 0 var(--h-ink), 0 0 0 2px rgba(255, 255, 255, .22) inset, 0 16px 28px rgba(4, 14, 30, .40);
+}
+body:not([data-skin="off"]) .mission { background-image:
+    radial-gradient(rgba(255, 255, 255, .12) 1px, transparent 1.4px),
+    linear-gradient(180deg, rgba(255, 255, 255, .30) 0, rgba(255, 255, 255, .06) 40%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, .22) 100%),
+    linear-gradient(150deg, var(--c1), var(--c2));
+  background-size: 8px 8px, auto, auto; box-shadow: 0 8px 0 var(--h-ink), 0 0 0 2px rgba(255, 255, 255, .18) inset, 0 18px 30px rgba(0, 0, 0, .38); }
+body:not([data-skin="off"]) .mission:active { box-shadow: 0 3px 0 var(--h-ink), 0 8px 14px rgba(0, 0, 0, .3); }
+body:not([data-skin="off"]) .h-btn:active { box-shadow: 0 2px 0 var(--h-ink), 0 6px 12px rgba(4, 14, 30, .3); }
+/* צ'יפים וכפתורי משחק קטנים (חווה, רכיבה, מכוניות): הברקה דקה בלבד */
+body:not([data-skin="off"]) .chip,
+body:not([data-skin="off"]) .zb,
+body:not([data-skin="off"]) .tb,
+body:not([data-skin="off"]) .ft,
+body:not([data-skin="off"]) .cb,
+body:not([data-skin="off"]) .mb,
+body:not([data-skin="off"]) .trk,
+body:not([data-skin="off"]) .hbtn {
+  box-shadow: 4px 5px 0 var(--h-ink), 0 0 0 2px rgba(255, 255, 255, .55) inset, 0 10px 18px rgba(4, 14, 30, .22);
+}
+
+/* ---------- פרק 3 — פאנלים וכרטיסים ---------- */
+/* מסגרת כפולה: דיו בחוץ, פס לבן בפנים — כמו פאנל קומיקס מודפס. הצל הקשיח מוסט ימינה-למטה */
+body:not([data-skin="off"]) .h-panel,
+body:not([data-skin="off"]) .wn-card {
+  box-shadow: 8px 9px 0 var(--h-ink), 0 0 0 3px #fff inset, 0 30px 60px rgba(4, 14, 30, .45);
+}
+/* פינת רסטר: נקודות שדוהות — אפקט הדפסה ישנה בפינה הימנית-העליונה של כל פאנל */
+body:not([data-skin="off"]) .h-panel { position: relative; overflow: hidden; }
+body:not([data-skin="off"]) .h-panel > * { position: relative; }
+body:not([data-skin="off"]) .h-panel::before {
+  content: ""; position: absolute; right: -40px; top: -40px; width: 220px; height: 220px; pointer-events: none;
+  background: radial-gradient(rgba(16, 30, 54, .16) 1.6px, transparent 2.1px) 0 0 / 12px 12px;
+  -webkit-mask: radial-gradient(circle at 80% 20%, #000 0, transparent 70%); mask: radial-gradient(circle at 80% 20%, #000 0, transparent 70%);
+}
+
+/* ---------- פרק 4 — כותרות קומיקס ---------- */
+/* כותרת ראשית בכל חלון: צל כפול (מגנטה ואז דיו) ונטייה קלה — ומסגרת שקופה שמונעת קפיצת layout */
+body:not([data-skin="off"]) .h-modal-card h2,
+body:not([data-skin="off"]) .card h1,
+body:not([data-skin="off"]) .wn-card h1 {
+  text-shadow: 3px 3px 0 var(--h-magenta), 6px 7px 0 var(--h-ink);
+}
+body:not([data-skin="off"]) .logo h1 { text-shadow: 0 .4vmin 0 var(--h-magenta), 0 1.1vmin 0 var(--h-ink), 0 2vmin 3vmin rgba(0, 0, 0, .4); }
+
+/* ---------- פרק 5 — קווי מהירות בכניסה לדף ---------- */
+/* .ms-lines — אלמנט שנוצר ב-tap-fx.js בטעינה: קרניים רדיאליות שמתרחבות ונעלמות ב-0.8 שניות ("כניסת גיבור") */
+.ms-lines {
+  position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 255, 255, .55) 0 1.2deg, transparent 1.2deg 7deg);
+  -webkit-mask: radial-gradient(circle at 50% 50%, transparent 18%, #000 60%); mask: radial-gradient(circle at 50% 50%, transparent 18%, #000 60%);
+  animation: ms-lines .8s cubic-bezier(.2, .8, .3, 1) forwards;
+}
+@keyframes ms-lines { from { opacity: .9; transform: scale(.6) rotate(-8deg); } to { opacity: 0; transform: scale(1.6) rotate(4deg); } }
+
+/* ---------- פרק 6 — כיבוי ונגישות ---------- */
+@media (prefers-reduced-motion: reduce) {
+  body::after { animation: none !important; }
+  .ms-lines { animation-duration: .01s; }
+}

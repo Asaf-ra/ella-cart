@@ -394,6 +394,7 @@
   }
   function prog(ev) {
     track('farm:act');   // כל פעולת טיפול בחיה נספרת בדוח ההורים
+    learnTip(ev);        // פרק 12: כל כמה פעולות — "הידעת?" קטן על הטיפול שעשינו
     var list = chores(), C = ST.chores, before = C.done;
     list.forEach(function (ch) { if (ch[1] === ev) C.prog[ch[0]] = Math.min(ch[2], (C.prog[ch[0]] || 0) + 1); });
     C.done = list.filter(function (ch) { return (C.prog[ch[0]] || 0) >= ch[2]; }).length;
@@ -615,6 +616,8 @@
     if (id === 'bunny') h += '<p>הגזר מוחבא מתחת לאחד השיחים. באיזה? 🥕</p>';
     if (id === 'stable') h += '<button class="zb wide" data-act="horsecare">🧺 טיפול בסוס</button><button class="zb wide" data-act="ride">🏇 לרכיבה</button><button class="zb wide" data-act="carrot">🥕 גזר מהגינה (' + ST.inv.carrot + ')</button>';
     if (id === 'market' || id === 'park') h += (id === 'park' ? '<p>כאן יופיעו הקישוטים שקונים: נדנדה, מזרקה, בית עץ וגדר קשת 🌈</p>' : '') + '<button class="zb wide" data-act="market">🛒 לפתוח את הדוכן</button>';
+    /* פרק 12: למידה — מדריך טיפול וחידון לכל אזור (js/farm-learn.js) */
+    if (window.FarmLearn && FarmLearn.GUIDES[id]) h += '<div class="zg"><button class="zb learn" data-act="learn"><b>📖</b>איך מטפלים?</button><button class="zb learn" data-act="quiz"><b>❓</b>שאלת החווה<small>' + quizStars(id) + '</small></button></div>';
     h += '<button class="zb wide back" data-act="back">🗺️ לכל החווה</button>';
     p.innerHTML = h;
   }
@@ -628,6 +631,7 @@
     else if (a[0] === 'horsecare') location.href = 'ride.html#farm'; else if (a[0] === 'ride') location.href = 'ride.html';
     else if (a[0] === 'carrot') { if (!ST.inv.carrot) { say('אין גזר. שותלים בגינה!'); return; } ST.inv.carrot--; save(); try { Horse.bump('food', 20); Horse.bump('happy', 8); } catch (x) {} say((window.Horse ? Horse.state.name : 'הסוס') + ' אוכל' + (BOY ? '' : 'ת') + ' גזר מהגינה! יאמי!'); teach('carrot', 'גזר!'); panel(); inv(); }
     else if (a[0] === 'market') openMarket();
+    else if (a[0] === 'learn') openGuide(Z[0]); else if (a[0] === 'quiz') openQuiz(Z[0]);
   });
   /* מגע על הקנבס */
   var ptr = { down: false, x: 0, y: 0, lx: 0, t: 0, moved: 0, target: null, hold: 0 };
@@ -737,6 +741,62 @@
     $('timeChip').addEventListener('click', function () { ST.time = ST.time === 'real' ? 'day' : ST.time === 'day' ? 'night' : 'real'; save(); tap(); say(ST.time === 'real' ? 'שעון אמיתי' : ST.time === 'day' ? 'יום בחווה' : 'לילה בחווה'); hud(); });
     document.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', function () { tap(); closeOv(b.dataset.close); }); });
     $('nameInp').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('nameOk').click(); });
+  }
+  /* ================= פרק 12 — למידה בחווה: "איך מטפלים?", "הידעת?" וחידון (שלב 16) =================
+     12.1 learnTip(ev): אחרי כל 3 פעולות טיפול מאותו סוג — עובדה קצרה (LearnFX.fact) עם קול. לא יותר מאחת ב-40 שניות
+     12.2 openGuide(zone): כרטיס "איך מטפלים?" — 4 צעדים; נגיעה בצעד מקריאה את ההסבר "למה?" ומלמדת את המילה באנגלית (LearnFX.word)
+     12.3 openQuiz(zone): שאלה אקראית מהאזור עם 3 תשובות. נכון = +2 🪙, כוכב לאזור ו-POW; טעות = הסבר עדין, בלי עונש
+     12.4 שמירה: ST.learn = { tips: {ev: n}, lastTip, quiz: {zone: stars}, seen: {zone: 1} } — נשמר עם שאר החווה (KEY)
+     תקלה נפוצה: הכפתורים לא מופיעים? בודקים ש-js/farm-learn.js ו-shared/learn-fx.js נטענים לפני farm.js */
+  if (!ST.learn) ST.learn = { tips: {}, lastTip: 0, quiz: {}, seen: {} };
+  /* מיפוי: שם האירוע ב-prog() → מפתח העובדות ב-FarmLearn.FACTS */
+  var LEARN_EV = { fetch: 'ball', trick: 'trick', petcat: 'pet', egg: 'egg', milk: 'milk', wool: 'shear', water: 'water', harvest: 'plant', ducks: 'ducks', bunny: 'bunny' };
+  /* 12.1 */
+  function learnTip(ev) {
+    var FL = window.FarmLearn, k = LEARN_EV[ev]; if (!FL || !k || !window.LearnFX) return;
+    var L = ST.learn; L.tips[k] = (L.tips[k] || 0) + 1;
+    if (L.tips[k] % 3 !== 1 || Date.now() - L.lastTip < 40000) { save(); return; }     /* פעולה ראשונה, רביעית, שביעית... ולא בצפיפות */
+    var list = FL.FACTS[k] || [], f = list[((L.tips[k] / 3) | 0) % list.length]; if (!f) return;
+    L.lastTip = Date.now(); save();
+    setTimeout(function () { LearnFX.fact('הידעת? ' + f[1], f[2], f[0], { life: 6 }); track('farm:learn'); }, 900);
+  }
+  /* 12.2 */
+  function openGuide(id) {
+    var FL = window.FarmLearn, g = FL && FL.GUIDES[id]; if (!g) return;
+    var box = $('guideBox'); $('guideTitle').textContent = g.ico + ' ' + g.title;
+    box.innerHTML = g.steps.map(function (s, i) {
+      return '<button type="button" class="gstep" data-i="' + i + '"><span class="gn">' + (i + 1) + '</span><span class="ge">' + s[0] + '</span><span class="gt"><b>' + s[1] + '</b><small>למה? ' + s[2] + '</small></span><span class="gw" dir="ltr">' + s[3] + '</span></button>';
+    }).join('');
+    box.querySelectorAll('.gstep').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var s = g.steps[+b.dataset.i]; tap(700);
+        box.querySelectorAll('.gstep').forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on');
+        say(s[1] + '. למה? ' + s[2]);
+        setTimeout(function () { try { LearnFX.word(s[3], s[4], s[0], { pos: 'bottom', tag: '🇬🇧 המילה באנגלית', quiet: false }); } catch (e) {} }, 2600 + s[2].length * 55);
+        track('farm:learn');
+      });
+    });
+    ST.learn.seen[id] = 1; save();
+    $('guideOv').classList.add('show'); say(g.title + ' נוגעים בכל צעד כדי לשמוע למה הוא חשוב');
+  }
+  /* 12.3 */
+  function quizStars(id) { var n = ST.learn.quiz[id] || 0; return n ? '⭐'.repeat(Math.min(3, n)) : 'חידון'; }
+  function openQuiz(id) {
+    var FL = window.FarmLearn, list = FL && FL.QUIZ[id]; if (!list || !list.length) return;
+    var q = list[(Math.random() * list.length) | 0], done = false;
+    $('quizQ').textContent = q.q; $('quizWhy').textContent = ''; $('quizWhy').className = 'qwhy';
+    var box = $('quizOpts'); box.innerHTML = q.opts.map(function (o, i) { return '<button type="button" class="qopt" data-i="' + i + '">' + o + '</button>'; }).join('');
+    box.querySelectorAll('.qopt').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (done) return; done = true; var ok = +b.dataset.i === q.ans;
+        box.querySelectorAll('.qopt').forEach(function (x, i) { x.classList.add(i === q.ans ? 'ok' : (x === b ? 'no' : 'dim')); });
+        $('quizWhy').textContent = (ok ? '✔ נכון! ' : 'כמעט! ') + q.why; $('quizWhy').className = 'qwhy show ' + (ok ? 'ok' : 'no');
+        if (ok) { ST.learn.quiz[id] = (ST.learn.quiz[id] || 0) + 1; try { Wallet.add(2); HeroRewards.award(1, b, { word: 'נכון!' }); } catch (e) {} snd('happy'); say('נכון! ' + q.why); try { Progress.recordAnswer('farm', true); } catch (e) {} }
+        else { tap(260); say('כמעט! ' + q.why); try { Progress.recordAnswer('farm', false); } catch (e) {} }
+        track('answer'); track('farm:learn'); save(); hud(); panel();
+      });
+    });
+    $('quizOv').classList.add('show'); say(q.q);
   }
   resize(); setupAnimals(); bind(); buildNav(); chores(); clampCam(); cam.cx = cam.tcx;
   window.addEventListener('DOMContentLoaded', function () { hud(); inv(); greet(); var m = location.hash.slice(1); if (m && zone(m)) setTimeout(function () { zoomTo(m); }, 600); requestAnimationFrame(function (t) { last = t; frame(t); }); setInterval(function () { hud(); if (Z && (Z[0] === 'coop' || Z[0] === 'barn' || Z[0] === 'sheep')) panel(); }, 20000); });
