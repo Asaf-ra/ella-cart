@@ -2,6 +2,16 @@
 
 הקובץ מתעד שינויים מהותיים במוצר, כדי שתמיד יהיה ברור מה נוסף, מה נבדק ואיזו גרסת עדכון האייפד צריך לקבל.
 
+## 2026-10-02 — שלב 25: עוד לשניים — ציור משותף, מרוץ סוסים, בלונים במסך מפוצל (גרסה 5.5, `sw.js` v64)
+
+**בקשה:** "כן תריץ תתקדם עם הרעיונות שלך" (בלונים במסך מפוצל, מרוץ סוסים לשניים, ציור משותף).
+
+- **`js/draw2.js` + `draw2.html` (חדש):** `tool[p]` לכל שחקן, `onDown` קובע בעלים לפי x ההתחלה, `segment()` מצייר רק את הקטע האחרון, `redraw()` אחרי undo/רקע, `share()` אורז ל-1200×1200 ו-`Share.show`. `Achievements.hit('draw:duo')`, `Progress.track('art:save')`.
+- **`js/ride-duo.js` (חדש):** `TAP_BOOST/DECAY/MAXV/JUMP_V/GRAV`, `FENCES` (6), `horseImg(p)` (שחקן 2 = `Horse.svg({state: ...coat white, mane blond})`), `update` עם לולאת גדרות, `finish` (מי שסיים ראשון; השני עד 8 שניות). `ride.html` פרק ז + `#rduoBtn`.
+- **`js/balloons-duo.js` (חדש):** מזריק `#bduoBtn`/`#bduoOv`, `sleepGame()` עם `gameInstance.loop.sleep/wake`, `spawn` לפי שדרוגי Wallet, `pop` עם מספרים/צבעים באנגלית.
+- **חיבורים:** `index.html` (`.mission.draw2`), 3 תגים ב-`achievements.js`, `whatsnew.js` 5.5, `sw.js` v64, `parents.js`, `welcome.html`, `gen_voice.py` (`RideDuo.englishLines`).
+- **`tools/smoke-test.js`:** 15 דפים, 3 תרחישים חדשים. תוקן: `ride-duo.js` ו-node (`window.addEventListener` חסר).
+
 ## 2026-10-02 — שלב 24: משחקים לשניים — המטבח לשניים, חווה לשניים, דו-קרב ידע (גרסה 5.4, `sw.js` v63)
 
 **בקשה:** "תוסיף עוד דברים שאפשר לעשות 2 במקביל — טיפולים בחווה, בישולים בעגלה ועוד".

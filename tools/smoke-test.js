@@ -30,7 +30,7 @@ function ok(msg) { console.log('  ✅ ' + msg); }
   const srv = await serve(), base = 'http://localhost:' + srv.address().port + '/';
   const br = await chromium.launch();
   /* ---------- פרק 2 — כל הדפים ---------- */
-  const pages = ['index.html', 'cars.html', 'kitchen.html', 'duel.html', 'farm.html', 'ride.html', 'welcome.html', 'dragon.html', 'stories.html', 'coloring.html', 'learning.html', 'balloons.html', 'flight.html', 'cart.html'];
+  const pages = ['index.html', 'cars.html', 'kitchen.html', 'duel.html', 'draw2.html', 'farm.html', 'ride.html', 'welcome.html', 'dragon.html', 'stories.html', 'coloring.html', 'learning.html', 'balloons.html', 'flight.html', 'cart.html'];
   console.log('פרק 2 — דפים');
   for (const p of pages) {
     const ctx = await br.newContext({ viewport: { width: 1180, height: 820 } }), pg = await ctx.newPage(), errs = [], missing = [];
@@ -101,8 +101,25 @@ function ok(msg) { console.log('  ✅ ' + msg); }
   if (frozen && dsc[0] === 1 && dsc[1] === 0) ok('דו-קרב: טעות מקפיאה, נכון נותן נקודה'); else fail('דו-קרב: ' + frozen + ' ' + dsc);
   await pg.evaluate(() => Duel.finish()); await pg.waitForTimeout(200);
   if (await pg.evaluate(() => document.getElementById('endScreen').classList.contains('show'))) ok('דו-קרב: מסך סיום'); else fail('דו-קרב: אין מסך סיום');
-  // הישגים (אחרי המשחקים, בדף הדו-קרב)
-  const ach = await pg.evaluate(() => ({ n: Achievements.count(), total: Achievements.total, guide: Achievements.state().c['duel:done'] }));
+  // ציור לשניים
+  await pg.goto(base + 'draw2.html'); await pg.waitForTimeout(500);
+  await pg.mouse.move(400, 400); await pg.mouse.down(); await pg.mouse.move(600, 500, { steps: 6 }); await pg.mouse.up();
+  await pg.mouse.move(800, 300); await pg.mouse.down(); await pg.mouse.move(700, 600, { steps: 6 }); await pg.mouse.up();
+  const d2 = await pg.evaluate(() => Draw2.strokes().map(s => s.p)); if (d2.length === 2 && d2[0] === 0 && d2[1] === 1) ok('ציור לשניים: קו משמאל = שחקן 1, מימין = שחקן 2'); else fail('ציור לשניים: ' + d2);
+  await pg.click('#shareBtn'); await pg.waitForTimeout(500); if (await pg.evaluate(() => !!document.querySelector('.sh-ov'))) ok('ציור לשניים: שיתוף'); else fail('ציור לשניים: אין חלון שיתוף');
+  // מרוץ סוסים לשניים
+  await pg.goto(base + 'ride.html'); await pg.waitForTimeout(500); await pg.click('#rduoBtn'); await pg.waitForTimeout(3800);
+  for (let i = 0; i < 10; i++) { await pg.mouse.click(600, 700); await pg.waitForTimeout(40); }
+  const rx = await pg.evaluate(() => RideDuo.state().P.map(p => Math.round(p.x))); if (rx[0] > 0 && rx[1] === 0) ok('מרוץ סוסים: נגיעות למטה מזיזות רק את שחקן 1'); else fail('מרוץ סוסים: ' + rx);
+  await pg.evaluate(() => { const d = RideDuo.state(); d.P[0].x = RideDuo.LEN + 1; d.P[0].nextFence = 99; d.P[1].x = RideDuo.LEN + 1; d.P[1].nextFence = 99; }); await pg.waitForTimeout(500);
+  if (await pg.evaluate(() => document.getElementById('rduoEnd').style.display === 'grid')) ok('מרוץ סוסים: סיום'); else fail('מרוץ סוסים: אין מסך סיום');
+  // בלונים לשניים
+  await pg.goto(base + 'balloons.html'); await pg.waitForTimeout(1200); await pg.click('#bduoBtn'); await pg.waitForTimeout(5200);
+  const bp = await pg.evaluate(() => { const d = BalloonsDuo.state(); let n = 0; [0, 1].forEach(p => { const b = d.bal[p][0]; if (b) { BalloonsDuo.pop(p, b); n++; } }); return { n: n, sleeping: !window.gameInstance.loop.running }; });
+  if (bp.n === 2 && bp.sleeping) ok('בלונים לשניים: פיצוץ בשני הצדדים, Phaser ישן'); else fail('בלונים לשניים: ' + JSON.stringify(bp));
+  await pg.click('#bduoX').catch(() => {}); await pg.evaluate(() => BalloonsDuo.close()); if (await pg.evaluate(() => window.gameInstance.loop.running)) ok('בלונים לשניים: Phaser התעורר'); else fail('בלונים לשניים: Phaser לא התעורר');
+  // הישגים (אחרי המשחקים)
+  const ach = await pg.evaluate(() => ({ n: Achievements.count(), total: Achievements.total, guide: Achievements.state().c['ride:duo'] }));
   if (ach.guide >= 1 && ach.total >= 24) ok('הישגים: מונים עובדים (' + ach.n + '/' + ach.total + ')'); else fail('הישגים ' + JSON.stringify(ach));
   await pg.evaluate(() => Achievements.open()); await pg.waitForTimeout(300);
   if (await pg.evaluate(() => document.querySelectorAll('.ach-b').length >= 24)) ok('הישגים: אלבום'); else fail('הישגים: אלבום לא נפתח');
