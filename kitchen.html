@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#101e36" />
+<meta name="apple-mobile-web-app-title" content="המטבח לשניים" />
+<title>המטבח לשניים — העולם של אלה</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<link rel="stylesheet" href="shared/theme.css" />
+<link rel="stylesheet" href="shared/marvel-skin.css" />
+<style>
+  /* ===== המטבח לשניים — עיצוב (שלב 18) =====
+     פרק א — בסיס ופריסה (3 עמודות: מגש שחקן 1 · המטבח · מגש שחקן 2) | פרק ב — HUD | פרק ג — הלקוח, שרשרת המתכון, הצלחת
+     פרק ד — המגשים והמרכיבים | פרק ה — מסכים (פתיחה, סיום) | פרק ו — סיבוב מסך */
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  html { background: var(--h-night); }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { font-family: var(--h-font); color: var(--h-ink); touch-action: none; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; background: linear-gradient(180deg, #ffe9c8 0, #fff3dc 55%, #c98b4f 55%, #b5773f 100%); }
+  .kitchen { direction: ltr; /* שחקן 1 פיזית משמאל גם בדף RTL */ position: fixed; inset: 0; display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 1.6fr) minmax(180px, 1fr); gap: 10px; padding: calc(max(10px, env(safe-area-inset-top)) + 64px) 12px max(12px, env(safe-area-inset-bottom)) 12px; }
+  /* --- פרק ב: HUD --- */
+  .hud { position: fixed; top: max(10px, env(safe-area-inset-top)); right: 14px; left: 90px; display: flex; gap: 8px; align-items: center; z-index: 10; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 4px solid var(--h-ink); border-radius: 14px; transform: skewX(-7deg); background: var(--h-paper); font-weight: 900; font-size: clamp(15px, 1.9vw, 21px); box-shadow: 4px 5px 0 var(--h-ink); white-space: nowrap; }
+  .chip.p1 { background: linear-gradient(180deg, #c9f3ff, #29e0ff); } .chip.p2 { background: linear-gradient(180deg, #ffd1e8, #ff5ca8); }
+  .hud h1 { font: 900 clamp(20px, 2.8vw, 30px)/1 var(--h-font); color: #fff; -webkit-text-stroke: 4px var(--h-ink); paint-order: stroke fill; text-shadow: 3px 4px 0 var(--h-magenta); margin-inline-end: auto; transform: rotate(-2deg); }
+  /* --- פרק ג: המטבח --- */
+  .mid, .tray { direction: rtl; }
+  .mid { display: grid; grid-template-rows: auto auto 1fr; gap: 8px; min-height: 0; }
+  .cust { display: grid; grid-template-columns: 90px 1fr; gap: 10px; align-items: center; padding: 8px 12px; border: 4px solid var(--h-ink); border-radius: 22px; background: var(--h-paper); box-shadow: 6px 7px 0 var(--h-ink); }
+  .cust img { width: 90px; height: 90px; object-fit: contain; filter: drop-shadow(0 4px 0 rgba(16,30,54,.3)); animation: h-float 2s ease-in-out infinite alternate; }
+  .cust b { display: block; font: 900 clamp(16px, 2.1vw, 22px)/1.2 var(--h-font); margin-bottom: 6px; }
+  .pat { height: 16px; border: 3px solid var(--h-ink); border-radius: 999px; background: #eee; overflow: hidden; }
+  .pat i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #3ff2b0, #2fb85a); transition: width .3s linear; }
+  .pat.low i { background: linear-gradient(90deg, #ffb36b, #ff3b3b); } .pat.low { animation: hot .5s ease-in-out infinite alternate; }
+  @keyframes hot { to { transform: scale(1.03); } }
+  /* שרשרת המתכון: מרכיבים לפי הסדר, הבא מהבהב בצבע השחקן שמחזיק אותו */
+  .chain { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; padding: 8px; border: 4px solid var(--h-ink); border-radius: 18px; background: #fff; box-shadow: 4px 5px 0 var(--h-ink); }
+  .ch { position: relative; width: clamp(48px, 6vw, 68px); height: clamp(48px, 6vw, 68px); border: 3px solid var(--h-ink); border-radius: 14px; background: #f4f0ff; display: grid; place-items: center; opacity: .55; }
+  .ch img, .ing img, .layer img, .fly img { width: 80%; height: 80%; object-fit: contain; pointer-events: none; } .emo { font-size: 34px; line-height: 1; pointer-events: none; }
+  .ch b { position: absolute; top: -10px; right: -8px; width: 22px; height: 22px; border: 2px solid var(--h-ink); border-radius: 50%; background: #fff; font: 900 12px/18px var(--h-font); text-align: center; }
+  .ch.done { opacity: 1; background: #e8fff4; } .ch.done::after { content: "✔"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; color: #1e9a54; -webkit-text-stroke: 2px #fff; }
+  .ch.next { opacity: 1; transform: scale(1.18); animation: nx .6s ease-in-out infinite alternate; }
+  .ch.next.p0 { background: #c9f3ff; box-shadow: 0 0 0 4px #29e0ff; } .ch.next.p1 { background: #ffd1e8; box-shadow: 0 0 0 4px #ff5ca8; }
+  @keyframes nx { to { transform: scale(1.28) rotate(-4deg); } }
+  .arr { font-style: normal; font-size: 18px; color: var(--h-text-soft); }
+  /* הצלחת: שכבות נערמות */
+  .plate { position: relative; align-self: end; justify-self: center; width: min(100%, 360px); height: clamp(150px, 28vh, 260px); border: 5px solid var(--h-ink); border-radius: 50% / 30%; background: radial-gradient(circle at 50% 60%, #fff, #e8e8f0 70%, #c9c9d9); box-shadow: 8px 9px 0 var(--h-ink), 0 0 0 4px #fff inset; }
+  .layer { position: absolute; left: 50%; bottom: calc(10% + var(--i) * 14px); width: 42%; height: 42%; transform: translateX(-50%); display: grid; place-items: center; animation: drop .4s var(--h-spring) both; z-index: var(--i); }
+  .layer .emo { font-size: clamp(44px, 6vw, 70px); }
+  .plate.shake .layer { bottom: calc(10% + var(--i) * 10px); width: 30%; }
+  @keyframes drop { from { transform: translateX(-50%) translateY(-120px) scale(1.3); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+  .fly { position: fixed; z-index: 9400; width: 70px; height: 70px; margin: -35px 0 0 -35px; display: grid; place-items: center; transition: transform .6s cubic-bezier(.3,.7,.3,1), opacity .6s; pointer-events: none; }
+  /* --- פרק ד: המגשים --- */
+  .tray { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 8px; padding: 10px; border: 5px solid var(--h-ink); border-radius: 24px; background: var(--h-paper) radial-gradient(rgba(16,30,54,.08) 1.4px, transparent 1.9px) 0 0 / 10px 10px; box-shadow: 8px 9px 0 var(--h-ink); min-height: 0; }
+  .tray.t0 { border-color: #29e0ff; box-shadow: 8px 9px 0 var(--h-ink), 0 0 0 4px #29e0ff inset; } .tray.t1 { border-color: #ff5ca8; box-shadow: 8px 9px 0 var(--h-ink), 0 0 0 4px #ff5ca8 inset; }
+  .tray h3 { grid-column: 1 / -1; font: 900 clamp(16px, 2vw, 22px)/1 var(--h-font); text-align: center; padding: 6px; border: 3px solid var(--h-ink); border-radius: 999px; color: #fff; -webkit-text-stroke: 3px var(--h-ink); paint-order: stroke fill; }
+  .tray.t0 h3 { background: #29e0ff; } .tray.t1 h3 { background: #ff5ca8; }
+  .ing { display: grid; place-items: center; align-content: center; gap: 2px; min-height: 0; border: 3px solid var(--h-ink); border-radius: 16px; background: #fff; box-shadow: 0 4px 0 var(--h-ink); cursor: pointer; font-family: var(--h-font); color: var(--h-ink); padding: 4px; touch-action: none; }
+  .ing img { width: clamp(40px, 5.5vw, 70px); height: clamp(40px, 5.5vw, 70px); } .ing .emo { font-size: clamp(34px, 4.6vw, 56px); }
+  .ing small { font: 900 clamp(10px, 1.1vw, 13px)/1 var(--h-font); color: var(--h-text-soft); }
+  .ing:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--h-ink); }
+  .ing.shake { animation: shk .35s; background: #fff3dc; }
+  @keyframes shk { 25% { transform: translateX(-8px) rotate(-4deg); } 75% { transform: translateX(8px) rotate(4deg); } }
+  /* --- פרק ה: מסכים --- */
+  .overlay { position: fixed; inset: 0; z-index: 50; display: none; place-items: center; padding: 16px; background: radial-gradient(circle at 50% 40%, rgba(58,17,119,.8), rgba(10,4,30,.92)); }
+  .overlay.show { display: grid; }
+  .card { width: min(94vw, 860px); max-height: 94vh; overflow: auto; padding: 18px 22px; text-align: center; }
+  .card h1 { font-size: clamp(30px, 4.6vw, 52px); font-weight: 900; color: #fff; -webkit-text-stroke: 4px var(--h-ink); paint-order: stroke fill; text-shadow: 4px 5px 0 var(--h-magenta); transform: rotate(-2deg); display: inline-block; }
+  .card p { font-weight: 700; font-size: clamp(15px, 1.9vw, 20px); color: var(--h-text-soft); margin: 6px 0 10px; }
+  .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0 14px; text-align: center; }
+  .how div { padding: 10px; border: 4px solid var(--h-ink); border-radius: 18px; background: #fff; box-shadow: 4px 5px 0 var(--h-ink); font: 800 clamp(13px, 1.5vw, 16px)/1.3 var(--h-font); }
+  .how b { display: block; font-size: 40px; line-height: 1; margin-bottom: 4px; }
+  .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0; }
+  .stat { border: 4px solid var(--h-ink); border-radius: 20px; background: #fff; padding: 8px; box-shadow: 0 4px 0 var(--h-ink); }
+  .stat b { display: block; font-size: 30px; line-height: 1.1; } .stat span { font-weight: 800; color: var(--h-text-soft); font-size: 14px; }
+  .learned { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 4px 0 10px; }
+  .learned span { padding: 4px 12px; border: 3px solid var(--h-ink); border-radius: 999px; background: var(--h-gold); font: 900 14px/1.2 var(--h-font); direction: ltr; box-shadow: 2px 3px 0 var(--h-ink); }
+  .big { font: 900 44px/1 var(--h-font); margin: 6px 0; }
+  /* --- פרק ו --- */
+  .rotate { display: none; }
+  @media (orientation: portrait) { .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 12px; text-align: center; background: var(--h-night); color: #fff; font-size: 26px; font-weight: 900; } }
+</style>
+</head>
+<body>
+  <div class="hud" id="kHud"><h1>👩‍🍳 המטבח לשניים</h1><span class="chip p1" id="hP1">שחקן 1 · 0</span><span class="chip" id="hServed">🍽️ 0/6</span><span class="chip" id="hTips">🪙 0</span><span class="chip p2" id="hP2">שחקן 2 · 0</span></div>
+  <div class="kitchen">
+    <!-- מגש שחקן 1 (שמאל פיזית — ב-RTL הוא העמודה האחרונה, לכן direction:ltr על הפריסה) -->
+    <div class="tray t0" id="tray0wrap"><h3>🧒 שחקן 1</h3><div class="tray-in" id="tray0" style="display:contents"></div></div>
+    <div class="mid">
+      <div class="cust"><img id="custImg" src="assets/art/cust_bear.svg" alt=""><div><b id="custName">הלקוח מגיע…</b><div class="pat"><i id="patBar"></i></div></div></div>
+      <div class="chain" id="chain"></div>
+      <div class="plate" id="plate"></div>
+    </div>
+    <div class="tray t1" id="tray1wrap"><h3>👥 שחקן 2</h3><div class="tray-in" id="tray1" style="display:contents"></div></div>
+  </div>
+
+  <div class="overlay show" id="startScreen"><div class="card h-panel">
+    <h1>👩‍🍳 המטבח לשניים</h1><p>בישולים בעגלה — ביחד! לכל שחקן מגש משלו, והמתכון צריך את שניכם.</p>
+    <div class="how"><div><b>🧒</b>שחקן 1 (שמאל): לחמניות, בסיסים, קציצה, גבינה, טעמים</div><div><b>📜</b>המתכון באמצע — המרכיב הבא מהבהב בצבע של מי שמחזיק אותו</div><div><b>👥</b>שחקן 2 (ימין): ירקות, תוספות וקישוטים</div></div>
+    <p>6 לקוחות · כל מרכיב נאמר באנגלית 🇬🇧 · טיפ גדול יותר כשמהירים · בלי פסילות</p><p id="kBest"></p>
+    <div class="row"><button class="h-btn gold" id="goBtn" type="button">מתחילים לבשל! 🍳</button></div>
+  </div></div>
+  <div class="overlay" id="endScreen"><div class="card h-panel">
+    <span class="h-modal-kicker">המשמרת נגמרה!</span><div class="big" id="eStars">⭐⭐⭐</div>
+    <div class="stats"><div class="stat"><b id="eServed">0</b><span>הזמנות הוגשו 🍽️</span></div><div class="stat"><b id="eTips">0</b><span>טיפים 🪙</span></div><div class="stat"><b id="eP">0 : 0</b><span>מרכיבים שחקן 1 : 2</span></div><div class="stat"><b id="eOops">0</b><span>אופסים 🙈</span></div></div>
+    <h4>🇬🇧 מילים שלמדנו במטבח</h4><div class="learned" id="learned"></div><p id="endText"></p>
+    <div class="row"><button class="h-btn gold" id="againBtn" type="button">עוד משמרת! 🍳</button><button class="h-btn violet" id="backBtn" type="button">למסך הפתיחה</button></div>
+  </div></div>
+  <div class="rotate"><div style="font-size:70px">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
+
+  <script src="shared/profile.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/voice-en.js"></script>
+  <script src="js/voice-en-slow.js"></script>
+  <script src="shared/kids-ui.js"></script>
+  <script src="shared/tap-fx.js"></script><script src="shared/perf-guard.js"></script>
+  <script src="shared/wallet.js"></script>
+  <script src="shared/hero-avatar.js"></script>
+  <script src="shared/hero-rewards.js"></script>
+  <script src="shared/progress.js"></script><script src="shared/achievements.js"></script>
+  <script src="shared/learn-fx.js"></script>
+  <script>window.KITCHEN_BOY = false;  /* גרסת הבנות */</script>
+  <script src="js/kitchen.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
+    if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+  </script>
+</body>
+</html>

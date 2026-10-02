@@ -53,6 +53,10 @@
     ['explorer', '🗺️', 'מטייל בכל העולם', 'מבקרים בחווה, ברכיבה, במרוץ, בטיסה ובעגלה', function (c) { return ['farm', 'ride', 'cars', 'flight', 'cart'].every(function (p) { return c['visit:' + p]; }); }, 'fun'],
     ['twop', '👥', 'חברים על הכביש', 'מרוץ של שני שחקנים במסך מפוצל', function (c) { return (c['cars:2p'] || 0) >= 1; }, 'cars'],
     ['design', '🎨', 'מעצב מכוניות', 'פותחים את עיצוב המכונית במוסך', function (c) { return (c['cars:design'] || 0) >= 1; }, 'cars'],
+    ['farmduo', '👥', 'חוואים לשניים', 'משחק אחד של "חווה לשניים"', function (c) { return (c['farm:duo'] || 0) >= 1; }, 'farm'],
+    ['chefs', '👩‍🍳', 'שפים לשניים', 'משמרת אחת במטבח לשניים', function (c) { return (c['kitchen:done'] || 0) >= 1; }, 'fun'],
+    ['chefsperf', '🍽️', 'מטבח מושלם', 'כל 6 הלקוחות יצאו שמחים', function (c) { return (c['kitchen:perfect'] || 0) >= 1; }, 'fun'],
+    ['duel', '⚔️', 'דו-קרב ראשון', 'דו-קרב ידע אחד עד הסוף', function (c) { return (c['duel:done'] || 0) >= 1; }, 'learn'],
     ['rich', '💰', 'חוסך גדול', 'צוברים 100 מטבעות בארנק', function () { return coins() >= 100; }, 'fun']
   ];
   var COLORS = { learn: ['#fff3c4', '#ffc93c'], cars: ['#ff9b9b', '#b3122e'], ride: ['#9df08a', '#1e9a54'], farm: ['#9ad8ff', '#2f6bff'], create: ['#eadcff', '#b48cff'], fun: ['#ffd1f0', '#ff4fa0'] };

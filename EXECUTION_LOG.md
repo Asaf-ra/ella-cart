@@ -2,6 +2,17 @@
 
 הקובץ מתעד שינויים מהותיים במוצר, כדי שתמיד יהיה ברור מה נוסף, מה נבדק ואיזו גרסת עדכון האייפד צריך לקבל.
 
+## 2026-10-02 — שלב 24: משחקים לשניים — המטבח לשניים, חווה לשניים, דו-קרב ידע (גרסה 5.4, `sw.js` v63)
+
+**בקשה:** "תוסיף עוד דברים שאפשר לעשות 2 במקביל — טיפולים בחווה, בישולים בעגלה ועוד".
+
+- **`js/farm-duo.js` (חדש):** `GAMES` (milk/eggs/wool/water), שכבה `#duoOv` עם קנבס מפוצל, `side(x)` לפי pointerId, `MAKERS` לכל משחק (`update/down/move/draw`), ספירה לאחור, `finish` → `FarmGame.state().inv[...] += units`, `Wallet.add`, `Achievements.hit('farm:duo')`. `farm.html` פרק ט: `#duoBtn`, `#duoMenu`, `#duoEnd`. `farm.js`: `FarmGame.save/inv/hud` נחשפו.
+- **`js/kitchen.js` + `kitchen.html` (חדש):** `ING` (26, מגש 0/1, SVG מ-`assets/art` או אימוג'י), `RECIPES` (5 מנות × 3), `newOrder/renderChain/renderTrays/onIng/fly/serve/finish`, שמירה `<pfx>-kitchen-v1`. הפריסה `direction:ltr` כדי ששחקן 1 יהיה פיזית משמאל.
+- **`js/duel.js` + `duel.html` (חדש):** `GEN` (math/word/color/count/odd), `ORDER` של 10 שאלות, `.side-1 { transform: rotate(180deg) }` + כפתור `noflip`, `FREEZE` 1.5ש, `Progress.recordAnswer('duel')`.
+- **חיבורים:** כרטיסים ב-`index.html`, `#kitchenLink` ב-`cart.html`, 4 תגים ב-`achievements.js`, `whatsnew.js` 5.4, `sw.js` v63, אריח ב-`parents.js`, כרטיס ב-`welcome.html`.
+- **`tools/gen_voice.py`:** `Kitchen.englishLines()` + `Duel.englishLines()` (126 משפטים) → הקלטות רגיל + איטי.
+- **`tools/smoke-test.js`:** 14 דפים, תרחישים חדשים לחווה לשניים, למטבח ולדו-קרב. תוקן בבדיקה: המרכיב ה"לא נכון" בבדיקה נבחר מהמגש בפועל.
+
 ## 2026-10-02 — שלב 23: שני שחקנים, הישגים, עיצוב המכונית, שומר ביצועים ובדיקות אוטומטיות (גרסה 5.3, `sw.js` v62)
 
 **בקשה:** "תתקדם חזק" — אחרי הצעת השיפורים (הישגים, עיצוב מכונית, שני שחקנים, שומר ביצועים, GitHub Actions).
