@@ -55,7 +55,9 @@
   var VW = 4400, VH = 800, GROUND = 600;
   var cv = $('farmCv'), ctx = cv.getContext('2d'), W = 0, H = 0, DPR = 1;
   var cam = { cx: 3450, cy: VH / 2, z: 1, tcx: 3450, tcy: VH / 2, tz: 1, vx: 0 };
-  function resize() { DPR = Math.min(window.devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
+  var DPR_CAP = 2;                                         // שומר הביצועים (shared/perf-guard.js) מוריד ל-1 באייפד ישן
+  window.addEventListener('perf:low', function () { DPR_CAP = 1; resize(); });
+  function resize() { DPR = Math.min(window.devicePixelRatio || 1, DPR_CAP); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
   window.addEventListener('resize', resize);
   function scale() { return H / VH * cam.z; }
   function viewW() { return W / scale(); }
@@ -731,7 +733,7 @@
     var h = hourNow(), gap = ST.last ? (Date.now() - ST.last) / 36e5 : 0, kid = kidName();
     var hi = h < 11 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : h < 20.5 ? 'ערב טוב' : 'לילה טוב';
     var line = hi + ', ' + kid + '! ' + (gap > 24 ? 'התגעגענו אלייך!'.replace('אלייך', BOY ? 'אליך' : 'אלייך') + ' ' : '') + (isNight() ? 'החיות ישנות... נגיעה עדינה מעירה אותן.' : 'ברוכים הבאים לחווה!');
-    ST.last = Date.now(); ST.visits++; save();
+    ST.last = Date.now(); ST.visits++; save(); if (isNight()) { try { Achievements.hit('farm:night'); } catch (e) {} }
     setTimeout(function () { say(line); if (!isNight()) { var d = byId('dog'); if (d) { d.tx = cam.cx - 60; d.st = 'go'; d.onArrive = function () { d.happy = 2; d.hearts = 30; sayEn('Woof!'); }; } } }, 700);
   }
   function bind() {
@@ -776,7 +778,7 @@
         track('farm:learn');
       });
     });
-    ST.learn.seen[id] = 1; save();
+    ST.learn.seen[id] = 1; save(); try { Achievements.hit('farm:guide'); } catch (e) {}
     $('guideOv').classList.add('show'); say(g.title + ' נוגעים בכל צעד כדי לשמוע למה הוא חשוב');
   }
   /* 12.3 */
@@ -791,7 +793,7 @@
         if (done) return; done = true; var ok = +b.dataset.i === q.ans;
         box.querySelectorAll('.qopt').forEach(function (x, i) { x.classList.add(i === q.ans ? 'ok' : (x === b ? 'no' : 'dim')); });
         $('quizWhy').textContent = (ok ? '✔ נכון! ' : 'כמעט! ') + q.why; $('quizWhy').className = 'qwhy show ' + (ok ? 'ok' : 'no');
-        if (ok) { ST.learn.quiz[id] = (ST.learn.quiz[id] || 0) + 1; try { Wallet.add(2); HeroRewards.award(1, b, { word: 'נכון!' }); } catch (e) {} snd('happy'); say('נכון! ' + q.why); try { Progress.recordAnswer('farm', true); } catch (e) {} }
+        if (ok) { ST.learn.quiz[id] = (ST.learn.quiz[id] || 0) + 1; try { Achievements.hit('farm:quiz_ok'); } catch (e) {} try { Wallet.add(2); HeroRewards.award(1, b, { word: 'נכון!' }); } catch (e) {} snd('happy'); say('נכון! ' + q.why); try { Progress.recordAnswer('farm', true); } catch (e) {} }
         else { tap(260); say('כמעט! ' + q.why); try { Progress.recordAnswer('farm', false); } catch (e) {} }
         track('answer'); track('farm:learn'); save(); hud(); panel();
       });

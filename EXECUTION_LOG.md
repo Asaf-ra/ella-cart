@@ -2,6 +2,18 @@
 
 הקובץ מתעד שינויים מהותיים במוצר, כדי שתמיד יהיה ברור מה נוסף, מה נבדק ואיזו גרסת עדכון האייפד צריך לקבל.
 
+## 2026-10-02 — שלב 23: שני שחקנים, הישגים, עיצוב המכונית, שומר ביצועים ובדיקות אוטומטיות (גרסה 5.3, `sw.js` v62)
+
+**בקשה:** "תתקדם חזק" — אחרי הצעת השיפורים (הישגים, עיצוב מכונית, שני שחקנים, שומר ביצועים, GitHub Actions).
+
+- **`shared/achievements.js` (חדש):** `BADGES` (26), מונים `S.c` שמתעדכנים מכל `progress:track` ומ-`Achievements.hit`, `unlock` עם תור באנרים, אלבום `open()`, ביקורים `visit:<page>`. hooks: `cars.js` (`cars:gold`, `cars:clean`, `cars:redlight`, `cars:2p`, `cars:design`), `ride.js` (`ride:gold`), `farm.js` (`farm:guide`, `farm:quiz_ok`, `farm:night`), `tap-fx.js` (`tap:combo10`, `tap:zap`). כרטיס `#achCard` ב-`index.html`, אריח ב-`parents.js`.
+- **`js/cars.js` שני שחקנים (פרק 5.0):** `twoP`, `G1`, `G2`, `PT` (מגעים לפי pointerId), `swapTo(g)` מחליף `G/input/segs`; `mkG(ti, pid)`; `newRound(ti, two)` בונה את המסלול פעמיים מאותו זרע; `loop` מצייר כל שחקן בחצי (`W = full/2` + clip + translate) ו-`hud2p`; `finish2P`. `applyCtl` מסתיר הגה/חיצים/דוושות; `body.twop` מסתיר צ'יפים ומד מהירות.
+- **עיצוב המכונית:** `cars-data.js` `PAINTS`/`STICKERS`; `cars.js` `S.design`, `styled(car)`, `openDesign()`; `cars.html` `#designOv` + `.cb/.crow/.cname`.
+- **`shared/perf-guard.js` (חדש):** חלונות של 2 שניות, 2 פסילות → `body[data-skin=off]` + אירוע `perf:low`; `DPR_CAP` ב-`cars.js`/`ride.js`/`farm.js`.
+- **`shared/learn-fx.js`:** `.lfx-word`/`.lfx-fact` `pointer-events:none` (רק `.lfx-say` מקבל מגע) — נמצא בבדיקה כשכרטיס "עקפנו!" חסם את צד שחקן 2.
+- **`tools/smoke-test.js` + `.github/workflows/test.yml`:** שרת סטטי מובנה, 12 דפים, 13 תרחישים; רץ על push ל-main ועל כל PR.
+- **בדיקה מקומית:** ✅ הכול עבר (26 בדיקות, 0 שגיאות).
+
 ## 2026-10-02 — שלב 22ב: הקלטות קול למשפטים החדשים + מיזוג ל-main (`sw.js` v61)
 
 **בקשה:** "למה לא נפתחו PR? למה אתה לא דוחף שהכל יעבוד?"
