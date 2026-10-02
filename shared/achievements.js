@@ -57,6 +57,9 @@
     ['chefs', '👩‍🍳', 'שפים לשניים', 'משמרת אחת במטבח לשניים', function (c) { return (c['kitchen:done'] || 0) >= 1; }, 'fun'],
     ['chefsperf', '🍽️', 'מטבח מושלם', 'כל 6 הלקוחות יצאו שמחים', function (c) { return (c['kitchen:perfect'] || 0) >= 1; }, 'fun'],
     ['duel', '⚔️', 'דו-קרב ראשון', 'דו-קרב ידע אחד עד הסוף', function (c) { return (c['duel:done'] || 0) >= 1; }, 'learn'],
+    ['balloonsduo', '🎈', 'בלונים בצמד', 'משחק בלונים לשניים', function (c) { return (c['balloons:duo'] || 0) >= 1; }, 'fun'],
+    ['rideduo', '🏇', 'מרוץ סוסים', 'מרוץ סוסים לשניים עד קו הסיום', function (c) { return (c['ride:duo'] || 0) >= 1; }, 'ride'],
+    ['drawduo', '🖍️', 'אמנים ביחד', 'ציור משותף שנשלח', function (c) { return (c['draw:duo'] || 0) >= 1; }, 'create'],
     ['rich', '💰', 'חוסך גדול', 'צוברים 100 מטבעות בארנק', function () { return coins() >= 100; }, 'fun']
   ];
   var COLORS = { learn: ['#fff3c4', '#ffc93c'], cars: ['#ff9b9b', '#b3122e'], ride: ['#9df08a', '#1e9a54'], farm: ['#9ad8ff', '#2f6bff'], create: ['#eadcff', '#b48cff'], fun: ['#ffd1f0', '#ff4fa0'] };

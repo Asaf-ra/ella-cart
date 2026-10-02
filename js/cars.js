@@ -209,7 +209,7 @@
   var CTLS = [['wheel', '🎡', 'הגה', 'מסובבים את ההגה'], ['pad', '🎮', 'חיצים', 'שמאלה / ימינה / טורבו / ברקס'], ['drag', '👆', 'גרירה', 'גוררים על הכביש'], ['tilt', '📱', 'הטיה', 'מטים את האייפד']];
   function applyCtl() {
     var run = !!(G && G.run), c = ctl();
-    document.body.classList.toggle('twop', twoP && run);
+    document.body.classList.toggle('twop', twoP && run); $('soloBtn').hidden = !twoP; $('soloBtn2').hidden = !twoP;   /* 👤 חזרה לשחקן יחיד — רק כשמשחקים בשניים */
     if (twoP) { ['wheel', 'pad', 'pedals'].forEach(function (id) { $(id).classList.remove('show'); }); return; }
     $('wheel').classList.toggle('show', run && c === 'wheel'); $('pad').classList.toggle('show', run && c === 'pad'); $('pedals').classList.toggle('show', run && c !== 'pad');
     if (c === 'tilt' && run && input.tilt == null) enableTilt();
@@ -606,6 +606,8 @@
     $('quitBtn').addEventListener('click', function () { startScreen(); });
     $('againBtn').addEventListener('click', function () { tap(); newRound(G ? G.ti : selTrack, twoP); });
     $('twoBtn').addEventListener('click', function () { tap(); ac(); newRound(selTrack, true); });
+    /* 👤 שחקן יחיד: מההשהיה או מהסיום של משחק לשניים — אותו מסלול, לבד */
+    ['soloBtn', 'soloBtn2'].forEach(function (id) { $(id).addEventListener('click', function () { tap(); var ti = G1 ? G1.ti : selTrack; $('pauseScreen').classList.remove('show'); newRound(ti, false); say('שחקן יחיד!'); }); });
     $('garageBtn').addEventListener('click', function () { tap(); startScreen(); });
     document.addEventListener('visibilitychange', function () { if (document.hidden && G && G.run) { G.run = false; applyCtl(); $('pauseScreen').classList.add('show'); } });
     bindPad(); bindWheel(); bindPedals();

@@ -55,11 +55,11 @@
     var ov = $('duoOv'); ov.classList.add('show'); $('duoMenu').style.display = 'grid'; $('duoEnd').style.display = 'none'; cv.style.display = 'none';
     say('חווה לשניים! בוחרים משחק: חליבה, ביצים, גזיזה או השקיה. כל אחד בצד שלו');
   }
-  function close() { stop(); $('duoOv').classList.remove('show'); try { TapFX.set('full'); } catch (e) {} }
+  function close() { stop(); $('duoQuit').style.display = 'none'; $('duoOv').classList.remove('show'); try { TapFX.set('full'); } catch (e) {} }
   function stop() { cancelAnimationFrame(raf); D = null; PT = {}; }
   function start(id) {
     game = GAMES.filter(function (g) { return g.id === id; })[0]; if (!game) return;
-    $('duoMenu').style.display = 'none'; $('duoEnd').style.display = 'none'; cv.style.display = 'block'; resize();
+    $('duoMenu').style.display = 'none'; $('duoEnd').style.display = 'none'; cv.style.display = 'block'; $('duoQuit').style.display = 'block'; resize();
     D = { phase: 'count', t: 0, time: 0, score: [0, 0], g: MAKERS[id](), fx: [], pops: [] };
     try { LearnFX.word(game.en, game.he, game.ico, { tag: '🇬🇧 ' + game.name, pos: 'top' }); } catch (e) { say(game.name); }
     say(game.how); snd('ding'); try { TapFX.set('light'); } catch (e) {}
@@ -214,6 +214,7 @@
     $('duoEndR').textContent = units ? 'לסל של החווה: ' + units + ' ' + { milk: '🥛 חלב', egg: '🥚 ביצים', wool: '🧶 צמר', carrot: '🥕 גזרים' }[game.inv] + ' + 🪙 3' : 'עוד קצת ויהיה פרס לסל! + 🪙 2';
     $('duoEnd').style.display = 'grid'; try { HeroRewards.confetti(); TapFX.set('full'); } catch (e) {} snd('happy');
     say((win ? PNAME[win - 1] + ' מנצח! ' : 'תיקו! ') + a + ' נגד ' + b + '. יחד ' + tot + '!');
+    $('duoQuit').style.display = 'none';
     setTimeout(function () { cancelAnimationFrame(raf); cv.style.display = 'none'; }, 400);
   }
 
@@ -226,6 +227,9 @@
     $('duoAgain').addEventListener('click', function () { tap(); start(game.id); });
     $('duoMenuBtn').addEventListener('click', function () { tap(); openChooser(); });
     $('duoBtn').addEventListener('click', function () { tap(); openChooser(); });
+    /* 👤 חזרה לשחקן יחיד: ✖ באמצע המשחק, ו"לחווה" במסך הסיום */
+    $('duoQuit').addEventListener('click', function () { tap(); close(); say('חזרנו לחווה'); });
+    $('duoHome').addEventListener('click', function () { tap(); close(); say('חזרנו לחווה'); });
   }
   window.FarmDuo = { open: openChooser, start: start, close: close, state: function () { return D; }, finish: finish, GAMES: GAMES };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();

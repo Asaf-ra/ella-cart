@@ -126,6 +126,13 @@
   .cb.buy { background: #f4f0ff; }
   .cname { font: 900 24px var(--h-font); padding: 8px 14px; border: 4px solid var(--h-ink); border-radius: 16px; width: min(100%, 320px); text-align: center; color: var(--h-ink); user-select: text; -webkit-user-select: text; }
 
+  /* --- פרק ז — 👥 מרוץ סוסים לשניים (שלב 19) --- */
+  #rduoOv { position: fixed; inset: 0; z-index: 60; display: none; background: var(--h-night); }
+  #rduoOv.show { display: block; }
+  #rduoCv { position: absolute; inset: 0; touch-action: none; }
+  #rduoEnd { position: absolute; inset: 0; display: none; place-items: center; padding: 16px; background: rgba(10,4,30,.55); }
+  #rduoEnd h2 { font: 900 clamp(28px, 4vw, 44px)/1.1 var(--h-font); color: #fff; -webkit-text-stroke: 4px var(--h-ink); paint-order: stroke fill; text-shadow: 3px 4px 0 var(--h-magenta); }
+  .rduo-s { font: 900 clamp(16px, 2.2vw, 24px)/1.4 var(--h-font); margin: 10px 0 14px; color: var(--h-ink); }
   /* --- פרק ו: סיבוב מסך --- */
   .rotate { display: none; }
   @media (orientation: portrait) { .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 12px; text-align: center; background: var(--h-night); font-size: 26px; font-weight: 900; } }
@@ -165,7 +172,7 @@
           <p>גוררים ימינה ושמאלה 👈👉 · מחליקים למעלה = קפיצה ⬆️ · למטה = האטה · כפתורי טריקים למטה ✨ · 🎮 = לוח חיצים</p>
           <div class="legend"><span>🪵 גדר / בול עץ — קופצים</span><span>🌾 🪨 — עוקפים</span><span>🌈 קשת טריקים = ×2</span><span>🎨🔢 שער — רוכבים לתשובה הנכונה</span></div>
           <div class="tracks" id="tracks"></div>
-          <div class="row"><button class="h-btn gold" id="goBtn" type="button">רוכבים! 🏇</button><button class="h-btn cyan" id="farmBtn" type="button">🧺 לחווה</button><button class="h-btn violet" id="padBtn2" type="button" aria-pressed="false">🎮 חיצים</button></div>
+          <div class="row"><button class="h-btn gold" id="goBtn" type="button">רוכבים! 🏇</button><button class="h-btn cyan" id="farmBtn" type="button">🧺 לחווה</button><button class="h-btn violet" id="padBtn2" type="button" aria-pressed="false">🎮 חיצים</button><button class="h-btn cyan" id="rduoBtn" type="button">👥 מרוץ לשניים</button></div>
         </div>
       </div>
     </div>
@@ -206,6 +213,8 @@
   <!-- ארון עיצוב -->
   <div class="overlay" id="closetOv"><div class="card h-panel"><div class="row" style="justify-content:space-between"><h1 style="font-size:32px">🎨 הארון של הסוס</h1><button class="h-btn violet" id="closetX" type="button">✖ סגירה</button></div><div id="closet"></div></div></div>
 
+  <!-- 👥 מרוץ סוסים לשניים (js/ride-duo.js): קנבס מחולק לשני מסלולים + מסך סיום -->
+  <div id="rduoOv"><canvas id="rduoCv"></canvas><button type="button" id="rduoQuit" style="position:absolute;top:max(10px,env(safe-area-inset-top));right:14px;z-index:5;padding:8px 14px;border:4px solid #101e36;border-radius:14px;background:#fffaf0;color:#101e36;font:900 16px/1 Rubik,sans-serif;box-shadow:4px 5px 0 #101e36;cursor:pointer">✖ חזרה לרכיבה · 👤 שחקנית יחידה</button><div id="rduoEnd"><div class="card h-panel" style="text-align:center;width:min(92vw,640px)"><h2 id="rduoEndT">🏆</h2><p id="rduoEndS" class="rduo-s"></p><div class="row"><button class="h-btn gold" id="rduoAgain" type="button">עוד מרוץ! 🔁</button><button class="h-btn violet" id="rduoX" type="button">🏇 חזרה לרכיבה · 👤 שחקנית יחידה</button></div></div></div></div>
   <div class="rotate"><div style="font-size:70px">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
 
   <script src="shared/profile.js"></script>
@@ -224,6 +233,7 @@
   <script src="shared/tap-fx.js"></script><script src="shared/perf-guard.js"></script>
   <script src="js/ride-data.js"></script>
   <script src="js/ride.js"></script>
+  <script src="js/ride-duo.js"></script>
   <script>
     window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
     if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function(){}); }); }

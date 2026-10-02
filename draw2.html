@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#101e36" />
+<meta name="apple-mobile-web-app-title" content="ציור לשניים" />
+<title>ציור לשניים — העולם של אלה</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+<link rel="stylesheet" href="shared/theme.css" />
+<link rel="stylesheet" href="shared/marvel-skin.css" />
+<style>
+  /* ===== ציור לשניים — עיצוב (שלב 19) =====
+     פרק א — פריסה: פלטה 1 · קנבס · פלטה 2 (direction:ltr כדי ששחקן 1 פיזית משמאל) | פרק ב — פלטות
+     פרק ג — סרגל עליון: נושא, רקעים, פעולות | פרק ד — סיבוב מסך */
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  html { background: var(--h-night); }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { font-family: var(--h-font); color: var(--h-ink); touch-action: none; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; background: linear-gradient(170deg, #0b224a, #1b3c8f); }
+  .wrap { direction: ltr; position: fixed; inset: 0; display: grid; grid-template-columns: clamp(130px, 14vw, 180px) 1fr clamp(130px, 14vw, 180px); grid-template-rows: auto 1fr; gap: 10px; padding: calc(max(10px, env(safe-area-inset-top))) 12px max(12px, env(safe-area-inset-bottom)) 12px; }
+  .top { grid-column: 1 / -1; direction: rtl; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-right: 80px; }
+  .top h1 { font: 900 clamp(20px, 2.6vw, 30px)/1 var(--h-font); color: #fff; -webkit-text-stroke: 4px var(--h-ink); paint-order: stroke fill; text-shadow: 3px 4px 0 var(--h-magenta); transform: rotate(-2deg); }
+  #theme { padding: 6px 14px; border: 3px solid var(--h-ink); border-radius: 6px 18px 18px 18px; background: var(--h-gold); font: 900 clamp(14px, 1.7vw, 19px)/1.2 var(--h-font); box-shadow: 3px 4px 0 var(--h-ink); }
+  .sp { flex: 1; }
+  .bgs { display: flex; gap: 6px; }
+  .bgb, .tb { padding: 7px 12px; border: 3px solid var(--h-ink); border-radius: 14px; background: var(--h-paper); font: 900 clamp(13px, 1.5vw, 17px)/1 var(--h-font); color: var(--h-ink); box-shadow: 3px 4px 0 var(--h-ink); cursor: pointer; white-space: nowrap; }
+  .bgb.on { background: linear-gradient(180deg, #fff3b0, #ffc93c); }
+  .tb.share { background: linear-gradient(180deg, #b6ffdc, #3ff2b0); } .tb.clear { background: linear-gradient(180deg, #ffd1c2, #ff9b7a); }
+  #d2cv { width: 100%; height: 100%; display: block; border: 5px solid var(--h-ink); border-radius: 22px; background: #fffaf0; box-shadow: 8px 9px 0 var(--h-ink); touch-action: none; }
+  .cvwrap { position: relative; min-height: 0; }
+  .cvwrap::after { content: ""; position: absolute; left: 50%; top: 5px; bottom: 5px; border-left: 3px dashed rgba(16,30,54,.18); pointer-events: none; }
+  /* --- פרק ב: פלטות --- */
+  .pal { direction: rtl; display: grid; grid-template-rows: auto auto auto 1fr; gap: 8px; padding: 8px; border: 5px solid var(--h-ink); border-radius: 22px; background: var(--h-paper) radial-gradient(rgba(16,30,54,.08) 1.4px, transparent 1.9px) 0 0 / 10px 10px; box-shadow: 8px 9px 0 var(--h-ink); min-height: 0; overflow: hidden; }
+  .pal h3 { font: 900 clamp(14px, 1.6vw, 18px)/1 var(--h-font); text-align: center; padding: 7px; border: 3px solid var(--h-ink); border-radius: 999px; color: #fff; -webkit-text-stroke: 3px var(--h-ink); paint-order: stroke fill; }
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .col { aspect-ratio: 1; border: 3px solid var(--h-ink); border-radius: 50%; cursor: pointer; box-shadow: 0 3px 0 var(--h-ink); }
+  .col.on { transform: scale(1.18); box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--h-ink); }
+  .sizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+  .sz { height: 40px; border: 3px solid var(--h-ink); border-radius: 12px; background: #fff; display: grid; place-items: center; cursor: pointer; font-size: 20px; }
+  .sz i { display: block; border-radius: 50%; background: var(--h-ink); } .sz.on { background: linear-gradient(180deg, #fff3b0, #ffc93c); }
+  .stamps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; align-content: start; overflow-y: auto; }
+  .stp { aspect-ratio: 1; border: 3px solid var(--h-ink); border-radius: 12px; background: #fff; font-size: clamp(20px, 2.4vw, 30px); cursor: pointer; }
+  .stp.on { background: linear-gradient(180deg, #c9f3ff, #29e0ff); transform: scale(1.1); }
+  /* --- פרק ד --- */
+  .rotate { display: none; }
+  @media (orientation: portrait) { .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 12px; text-align: center; background: var(--h-night); color: #fff; font-size: 26px; font-weight: 900; } }
+</style>
+</head>
+<body data-tapfx="light">
+  <div class="wrap">
+    <div class="top"><h1>🎨 ציור לשניים</h1><span id="theme"></span><button class="tb" id="themeBtn" type="button">🎲 נושא אחר</button><span class="sp"></span><div class="bgs" id="bgs"></div><button class="tb clear" id="clearBtn" type="button">🗑️ דף חדש</button><button class="tb share" id="shareBtn" type="button">📤 לשלוח לסבתא</button><a class="tb" href="coloring.html" style="text-decoration:none">👤 שחקנית יחידה: הסטודיו</a></div>
+    <div class="pal" id="pal0"></div>
+    <div class="cvwrap"><canvas id="d2cv"></canvas></div>
+    <div class="pal" id="pal1"></div>
+  </div>
+  <div class="rotate"><div style="font-size:70px">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
+
+  <script src="shared/profile.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="shared/kids-ui.js"></script>
+  <script src="shared/tap-fx.js"></script><script src="shared/perf-guard.js"></script>
+  <script src="shared/wallet.js"></script>
+  <script src="shared/hero-avatar.js"></script>
+  <script src="shared/hero-rewards.js"></script>
+  <script src="shared/progress.js"></script><script src="shared/achievements.js"></script>
+  <script src="shared/share.js"></script>
+  <script src="js/draw2.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () { KidsUI.HomeButton.attach(); });
+    if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+  </script>
+</body>
+</html>
