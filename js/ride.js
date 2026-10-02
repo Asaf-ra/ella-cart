@@ -39,7 +39,9 @@
   var SEG = 200, RUMBLE = 3, ROAD_W = 2000, CAM_H = 1000, FOV = 100, DEPTH = 1 / Math.tan(FOV / 2 * Math.PI / 180), DRAW = 150;
   var PZ = CAM_H * DEPTH;                                  // המרחק של "הרוכבת" מהמצלמה
   var LANES = [-0.62, 0, 0.62];
-  function resize() { DPR = Math.min(window.devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+  var DPR_CAP = 1.5;                                       // שומר הביצועים (shared/perf-guard.js) מוריד ל-1 באייפד ישן
+  window.addEventListener('perf:low', function () { DPR_CAP = 1; resize(); });
+  function resize() { DPR = Math.min(window.devicePixelRatio || 1, DPR_CAP); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
   window.addEventListener('resize', resize);
   var segs = [], LEN = 0;
   function project(p, cx, cy, cz) {
@@ -441,6 +443,7 @@
     try { TapFX.set('full'); } catch (e) {}                                   // במסך הסיום חוזרים לתגובות המלאות
     var st = G.stars, m = medalOf(st), S = HS.state, ti = G.ti, unlocked = false;
     S.best[T.id] = Math.max(S.best[T.id] || 0, st);
+    try { if (st >= MEDAL.gold) Achievements.hit('ride:gold'); } catch (e) {}   /* 🏅 הישגים */
     if (st >= MEDAL.bronze && S.tracks === ti + 1 && S.tracks < D.TRACKS.length) { S.tracks++; unlocked = true; }
     HS.afterRide(Math.min(3, Math.floor(st / 40)));
     HS.bump('food', 0);

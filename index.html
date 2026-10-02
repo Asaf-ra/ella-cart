@@ -157,7 +157,7 @@
   .missions .mission.main.narrow h2 { font-size: clamp(20px, 2.3vw, 30px); } .missions .mission.main.narrow .m-ico { font-size: clamp(42px, 4.8vw, 66px); } .missions .mission.main.narrow p { font-size: clamp(12px, 1.2vw, 15px); }
   .mission.kitchen { --c1: #ffd95a; --c2: #ff7a1c; color: var(--h-ink); } .mission.kitchen h2 { color: #fff; }
   .mission.clinic { --c1: #8fe9ff; --c2: #2a8fd8; }
-  .mission.me { --c1: #ff5fb0; --c2: #8b1a8f; } .mission.me2 { --c1: #ffc93c; --c2: #ff7a1c; } .mission.me3 { --c1: #3ff2b0; --c2: #0f7a8c; }
+  .mission.me { --c1: #ff5fb0; --c2: #8b1a8f; } .mission.me2 { --c1: #ffc93c; --c2: #ff7a1c; } .mission.me3 { --c1: #3ff2b0; --c2: #0f7a8c; } .mission.me4 { --c1: #ffd95a; --c2: #b3122e; }
   .mission.boss { --c1: #8b5cff; --c2: #2a0b5e; }
   .mission.boss.won { --c1: #ffd95a; --c2: #3ff2b0; }
   .mission .m-tag.hot { background: var(--h-gold); }
@@ -316,6 +316,8 @@
           <button type="button" class="mission me" data-group="me" data-act="wardrobeBtn"><span class="m-text"><h2>תחפושות</h2><p>מלבישים את הגיבורה</p></span><span class="m-ico">🦸‍♀️</span></button>
           <button type="button" class="mission me2" data-group="me" data-act="shopBtn"><span class="m-text"><h2>שדרוגים</h2><p>קונים במטבעות</p></span><span class="m-ico">🛒</span></button>
           <button type="button" class="mission me3" data-group="me" data-act="albumBtn"><span class="m-text"><h2>אלבום מדבקות</h2><p id="albumCard">אוספים מדבקות</p></span><span class="m-ico">📒</span></button>
+          <!-- 🏅 הישגים (shared/achievements.js): תגים מכל המשחקים -->
+          <button type="button" class="mission me4" id="achCard" data-group="me"><span class="m-text"><span class="m-tag hot">חדש! 🏅</span><h2>הישגים</h2><p id="achCount">תגים מכל המשחקים</p></span><span class="m-ico">🏅</span></button>
         </nav>
       </div>
       <!-- הגיבורה (בצד שמאל ב-RTL) -->
@@ -347,11 +349,11 @@
   <script src="js/voice-en.js"></script>
   <script src="js/voice-en-slow.js"></script>
   <script src="shared/kids-ui.js"></script>
-  <script src="shared/tap-fx.js"></script>
+  <script src="shared/tap-fx.js"></script><script src="shared/perf-guard.js"></script>
   <script src="shared/wallet.js"></script>
   <script src="shared/hero-avatar.js"></script>
   <script src="shared/hero-rewards.js"></script>
-  <script src="shared/progress.js"></script>
+  <script src="shared/progress.js"></script><script src="shared/achievements.js"></script>
   <script src="shared/stickers.js"></script>
   <script src="shared/pet.js"></script>
   <script src="shared/voice-settings.js"></script>

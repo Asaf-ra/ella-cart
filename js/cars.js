@@ -24,11 +24,16 @@
   var PFX = BOY ? 'eitan' : 'ella', KEY = PFX + '-cars-v1';
 
   /* ================= פרק 1 — הגדרות ושמירה ================= */
-  function blank() { return { car: 'sport', own: ['sport', 'police', 'taxi'], tracks: 1, best: {}, ctl: 'wheel', rounds: 0, words: {}, week: {} }; }
+  function blank() { return { car: 'sport', own: ['sport', 'police', 'taxi'], tracks: 1, best: {}, ctl: 'wheel', rounds: 0, words: {}, week: {}, design: { paint: '', sticker: '', plate: '', own: [] } }; }
   function load() { try { var b = blank(), s = JSON.parse(localStorage.getItem(KEY)); if (!s) return b; Object.keys(b).forEach(function (k) { if (s[k] == null) s[k] = b[k]; }); return s; } catch (e) { return blank(); } }
   var S = load();
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function carOf(id) { return D.CARS.filter(function (c) { return c.id === id; })[0] || D.CARS[0]; }
+  /* styled(car) — המכונית עם העיצוב מהמוסך (פרק 1ב ב-cars-data): צבע, מדבקה על הגג ושם על הלוחית */
+  function styled(car) {
+    var d = S.design || {}, p = D.PAINTS.filter(function (x) { return x[0] === d.paint; })[0], st = D.STICKERS.filter(function (x) { return x[0] === d.sticker; })[0];
+    return Object.assign({}, car, { body: p ? p[1] : car.body, sticker: st ? st[1] : '', plate: d.plate || '' });
+  }
 
   /* ---------- עזרים ---------- */
   function $(id) { return document.getElementById(id); }
@@ -51,7 +56,9 @@
   var SEG = 200, RUMBLE = 3, ROAD_W = 2200, CAM_H = 1100, FOV = 100, DEPTH = 1 / Math.tan(FOV / 2 * Math.PI / 180), DRAW = 160;
   var PZ = CAM_H * DEPTH;                                  // המרחק של המכונית מהמצלמה
   var LANES = [-0.62, 0, 0.62];
-  function resize() { DPR = Math.min(window.devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+  var DPR_CAP = 1.5;                                       // שומר הביצועים (shared/perf-guard.js) מוריד ל-1 באייפד ישן
+  window.addEventListener('perf:low', function () { DPR_CAP = 1; resize(); });
+  function resize() { DPR = Math.min(window.devicePixelRatio || 1, DPR_CAP); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
   window.addEventListener('resize', resize);
   var segs = [], LEN = 0;
   function project(p, cx, cy, cz) { var x = -cx, y = p.y - cy, z = p.z - cz; if (z < 1) z = 1; p.s = DEPTH / z; p.X = W / 2 + p.s * x * W / 2; p.Y = H / 2 - p.s * y * H / 2; p.Wd = p.s * ROAD_W * W / 2; }
@@ -118,11 +125,32 @@
   /* ================= פרק 5 — שליטה ================= */
   var input = { dragX: null, startX: 0, startY: 0, t0: 0, baseX: 0, tilt: null, held: {}, brake: false, wheel: null };
   function ctl() { return S.ctl; }
-  /* 5.1 גרירה על הקנבס (מצב drag) — וגם במצב הגה/חיצים: הקשה מהירה בצד = מעבר נתיב */
-  cv.addEventListener('pointerdown', function (e) { if (!G || !G.run) return; input.dragX = e.clientX; input.startX = e.clientX; input.startY = e.clientY; input.t0 = performance.now(); input.baseX = G.tx; });
-  window.addEventListener('pointermove', function (e) { if (input.dragX == null || !G || ctl() !== 'drag') return; G.tx = Math.max(-1, Math.min(1, input.baseX + (e.clientX - input.startX) / (W * .32))); });
+  /* ---------- 5.0 שני שחקנים (שלב 17) ----------
+     twoP = מסך מפוצל: שחקן 1 בחצי השמאלי, שחקן 2 בחצי הימני. לכל שחקן G משלו (מצב), inp משלו (מגע) ו-segs משלו
+     (אותו מסלול, אותו זרע — אבל דגלי e.done נפרדים). swapTo(g) מחליף את המשתנים הגלובליים G/input/segs לפני
+     update/render של כל שחקן, ו-W מוקטן לחצי בזמן הציור. שליטה בשני שחקנים: גרירה = פנייה, החלקה למעלה = טורבו,
+     החלקה למטה = ברקס (לשנייה). */
+  var twoP = false, G1 = null, G2 = null, PT = {};
+  function swapTo(g) { G = g; input = g.inp; segs = g.segs; }
+  function playerAt(x) { return !twoP ? G1 : (x < W / 2 ? G1 : G2); }
+  cv.addEventListener('pointerdown', function (e) {
+    if (!twoP) return; var g = playerAt(e.clientX); if (!g || !g.run) return;
+    PT[e.pointerId] = { g: g, x0: e.clientX, y0: e.clientY, t0: performance.now(), base: g.tx, half: W / 2 };
+  });
+  window.addEventListener('pointermove', function (e) { var p = PT[e.pointerId]; if (!twoP || !p) return; p.g.tx = Math.max(-1, Math.min(1, p.base + (e.clientX - p.x0) / (p.half * .32))); });
   window.addEventListener('pointerup', function (e) {
-    if (input.dragX == null || !G) return;
+    var p = PT[e.pointerId]; if (!twoP || !p) return; delete PT[e.pointerId];
+    var dy = e.clientY - p.y0, dx = e.clientX - p.x0, dt = performance.now() - p.t0, keep = G, keepI = input, keepS = segs;
+    swapTo(p.g);
+    if (dt < 450 && dy < -60 && Math.abs(dy) > Math.abs(dx)) useBoost();
+    else if (dt < 450 && dy > 60 && Math.abs(dy) > Math.abs(dx)) { input.brake = true; var inp = input; setTimeout(function () { inp.brake = false; }, 1000); sayEn('Brake!'); }
+    G = keep; input = keepI; segs = keepS;
+  });
+  /* 5.1 גרירה על הקנבס (מצב drag) — וגם במצב הגה/חיצים: הקשה מהירה בצד = מעבר נתיב */
+  cv.addEventListener('pointerdown', function (e) { if (twoP || !G || !G.run) return; input.dragX = e.clientX; input.startX = e.clientX; input.startY = e.clientY; input.t0 = performance.now(); input.baseX = G.tx; });
+  window.addEventListener('pointermove', function (e) { if (twoP || input.dragX == null || !G || ctl() !== 'drag') return; G.tx = Math.max(-1, Math.min(1, input.baseX + (e.clientX - input.startX) / (W * .32))); });
+  window.addEventListener('pointerup', function (e) {
+    if (twoP || input.dragX == null || !G) return;
     var dy = e.clientY - input.startY, dx = e.clientX - input.startX, dt = performance.now() - input.t0; input.dragX = null;
     if (dt < 450 && dy < -60 && Math.abs(dy) > Math.abs(dx)) useBoost();
     else if (dt < 450 && dy > 60 && Math.abs(dy) > Math.abs(dx)) { G.slow = 1; sayEn('Brake!'); }
@@ -160,7 +188,7 @@
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) { w.addEventListener(ev, function () { wheelDown = null; }); });
   }
   function wheelStep(dt) {
-    if (ctl() !== 'wheel') return;
+    if (twoP || ctl() !== 'wheel') return;
     if (!wheelDown) wheelAng += (0 - wheelAng) * Math.min(1, dt * 6);                     // חזרה למרכז
     if (G && G.run) G.tx = Math.max(-1, Math.min(1, wheelAng / 2.1));
     $('wheelSvg').style.transform = 'rotate(' + (wheelAng * 180 / Math.PI) + 'deg)';
@@ -181,6 +209,8 @@
   var CTLS = [['wheel', '🎡', 'הגה', 'מסובבים את ההגה'], ['pad', '🎮', 'חיצים', 'שמאלה / ימינה / טורבו / ברקס'], ['drag', '👆', 'גרירה', 'גוררים על הכביש'], ['tilt', '📱', 'הטיה', 'מטים את האייפד']];
   function applyCtl() {
     var run = !!(G && G.run), c = ctl();
+    document.body.classList.toggle('twop', twoP && run);
+    if (twoP) { ['wheel', 'pad', 'pedals'].forEach(function (id) { $(id).classList.remove('show'); }); return; }
     $('wheel').classList.toggle('show', run && c === 'wheel'); $('pad').classList.toggle('show', run && c === 'pad'); $('pedals').classList.toggle('show', run && c !== 'pad');
     if (c === 'tilt' && run && input.tilt == null) enableTilt();
   }
@@ -217,7 +247,7 @@
     var L = G.light; if (!L) return; L.t += dt;
     if (L.phase === 'red') { if (input.brake || G.slow > 0) L.braked += dt; if (L.t > 2.2) { L.phase = 'yellow'; L.t = 0; $('cQ').className = 'show'; $('cQ').innerHTML = '🟡 מתכוננים…'; sayEn(D.LIGHT.yellow); } }
     else if (L.phase === 'yellow') { if (L.t > .8) { L.phase = 'green'; L.t = 0; $('cQ').className = 'show green'; $('cQ').innerHTML = '🟢 ירוק! GO!'; sayEn(D.LIGHT.green); try { LF().sign('green', { quiet: true, life: 1.6 }); } catch (e) {}
-        if (L.braked >= 1.1) { G.stars += 3; G.stops++; pop('🚦 עצרנו באדום! +3⭐', '#3ff2b0'); snd('happy'); say('כל הכבוד! אדום עוצרים, ירוק נוסעים!'); } else { pop('אדום = עוצרים! בפעם הבאה 🛑', '#ffc27a'); say('ברמזור אדום עוצרים ומחכים לירוק. בפעם הבאה לוחצים על הברקס!'); } } }
+        if (L.braked >= 1.1) { G.stars += 3; G.stops++; pop('🚦 עצרנו באדום! +3⭐', '#3ff2b0'); try { Achievements.hit('cars:redlight'); } catch (e) {} snd('happy'); say('כל הכבוד! אדום עוצרים, ירוק נוסעים!'); } else { pop('אדום = עוצרים! בפעם הבאה 🛑', '#ffc27a'); say('ברמזור אדום עוצרים ומחכים לירוק. בפעם הבאה לוחצים על הברקס!'); } } }
     else if (L.t > 1.4) { G.light = null; $('cQ').className = ''; }
   }
   /* תמרור בצד הדרך: כרטיס קטן + קול (כל סוג פעם אחת בסבב) */
@@ -238,20 +268,45 @@
   function whoosh() { var a = ac(); if (!a || muted()) return; var o = a.createOscillator(), g = a.createGain(), t = a.currentTime; o.type = 'sine'; o.frequency.setValueAtTime(200, t); o.frequency.exponentialRampToValueAtTime(1600, t + .5); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.12, t + .1); g.gain.exponentialRampToValueAtTime(.0001, t + .6); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + .65); }
 
   /* ================= פרק 8 — לולאת משחק ================= */
-  function newRound(ti) {
-    T = D.TRACKS[ti]; CAR = carOf(S.car);
+  /* mkG(ti, pid) — מצב סבב חדש לשחקן pid (1 או 2) */
+  function mkG(ti, pid) {
+    return { pid: pid, ti: ti, run: true, pos: 0, speed: 0, x: 0, tx: 0, time: 0, stars: 0, coins: 0, gates: 0, good: 0, stops: 0, clean: 0, hits: 0, boosts: 0, fuels: 0, q: null, slow: 0, slowFor: 0, spin: 0, shake: 0, flash: 0,
+      boost: 0, boostE: 40, fuel: 100, light: null, signs: {}, learned: {}, lastWord: -99, lastFact: -99, factI: (Math.random() * 9) | 0, fx: [], pops: [], sky: 0, wheelRot: 0, lastSeg: -1, counting: 0, combo: 0, lastClean: -9, puff: 0,
+      inp: pid === 1 ? input : { dragX: null, startX: 0, startY: 0, t0: 0, baseX: 0, tilt: null, held: {}, brake: false, wheel: null }, segs: null };
+  }
+  function newRound(ti, two) {
+    T = D.TRACKS[ti]; CAR = carOf(S.car); twoP = !!two; PT = {};
     var wk = weekId(), seed = T.contest ? wk.split('-').reduce(function (a, b) { return a * 131 + +b; }, 7) : (Math.random() * 1e9) | 0;
-    build(T, seed);
-    G = { ti: ti, run: true, pos: 0, speed: 0, x: 0, tx: 0, time: 0, stars: 0, coins: 0, gates: 0, good: 0, stops: 0, clean: 0, hits: 0, boosts: 0, fuels: 0, q: null, slow: 0, slowFor: 0, spin: 0, shake: 0, flash: 0,
-      boost: 0, boostE: 40, fuel: 100, light: null, signs: {}, learned: {}, lastWord: -99, lastFact: -99, factI: (Math.random() * 9) | 0, fx: [], pops: [], sky: 0, wheelRot: 0, lastSeg: -1, counting: 0, combo: 0, lastClean: -9, puff: 0 };
+    build(T, seed); G1 = mkG(ti, 1); G1.segs = segs;
+    if (twoP) { build(T, seed); G2 = mkG(ti, 2); G2.segs = segs; } else G2 = null;   /* אותו מסלול פעמיים — דגלי done נפרדים */
+    swapTo(G1);
     ['startScreen', 'endScreen', 'pauseScreen'].forEach(function (id) { $(id).classList.remove('show'); });
     $('cQ').className = ''; wheelAng = 0; input.held = {}; input.brake = false; applyCtl(); hud();
     try { TapFX.set('light'); } catch (e) {}
-    say(T.name + '! ' + CTLS.filter(function (c) { return c[0] === S.ctl; })[0][3] + '. יאללה, ' + kidName() + '!');
+    say(twoP ? T.name + '! שני שחקנים: כל אחד בצד שלו. גוררים כדי לפנות, מחליקים למעלה לטורבו ולמטה לברקס. למקומות, היכון… סע!' : T.name + '! ' + CTLS.filter(function (c) { return c[0] === S.ctl; })[0][3] + '. יאללה, ' + kidName() + '!');
     engineStart(); sayEn('Vroom!'); last = performance.now();
+    try { if (twoP) Achievements.hit('cars:2p'); } catch (e) {}
   }
   var last = 0;
-  function loop(now) { requestAnimationFrame(loop); var dt = Math.min(.05, (now - last) / 1000); last = now; wheelStep(dt); if (G && G.run) update(dt); if (G) render(dt); engineStep(); }
+  function loop(now) {
+    requestAnimationFrame(loop); var dt = Math.min(.05, (now - last) / 1000); last = now; wheelStep(dt);
+    if (!twoP) { if (G && G.run) update(dt); if (G) render(dt); engineStep(); return; }
+    /* שני שחקנים: מעדכנים ומציירים כל שחקן בחצי שלו; W מוקטן לחצי בזמן הציור כדי שכל ההטלות והמיקומים יתאימו */
+    var full = W;
+    [G1, G2].forEach(function (g, i) {
+      swapTo(g); if (g.run) update(dt);
+      W = full / 2; ctx.save(); ctx.beginPath(); ctx.rect(i * W, 0, W, H); ctx.clip(); ctx.translate(i * W, 0); render(dt); hud2p(i); ctx.restore(); W = full;
+    });
+    ctx.fillStyle = INK; ctx.fillRect(W / 2 - 4, 0, 8, H);                          /* קו הפרדה */
+    swapTo(G1); engineStep();
+  }
+  /* hud2p(i) — לוח ניקוד על הקנבס לכל חצי: שם השחקן, כוכבים, מטבעות, זמן */
+  function hud2p(i) {
+    var c = ctx, col = i ? '#ff5ca8' : '#29e0ff', txt = (i ? '👥 שחקן 2' : '🧒 שחקן 1') + '   ⭐ ' + G.stars + '   🪙 ' + G.coins + (G.boost > 0 ? '   ⚡' : '');
+    c.save(); c.font = '900 ' + Math.round(Math.min(W, H) * .045) + 'px ' + FONT; c.textAlign = 'center'; c.direction = 'rtl'; var y = Math.max(60, H * .09) + 50, w = c.measureText(txt).width + 36;
+    c.fillStyle = INK; rr(c, W / 2 - w / 2 + 5, y - 30 + 6, w, 44, 12); c.fill(); c.fillStyle = col; rr(c, W / 2 - w / 2, y - 30, w, 44, 12); c.fill(); c.lineWidth = 4; c.strokeStyle = INK; c.stroke();
+    c.fillStyle = INK; c.fillText(txt, W / 2, y + 2); c.restore();
+  }
   function update(dt) {
     G.time += dt;
     /* מהירות: עולה לאורך הסבב; האטה ליד שערים, בברקס, בהחלקה; טורבו מכפיל; בלי דלק — זוחלים */
@@ -267,7 +322,7 @@
     G.fuel = Math.max(0, G.fuel - dt * 1.1);
     G.boostE = Math.min(100, G.boostE + dt * 4);
     /* פנייה לפי אמצעי השליטה; העיקול דוחף מעט החוצה; שלג מחליק יותר */
-    if (ctl() === 'tilt' && input.tilt != null && input.dragX == null) G.tx = input.tilt;
+    if (!twoP && ctl() === 'tilt' && input.tilt != null && input.dragX == null) G.tx = input.tilt;
     padStep(dt);
     var ease = T.slippery ? 4 : 7; G.x += (G.tx - G.x) * Math.min(1, dt * ease);
     var seg = segs[Math.floor((G.pos + PZ) / SEG) % segs.length];
@@ -283,8 +338,8 @@
     G.fx.forEach(function (f) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 900 * dt; f.life -= dt; }); G.fx = G.fx.filter(function (f) { return f.life > 0; });
     G.pops.forEach(function (p) { p.t += dt; }); G.pops = G.pops.filter(function (p) { return p.t < 1.4; });
     bursts.forEach(function (b) { b.t += dt; }); bursts = bursts.filter(function (b) { return b.t < b.life; });
-    if (G.time >= ROUND) finish();
-    hud();
+    if (G.time >= ROUND) { if (twoP) finish2P(); else finish(); }
+    if (!twoP) hud();
   }
   function hitSeg(s) {
     s.ents.forEach(function (e) {
@@ -366,7 +421,7 @@
     /* המכונית שלנו — מאחור, במרכז-למטה, נוטה בפנייה; מסתובבת על שמן */
     var lean = (G.tx - G.x) * .9 + G.x * .12, cx = W / 2, cy = H * .9, sc = Math.min(W, H) / 560;
     c.save(); c.translate(cx, cy); if (G.spin > 0) c.rotate((1 - G.spin) * Math.PI * 2); c.rotate(lean * .15); c.translate(G.x * W * .02, 0);
-    drawCar(c, 0, 0, sc, CAR, lean, G.wheelRot, input.brake, G.boost > 0, tr.night, G.time); c.restore();
+    drawCar(c, 0, 0, sc, styled(CAR), lean, G.wheelRot, input.brake, G.boost > 0, tr.night, G.time); c.restore();
     c.restore();
     if (G.flash > 0) { c.fillStyle = 'rgba(200,240,255,' + G.flash + ')'; c.fillRect(0, 0, W, H); }
     if (tr.night) { c.fillStyle = 'rgba(10,8,40,.22)'; c.fillRect(0, 0, W, H); var hl = c.createRadialGradient(W / 2, H * .62, 20, W / 2, H * .62, W * .45); hl.addColorStop(0, 'rgba(255,250,200,.28)'); hl.addColorStop(1, 'rgba(255,250,200,0)'); c.fillStyle = hl; c.fillRect(0, 0, W, H); }   /* פנסים */
@@ -422,7 +477,7 @@
     c.fillStyle = car.acc; c.fillRect(-bw / 2 + 6, -bh * .42, bw - 12, 14); c.strokeRect(-bw / 2 + 6, -bh * .42, bw - 12, 14);
     c.fillStyle = '#2a2a3a'; rr(c, -bw / 2 + 4, -22, bw - 8, 22, 8); c.fill(); c.stroke();
     /* לוחית רישוי */
-    c.fillStyle = '#ffd93c'; rr(c, -34, -20, 68, 18, 4); c.fill(); c.stroke(); c.fillStyle = INK; c.font = '900 12px ' + FONT; c.textAlign = 'center'; c.direction = 'ltr'; c.fillText(kidName().slice(0, 6).toUpperCase(), 0, -6);
+    c.fillStyle = '#ffd93c'; rr(c, -34, -20, 68, 18, 4); c.fill(); c.stroke(); c.fillStyle = INK; c.font = '900 12px ' + FONT; c.textAlign = 'center'; c.direction = 'ltr'; c.fillText((car.plate || kidName()).slice(0, 7).toUpperCase(), 0, -6);
     /* פנסים אחוריים — זוהרים בברקס */
     [-1, 1].forEach(function (sd) { var lx = sd * (bw / 2 - 30); if (brake) { c.save(); c.globalAlpha = .45; c.fillStyle = '#ff2e3b'; c.beginPath(); c.arc(lx, -bh * .22, 34, 0, 7); c.fill(); c.restore(); } c.fillStyle = brake ? '#ff5c5c' : '#c40f26'; rr(c, lx - 20, -bh * .3, 40, 18, 6); c.fill(); c.stroke(); });
     /* גג וחלון אחורי */
@@ -431,6 +486,8 @@
     c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.moveTo(-rw / 2 + 20, -bh - 10); c.lineTo(-rw / 2 + 30, -bh - rh + 16); c.lineTo(-rw / 2 + 50, -bh - rh + 16); c.lineTo(-rw / 2 + 36, -bh - 10); c.closePath(); c.fill();
     /* ראש של הנהג/ת בחלון */
     c.fillStyle = '#f2c9a0'; c.beginPath(); c.arc(0, -bh - rh * .45, rh * .22, 0, 7); c.fill(); c.stroke(); c.fillStyle = BOY ? '#3d7bff' : '#ff5ca8'; c.beginPath(); c.arc(0, -bh - rh * .5, rh * .24, Math.PI, 0); c.fill(); c.stroke();
+    /* מדבקה מהמוסך על הגג */
+    if (car.sticker) c.drawImage(spr(car.sticker), -rw * .2, -bh - rh * .95, rw * .4, rw * .4);
     /* תוספות לפי דגם */
     var top = -bh - rh;
     if (car.kind === 'police') { var on = Math.floor(t * 6) % 2; c.fillStyle = '#2a2a3a'; rr(c, -60, top - 18, 120, 18, 6); c.fill(); c.stroke(); c.fillStyle = on ? '#ff2e3b' : '#7a1a1a'; rr(c, -56, top - 16, 52, 14, 4); c.fill(); c.fillStyle = on ? '#1a3aff' : '#1a1a7a'; rr(c, 4, top - 16, 52, 14, 4); c.fill(); c.save(); c.globalAlpha = .35; c.fillStyle = on ? '#ff2e3b' : '#1a3aff'; c.beginPath(); c.arc(on ? -30 : 30, top - 10, 50, 0, 7); c.fill(); c.restore(); }
@@ -453,11 +510,25 @@
     $('boost').classList.toggle('dim', G.boostE < 50); $('boost').classList.toggle('ready', G.boostE >= 50 && G.boost <= 0);
   }
   var MEDAL = { gold: 30, silver: 17, bronze: 7 };
+  /* finish2P — סיום בשני שחקנים: מי שצבר יותר כוכבים מנצח (תיקו = שניהם). המטבעות של שניהם לארנק; לא נשמר שיא */
+  function finish2P() {
+    if (!G1.run && !G2.run) return; G1.run = G2.run = false; $('cQ').className = ''; applyCtl(); try { TapFX.set('full'); } catch (e) {}
+    var a = G1.stars, b = G2.stars, win = a === b ? 0 : a > b ? 1 : 2;
+    $('cMedal').textContent = win ? '🏆' : '🤝'; $('cMedalT').textContent = win ? 'המנצח: שחקן ' + win + '!' : 'תיקו! שניכם אלופים';
+    $('eS').textContent = a + ' : ' + b; $('eG').textContent = G1.good + ' : ' + G2.good; $('eL').textContent = G1.stops + ' : ' + G2.stops; $('eO').textContent = G1.clean + ' : ' + G2.clean; $('eB').textContent = G1.boosts + ' : ' + G2.boosts; $('eC').textContent = G1.coins + ' : ' + G2.coins;
+    var L = Object.assign({}, G1.learned, G2.learned), ws = Object.keys(L); $('learned').innerHTML = ws.length ? ws.map(function (w) { return '<span>' + w + ' · ' + L[w] + '</span>'; }).join('') : '<span style="direction:rtl">בפעם הבאה עוברים ליד תמרורים ועוקפים מכוניות 🚗</span>';
+    $('endText').textContent = 'שחקן 1 (שמאל) : שחקן 2 (ימין) · ' + (win ? 'כל הכבוד לשניכם!' : 'תיקו מושלם!');
+    try { if (window.Wallet) Wallet.add(G1.coins + G2.coins + 2); } catch (e) {}
+    try { HeroRewards.confetti(); } catch (e) {}
+    track('cars:done'); say(win ? 'הגענו לקו הסיום! המנצח: שחקן ' + win + '! ' + a + ' נגד ' + b : 'תיקו! ' + a + ' נגד ' + b + '. שניכם אלופים!');
+    $('endScreen').classList.add('show');
+  }
   function medalOf(st) { return st >= MEDAL.gold ? ['🥇', 'זהב'] : st >= MEDAL.silver ? ['🥈', 'כסף'] : st >= MEDAL.bronze ? ['🥉', 'ארד'] : ['🎗️', 'השתתפות']; }
   function finish() {
     G.run = false; $('cQ').className = ''; applyCtl(); try { TapFX.set('full'); } catch (e) {}
     var st = G.stars, m = medalOf(st), ti = G.ti, unlocked = false;
     S.best[T.id] = Math.max(S.best[T.id] || 0, st); S.rounds++;
+    try { if (st >= MEDAL.gold) Achievements.hit('cars:gold'); if (!G.hits) Achievements.hit('cars:clean'); } catch (e) {}   /* 🏅 הישגים */
     if (st >= MEDAL.bronze && S.tracks === ti + 1 && S.tracks < D.TRACKS.length) { S.tracks++; unlocked = true; }
     save();
     $('cMedal').textContent = m[0]; $('cMedalT').textContent = 'מדליית ' + m[1] + ' · ' + T.name;
@@ -474,7 +545,7 @@
   /* --- מסך הפתיחה: מכונית, מסלול, שליטה --- */
   var selTrack = 0, prevT = 0;
   function startScreen() {
-    G = null; ['endScreen', 'pauseScreen'].forEach(function (id) { $(id).classList.remove('show'); }); applyCtl(); $('cQ').className = ''; try { TapFX.set('full'); } catch (e) {}
+    G = null; twoP = false; G2 = null; ['endScreen', 'pauseScreen'].forEach(function (id) { $(id).classList.remove('show'); }); applyCtl(); $('cQ').className = ''; try { TapFX.set('full'); } catch (e) {}
     var cars = $('cars'); cars.innerHTML = '';
     D.CARS.forEach(function (car) {
       var own = S.own.indexOf(car.id) >= 0, b = el('button', 'cc' + (car.id === S.car ? ' sel' : '') + (own ? '' : ' locked'), '<span class="ci">' + car.ico + '</span>' + car.name + (own ? '' : '<small>🔒 ' + car.cost + ' 🪙</small>')); b.type = 'button';
@@ -494,21 +565,47 @@
     });
     var cs = $('ctrls'); cs.innerHTML = '';
     CTLS.forEach(function (c) { var b = el('button', 'ct' + (c[0] === S.ctl ? ' sel' : ''), '<b>' + c[1] + '</b>' + c[2] + '<small>' + c[3] + '</small>'); b.type = 'button'; b.addEventListener('click', function () { tap(); setCtl(c[0]); startScreen(); say(c[2] + ': ' + c[3]); }); cs.appendChild(b); });
-    var car = carOf(S.car); $('carName').textContent = car.name; $('carEn').textContent = car.en;
+    var car = carOf(S.car); $('carName').textContent = (S.design.plate ? S.design.plate + ' · ' : '') + car.name; $('carEn').textContent = car.en;
     $('startScreen').classList.add('show');
   }
   /* תצוגה מקדימה של המכונית הנבחרת — מונפשת (גלגלים מסתובבים, פנסי משטרה) */
   function drawPreview(t) {
     var pc = $('carPrev'); if (!pc || !$('startScreen').classList.contains('show')) return;
-    var x = pc.getContext('2d'); x.clearRect(0, 0, pc.width, pc.height); drawCar(x, 200, 330, .95, carOf(S.car), Math.sin(t / 900) * .4, t / 200, Math.floor(t / 1200) % 3 === 0, false, false, t / 1000);
+    var x = pc.getContext('2d'); x.clearRect(0, 0, pc.width, pc.height); drawCar(x, 200, 330, .95, styled(carOf(S.car)), Math.sin(t / 900) * .4, t / 200, Math.floor(t / 1200) % 3 === 0, false, false, t / 1000);
+  }
+  /* --- עיצוב המכונית (שלב 17): צבע, מדבקה ושם — כמו ארון הסוס ברכיבה. פריט בתשלום נקנה פעם אחת (S.design.own) --- */
+  function openDesign() {
+    var box = $('design'); box.innerHTML = '';
+    function row(title, list, key) {
+      box.appendChild(el('h4', '', title)); var r = el('div', 'crow');
+      list.forEach(function (it) {
+        var owned = !it[3] || S.design.own.indexOf(key + ':' + it[0]) >= 0, on = (S.design[key] || (key === 'paint' ? '' : 'none')) === it[0];
+        var sw = key === 'paint' ? '<i style="background:' + it[1] + '"></i>' : '<i class="em">' + (it[1] || '🚫') + '</i>';
+        var b = el('button', 'cb' + (on ? ' on' : '') + (owned ? '' : ' buy'), sw + '<span>' + it[2] + '</span>' + (owned ? '' : '<small>🪙 ' + it[3] + '</small>')); b.type = 'button';
+        b.addEventListener('click', function () {
+          if (!owned) { var have = 0; try { have = Wallet.coins; } catch (e) {} if (have < it[3] || !Wallet.spend(it[3])) { say('צריך עוד ' + (it[3] - have) + ' מטבעות. נוסעים ואוספים 🪙!'); tap(250); return; } S.design.own.push(key + ':' + it[0]); snd('cha_ching'); }
+          S.design[key] = it[0] === 'none' ? '' : it[0]; save(); tap(700); say(it[2]); openDesign();
+        });
+        r.appendChild(b);
+      });
+      box.appendChild(r);
+    }
+    row('🎨 צבע', D.PAINTS, 'paint'); row('✨ מדבקה על הגג', D.STICKERS, 'sticker');
+    var nm = el('div', 'crow'), inp = el('input'); inp.value = S.design.plate || kidName(); inp.maxLength = 7; inp.className = 'cname'; inp.setAttribute('dir', 'auto');
+    inp.addEventListener('change', function () { var v = inp.value.replace(/[<>]/g, '').trim(); S.design.plate = v; save(); say(v ? 'הלוחית: ' + v : 'השם שלך על הלוחית'); $('carName').textContent = (v ? v + ' · ' : '') + carOf(S.car).name; });
+    box.appendChild(el('h4', '', '🔢 לוחית רישוי')); nm.appendChild(inp); box.appendChild(nm);
+    $('designOv').classList.add('show'); try { Achievements.hit('cars:design'); } catch (e) {}
   }
   function bind() {
     $('goBtn').addEventListener('click', function () { tap(); ac(); newRound(selTrack); });
+    $('designBtn').addEventListener('click', function () { tap(); openDesign(); say('מעצבים את המכונית: צבע, מדבקה ושם על הלוחית'); });
+    $('designX').addEventListener('click', function () { tap(); $('designOv').classList.remove('show'); startScreen(); });
     $('ctlBtn').addEventListener('click', function () { var i = CTLS.map(function (c) { return c[0]; }).indexOf(S.ctl); setCtl(CTLS[(i + 1) % CTLS.length][0]); var c = CTLS.filter(function (c) { return c[0] === S.ctl; })[0]; tap(); say(c[2] + ': ' + c[3]); $('ctlBtn').textContent = c[1]; });
-    $('pauseBtn').addEventListener('click', function () { if (!G || !G.run) return; G.run = false; applyCtl(); $('pauseScreen').classList.add('show'); });
-    $('resumeBtn').addEventListener('click', function () { $('pauseScreen').classList.remove('show'); G.run = true; applyCtl(); last = performance.now(); });
+    $('pauseBtn').addEventListener('click', function () { if (!G || !G.run) return; G.run = false; if (twoP) G2.run = false; applyCtl(); $('pauseScreen').classList.add('show'); });
+    $('resumeBtn').addEventListener('click', function () { $('pauseScreen').classList.remove('show'); G.run = true; if (twoP) G2.run = true; applyCtl(); last = performance.now(); });
     $('quitBtn').addEventListener('click', function () { startScreen(); });
-    $('againBtn').addEventListener('click', function () { tap(); newRound(G ? G.ti : selTrack); });
+    $('againBtn').addEventListener('click', function () { tap(); newRound(G ? G.ti : selTrack, twoP); });
+    $('twoBtn').addEventListener('click', function () { tap(); ac(); newRound(selTrack, true); });
     $('garageBtn').addEventListener('click', function () { tap(); startScreen(); });
     document.addEventListener('visibilitychange', function () { if (document.hidden && G && G.run) { G.run = false; applyCtl(); $('pauseScreen').classList.add('show'); } });
     bindPad(); bindWheel(); bindPedals();
@@ -517,5 +614,5 @@
   window.addEventListener('DOMContentLoaded', function () { startScreen(); requestAnimationFrame(function (t) { last = t; loop(t); }); (function pv(t) { drawPreview(t || 0); requestAnimationFrame(pv); })(0); });
 
   /* ================= פרק 11 — API לבדיקות ================= */
-  window.CarsGame = { state: function () { return G; }, save: function () { return S; }, start: newRound, boost: useBoost, brake: function (on) { input.brake = !!on; }, steer: function (x) { if (G) G.tx = x; }, ctl: setCtl, finish: function () { if (G) G.time = ROUND; }, segs: function () { return segs; }, drawCar: drawCar };
+  window.CarsGame = { state: function () { return G; }, p2: function () { return G2; }, twoP: function () { return twoP; }, save: function () { return S; }, start: newRound, boost: useBoost, brake: function (on) { input.brake = !!on; }, steer: function (x) { if (G) G.tx = x; }, ctl: setCtl, finish: function () { if (G) G.time = ROUND; }, segs: function () { return segs; }, drawCar: drawCar };
 })();

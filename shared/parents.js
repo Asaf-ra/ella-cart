@@ -154,6 +154,7 @@
         '<div class="pa-tile"><b>' + sumWeek('ride:done') + '</b><span>רכיבות על סוס השבוע</span></div>' +
         '<div class="pa-tile"><b>' + sumWeek('cars:done') + '</b><span>מרוצי מכוניות השבוע</span></div>' +
         '<div class="pa-tile"><b>' + sumWeek('farm:learn') + '</b><span>רגעי למידה בחווה (מדריך, הידעת?, חידון)</span></div>' +
+        (window.Achievements ? '<div class="pa-tile"><b>' + Achievements.count() + '/' + Achievements.total + '</b><span>הישגים שנפתחו 🏅</span></div>' : '') +
         '<div class="pa-tile"><b>' + sumWeek('farm:act') + '</b><span>טיפולים בחיות החווה השבוע</span></div>' +
         '<div class="pa-tile"><b>' + sumWeek('farm:chores') + '</b><span>ימי "משימות בוקר" מושלמים בחווה</span></div>' +
         (window.Motor ? '<div class="pa-tile"><b>' + Motor.EX.filter(function (id) { return Motor.stars(id) > 0; }).length + '/' + Motor.EX.length + '</b><span>תרגילי סדנת העט שהושלמו</span></div>' : '') +

@@ -23,6 +23,11 @@
     { id: 'race', name: 'מכונית מרוץ', body: '#9b5cff', acc: '#ffc93c', kind: 'race', cost: 80, speed: 1.1, en: 'race car', he: 'מכונית מרוץ', ico: '🏁' }
   ];
 
+  /* ---------- פרק 1ב — עיצוב המכונית (שלב 17): צבעים ומדבקות למוסך ----------
+     PAINTS: [id, צבע, שם, מחיר במטבעות (0 = חינם)] · STICKERS: [id, אימוג'י, שם, מחיר] — נשמרים ב-S.design (js/cars.js פרק 1) */
+  var PAINTS = [['red', '#ff3b3b', 'אדום', 0], ['blue', '#2f6bff', 'כחול', 0], ['yellow', '#ffd93c', 'צהוב', 0], ['green', '#2fb85a', 'ירוק', 10], ['pink', '#ff5ca8', 'ורוד', 10], ['purple', '#9b5cff', 'סגול', 15], ['black', '#2a2a3a', 'שחור', 20], ['gold', '#ffb300', 'זהב', 40]];
+  var STICKERS = [['none', '', 'בלי', 0], ['bolt', '⚡', 'ברק', 0], ['star', '⭐', 'כוכב', 0], ['fire', '🔥', 'אש', 10], ['heart', '💖', 'לב', 10], ['rainbow', '🌈', 'קשת', 15], ['unicorn', '🦄', 'חד-קרן', 20], ['dragon', '🐉', 'דרקון', 20], ['rocket', '🚀', 'טיל', 25]];
+
   /* ---------- פרק 2 — מסלולים ----------
      sky: 3 צבעים · side: 2 צבעי שוליים (פסים) · road: 2 צבעי אספלט · edge: קו שוליים · scenery: אימוג'י בצדדים
      obs: מכשולים אפשריים (cone / oil / car / puddle) · curve · hills · night (פנסים) · lights: רמזורים · fuel: תחנות דלק */
@@ -69,5 +74,5 @@
     return out;
   }
 
-  root.CarsData = { CARS: CARS, TRACKS: TRACKS, COLORS: COLORS, VEHICLES: VEHICLES, SIGNS: SIGNS, LIGHT: LIGHT, SAFETY: SAFETY, COUNT_LINE: COUNT_LINE, colorLine: colorLine, vehicleLine: vehicleLine, englishLines: englishLines, BOY: BOY };
+  root.CarsData = { CARS: CARS, PAINTS: PAINTS, STICKERS: STICKERS, TRACKS: TRACKS, COLORS: COLORS, VEHICLES: VEHICLES, SIGNS: SIGNS, LIGHT: LIGHT, SAFETY: SAFETY, COUNT_LINE: COUNT_LINE, colorLine: colorLine, vehicleLine: vehicleLine, englishLines: englishLines, BOY: BOY };
 })(typeof window !== 'undefined' ? window : this);

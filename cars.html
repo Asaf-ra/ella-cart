@@ -77,6 +77,8 @@
   #boost.ready { animation: hot2 .5s ease-in-out infinite alternate; }
   @keyframes hot2 { to { transform: scale(1.08); } }
 
+  /* --- פרק ג2: שני שחקנים (שלב 17) — מסך מפוצל: מסתירים את מד המהירות והצ'יפים של שחקן 1; הניקוד מצויר על הקנבס --- */
+  body.twop #speedo, body.twop #hS, body.twop #hC, body.twop #hFuel, body.twop #hCombo, body.twop #ctlBtn { display: none; }
   /* --- פרק ד: מסכים --- */
   .overlay { position: fixed; inset: 0; z-index: 50; display: none; place-items: center; padding: 16px; background: radial-gradient(circle at 50% 40%, rgba(58,17,119,.8), rgba(10,4,30,.92)); }
   .overlay.show { display: grid; }
@@ -115,6 +117,15 @@
   .learned { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 4px 0 10px; }
   .learned span { padding: 4px 12px; border: 3px solid var(--h-ink); border-radius: 999px; background: var(--h-gold); font: 900 15px/1.2 var(--h-font); direction: ltr; box-shadow: 2px 3px 0 var(--h-ink); }
 
+  /* --- פרק ד2: עיצוב המכונית (שלב 17) — אותם רכיבים כמו ארון הסוס --- */
+  .crow { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cb { display: grid; justify-items: center; gap: 3px; min-width: 86px; padding: 8px 6px; border: 3px solid var(--h-ink); border-radius: 16px; background: #fff; box-shadow: 0 3px 0 var(--h-ink); font: 800 13px/1.1 var(--h-font); color: var(--h-ink); cursor: pointer; }
+  .cb i { display: block; width: 34px; height: 34px; border: 3px solid var(--h-ink); border-radius: 50%; }
+  .cb i.em { border: 0; font-style: normal; font-size: 30px; line-height: 34px; }
+  .cb small { font-weight: 900; color: #b36b00; }
+  .cb.on { background: linear-gradient(180deg, #fff3b0, #ffc93c); box-shadow: 0 3px 0 var(--h-ink), 0 0 0 3px var(--h-magenta); }
+  .cb.buy { background: #f4f0ff; }
+  .cname { font: 900 24px var(--h-font); padding: 8px 14px; border: 4px solid var(--h-ink); border-radius: 16px; width: min(100%, 320px); text-align: center; color: var(--h-ink); user-select: text; -webkit-user-select: text; }
   /* --- פרק ה: סיבוב מסך --- */
   .rotate { display: none; }
   @media (orientation: portrait) { .rotate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; gap: 12px; text-align: center; background: var(--h-night); font-size: 26px; font-weight: 900; } }
@@ -178,7 +189,7 @@
           <h4>🗺️ בוחרים מסלול</h4><div class="tracks" id="tracks"></div>
           <h4>🎮 איך נוהגים?</h4><div class="ctrls" id="ctrls"></div>
           <div class="legend"><span>🔶 קונוס — עוקפים</span><span>🛢️ שמן — מחליקים!</span><span>🚦 אדום — ברקס 🛑</span><span>⛽ דלק — אוספים</span><span>⚡ טורבו — מעל הפס הכחול</span><span>🎨🔢 שער — נוסעים לתשובה</span></div>
-          <div class="row"><button class="h-btn gold" id="goBtn" type="button">מתניעים! 🏁</button></div>
+          <div class="row"><button class="h-btn gold" id="goBtn" type="button">מתניעים! 🏁</button><button class="h-btn violet" id="designBtn" type="button">🎨 עיצוב המכונית</button><button class="h-btn cyan" id="twoBtn" type="button">👥 שני שחקנים</button></div>
         </div>
       </div>
     </div>
@@ -207,6 +218,8 @@
     </div>
   </div>
 
+  <!-- עיצוב המכונית (שלב 17): צבע, מדבקה, לוחית — js/cars.js openDesign() -->
+  <div class="overlay" id="designOv"><div class="card h-panel" style="text-align:right"><div class="row" style="justify-content:space-between"><h1 style="font-size:32px">🎨 המוסך: עיצוב המכונית</h1><button class="h-btn violet" id="designX" type="button">✔ סיימנו</button></div><div id="design"></div></div></div>
   <div class="rotate"><div style="font-size:70px">📱</div><div>סובבו את האייפד לרוחב 😊</div></div>
 
   <script src="shared/profile.js"></script>
@@ -217,11 +230,11 @@
   <script src="shared/wallet.js"></script>
   <script src="shared/hero-avatar.js"></script>
   <script src="shared/hero-rewards.js"></script>
-  <script src="shared/progress.js"></script>
+  <script src="shared/progress.js"></script><script src="shared/achievements.js"></script>
   <script src="shared/stickers.js"></script>
   <script src="shared/share.js"></script>
   <script src="shared/learn-fx.js"></script>
-  <script src="shared/tap-fx.js"></script>
+  <script src="shared/tap-fx.js"></script><script src="shared/perf-guard.js"></script>
   <script>window.CARS_BOY = false;  /* גרסת הבנות: משאית גלידה במוסך, לשון נקבה */</script>
   <script src="js/cars-data.js"></script>
   <script src="js/cars.js"></script>

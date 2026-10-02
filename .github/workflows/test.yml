@@ -1,0 +1,23 @@
+# בדיקת עשן אוטומטית (tools/smoke-test.js) — רצה על כל push ו-Pull Request.
+# פותחת את כל 12 הדפים ב-Chromium, בודקת 0 שגיאות ו-0 קבצים חסרים, ומריצה תרחישים במשחקים.
+name: smoke-test
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: התקנת Playwright + Chromium
+        run: |
+          npm init -y >/dev/null
+          npm i playwright@1.56.1 >/dev/null
+          npx playwright install --with-deps chromium
+      - name: בדיקת עשן
+        run: node tools/smoke-test.js

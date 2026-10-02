@@ -195,7 +195,7 @@
   }
   // zap(x, y) — ברק מהשמיים לנקודת הלחיצה: פלאש, ברק SVG, מילה "ZAP!", צליל ורעידה
   function zap(x, y) {
-    flash(); shake(); SND.zap();
+    flash(); shake(); SND.zap(); try { Achievements.hit('tap:zap'); } catch (e) {}
     spawn('tfx-bolt', '<svg viewBox="0 0 220 320"><path d="M120 0 L70 140 L120 140 L60 320 L170 120 L115 120 L175 0 Z" fill="#ffe14a" stroke="#101e36" stroke-width="8" stroke-linejoin="round"/></svg>', x, y, 560);
     setTimeout(function () { word(x, y - 10, 'ZAP!', true); shards(x, y, 10); }, 120);
   }
@@ -235,7 +235,7 @@
     // קומבו: הקשות בתוך 700 מילישניות אחת מהשנייה
     combo = now - comboAt < 700 ? combo + 1 : 1; comboAt = now; taps++;
     var cw = COMBO_WORDS[combo];
-    if (cw) { burst(x, y, cw, true); SND.combo(combo); if (combo >= 6) { shake(); confetti(combo >= 10 ? 60 : 24); } if (combo === 10) speak('עשר לחיצות! כוח-על!'); }
+    if (cw) { burst(x, y, cw, true); SND.combo(combo); if (combo >= 6) { shake(); confetti(combo >= 10 ? 60 : 24); } if (combo === 10) { speak('עשר לחיצות! כוח-על!'); try { Achievements.hit('tap:combo10'); } catch (e) {} } }
     else burst(x, y, null, false);
     // הפתעה: כל ~9 הקשות (לא בזמן קומבו מהיר, כדי לא להציף)
     if (taps >= nextSurprise && combo < 3) { nextSurprise = taps + SURPRISE_EVERY + ((Math.random() * 7) | 0) - 3; setTimeout(function () { surprise(x); }, 160); }
