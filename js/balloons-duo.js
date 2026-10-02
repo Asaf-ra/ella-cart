@@ -132,7 +132,7 @@
   /* ---------- אתחול ---------- */
   function boot() {
     var ov = document.createElement('div'); ov.id = 'bduoOv';
-    ov.innerHTML = '<canvas id="bduoCv"></canvas><div id="bduoEnd"><div class="card h-panel" style="text-align:center;width:min(92vw,620px);padding:18px 22px"><h2 id="bduoEndT">🏆</h2><p id="bduoEndS"></p><div class="row"><button class="h-btn gold" id="bduoAgain" type="button">עוד פעם! 🔁</button><button class="h-btn violet" id="bduoX" type="button">חזרה לבלונים</button></div></div></div>';
+    ov.innerHTML = '<canvas id="bduoCv"></canvas><button type="button" id="bduoQuit" style="position:absolute;top:max(10px,env(safe-area-inset-top));right:14px;z-index:5;padding:8px 14px;border:4px solid #101e36;border-radius:14px;background:#fffaf0;color:#101e36;font:900 16px/1 Rubik,sans-serif;box-shadow:4px 5px 0 #101e36;cursor:pointer">✖ חזרה לבלונים · 👤 שחקנית יחידה</button><div id="bduoEnd"><div class="card h-panel" style="text-align:center;width:min(92vw,620px);padding:18px 22px"><h2 id="bduoEndT">🏆</h2><p id="bduoEndS"></p><div class="row"><button class="h-btn gold" id="bduoAgain" type="button">עוד פעם! 🔁</button><button class="h-btn violet" id="bduoX" type="button">🎈 חזרה לבלונים · 👤 שחקנית יחידה</button></div></div></div>';
     var st = document.createElement('style'); st.textContent = '#bduoBtn{position:fixed;top:max(10px,env(safe-area-inset-top));right:14px;z-index:9000;padding:8px 14px;border:4px solid #101e36;border-radius:14px;background:#fffaf0 linear-gradient(180deg,#c9f3ff,#ff9bc8);color:#101e36;font:900 16px/1 Rubik,sans-serif;box-shadow:4px 5px 0 #101e36;transform:skewX(-7deg);cursor:pointer}' +
       '#bduoOv{position:fixed;inset:0;z-index:9100;display:none;background:#0b224a}#bduoOv.show{display:block}#bduoCv{position:absolute;inset:0;touch-action:none}' +
       '#bduoEnd{position:absolute;inset:0;display:none;place-items:center;padding:16px;background:rgba(10,4,30,.6);font-family:Rubik,sans-serif;direction:rtl}#bduoEnd h2{font:900 clamp(28px,4vw,44px)/1.1 Rubik,sans-serif;color:#fff;-webkit-text-stroke:4px #101e36;paint-order:stroke fill;text-shadow:3px 4px 0 #ff622e}#bduoEnd p{font:900 clamp(18px,2.4vw,26px)/1.4 Rubik,sans-serif;margin:10px 0 14px;color:#101e36}#bduoEnd .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}';
@@ -143,6 +143,7 @@
     btn.addEventListener('click', function () { tap(); open(); });
     $('bduoAgain').addEventListener('click', function () { tap(); open(); });
     $('bduoX').addEventListener('click', function () { tap(); close(); });
+    $('bduoQuit').addEventListener('click', function () { tap(); close(); say('חזרנו לבלונים'); });   /* 👤 שחקן יחיד באמצע המשחק */
   }
   window.BalloonsDuo = { open: open, close: close, state: function () { return D; }, finish: finish, pop: pop };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();

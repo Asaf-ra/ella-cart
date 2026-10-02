@@ -138,6 +138,7 @@
     $('rduoBtn').addEventListener('click', function () { tap(); open(); });
     $('rduoAgain').addEventListener('click', function () { tap(); open(); });
     $('rduoX').addEventListener('click', function () { tap(); close(); });
+    $('rduoQuit').addEventListener('click', function () { tap(); close(); say('חזרנו לרכיבה'); });   /* 👤 שחקן יחיד באמצע המרוץ */
   }
   window.RideDuo = { open: open, close: close, state: function () { return D; }, gallop: gallop, jump: jump, finish: finish, englishLines: englishLines, LEN: LEN };
   if (typeof document !== 'undefined' && document.addEventListener) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot(); }
