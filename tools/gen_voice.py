@@ -3,7 +3,7 @@
 # tools/gen_voice.py — יצירת הקלטות קול טבעיות באנגלית (Kokoro, קוד פתוח)
 # ---------------------------------------------------------------------
 # פרק 1 — איסוף הטקסטים: כל מה שהאפליקציה מקריאה באנגלית
-#          (AcademyModules.englishPhrases() + סיפורי אנגלית STORIES.englishLines() + שמות אותיות + משפטים קבועים)
+#          (AcademyModules.englishPhrases() + סיפורי אנגלית STORIES.englishLines() + דרקון, טיפול, רכיבה, חווה, מכוניות (CarsData), מדריכי החווה (FarmLearn) + שמות אותיות + משפטים קבועים)
 # פרק 2 — נרמול: אותו נרמול כמו ב-js/audio.js (normEn) כדי שהמפתחות יתאימו
 # פרק 3 — יצירה: Kokoro (קול af_heart), חיתוך שקט, נרמול עוצמה, MP3 מונו 48kbps
 # פרק 4 — מניפסט: js/voice-en.js → window.VOICE_EN = { "טקסט מנורמל": "קובץ" }
@@ -39,12 +39,14 @@ LETTERS = {'A': 'Ay.', 'B': 'Bee.', 'C': 'See.', 'D': 'Dee.', 'E': 'Ee.', 'F': '
 EXTRA = ['Great answer!', 'Great job!', 'Excellent!', 'Yes!', 'Well done!', 'Hello!', 'You are a super hero.',
          'Hello! You are a super hero. Let us learn some English words together!',
          # מילות טיפול בדרקון (טמגוצ'י): אמבטיה, שינה, משחק, אוכל, אהבה
-         'bath', 'clean', 'dirty', 'wash', 'bubbles', 'play', 'yummy', 'hungry', 'I love you', 'Time for a bath!', "Let's play!", 'Good night!', 'Good morning!', 'Surprise!']
+         'bath', 'clean', 'dirty', 'wash', 'bubbles', 'play', 'yummy', 'hungry', 'I love you', 'Time for a bath!', "Let's play!", 'Good night!', 'Good morning!', 'Surprise!',
+         # שלב 16/22 — מרוץ המכוניות (שני דגמי המוסך) וספירה בכרטיסי הלמידה (shared/learn-fx.js: 'one cone', 'three cones'...)
+         'monster truck', 'ice cream truck', 'one cone', 'two cones', 'three cones', 'four cones', 'five cones', 'six cones', 'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
 
 def collect():
     # ---------- פרק 1 — איסוף ----------
-    js = ("global.window={};global.document={createElement:()=>({})};require('./js/academy-modules.js');require('./js/story-data.js');require('./js/dragon-data.js');require('./js/care-data.js');require('./js/ride-data.js');require('./js/farm-data.js');"
-          "process.stdout.write(JSON.stringify(window.AcademyModules.englishPhrases().concat(window.STORIES.englishLines(), window.DragonData.englishLines(), window.CareData.englishLines(), window.RideData.englishLines(), window.FarmData.englishLines())))")
+    js = ("global.window={};global.document={createElement:()=>({})};require('./js/academy-modules.js');require('./js/story-data.js');require('./js/dragon-data.js');require('./js/care-data.js');require('./js/ride-data.js');require('./js/farm-data.js');require('./js/cars-data.js');require('./js/farm-learn.js');"
+          "process.stdout.write(JSON.stringify(window.AcademyModules.englishPhrases().concat(window.STORIES.englishLines(), window.DragonData.englishLines(), window.CareData.englishLines(), window.RideData.englishLines(), window.FarmData.englishLines(), window.CarsData.englishLines(), window.FarmLearn.englishLines())))")
     phrases = json.loads(subprocess.check_output(['node', '-e', js], cwd=ROOT))
     items = {}
     for p in phrases + EXTRA:
