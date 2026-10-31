@@ -44,6 +44,9 @@ function ok(msg) { console.log('  ✅ ' + msg); }
   console.log('פרק 3 — משחקים');
   const ctx = await br.newContext({ viewport: { width: 1180, height: 820 } }), pg = await ctx.newPage(), errs = [];
   pg.on('pageerror', e => errs.push(e.message)); pg.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  /* חלונות פרס (.h-modal — עליית רמה / תחפושת) קופצים בטיימר באמצע תרחיש וחוסמים לחיצות; אף בדיקה לא בודקת אותם,
+     אז בכל דף שנטען מסירים אותם אוטומטית ברגע שהם מופיעים (MutationObserver). clearModals נשאר לחלונות האחרים */
+  await ctx.addInitScript(() => { const kill = () => document.querySelectorAll('.h-modal.show').forEach(m => m.remove()); document.addEventListener('DOMContentLoaded', () => { kill(); new MutationObserver(kill).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] }); }); });
   /* clearModals — חלונות פרס (עליית רמה / תחפושת חדשה / הישג) שקופצים באמצע תרחיש חוסמים לחיצות; מסירים אותם בבדיקה */
   const clearModals = () => pg.evaluate(() => document.querySelectorAll('.h-modal.show, .wn-ov, .ach-ov').forEach(m => m.remove()));
   const drive = async (n) => { for (let i = 0; i < n; i++) { await pg.evaluate(() => { [CarsGame.state(), CarsGame.p2()].forEach(g => { if (!g) return; g.time += 2; g.pos += 3800; if (g.light) g.inp.brake = true; }); }); await pg.waitForTimeout(60); } };
@@ -91,7 +94,8 @@ function ok(msg) { console.log('  ✅ ' + msg); }
   if (await pg.evaluate(() => document.querySelectorAll('.duo-g').length === 4)) ok('חווה לשניים: 4 משחקים'); else fail('חווה לשניים: תפריט');
   await pg.click('.duo-g[data-g="eggs"]'); await pg.waitForTimeout(600);
   if (await pg.evaluate(() => document.getElementById('duoQuit').style.display === 'block')) ok('חווה לשניים: ✖ שחקן יחיד מוצג בזמן משחק'); else fail('חווה לשניים: אין כפתור יציאה'); await pg.evaluate(() => { FarmDuo.state().phase = 'play'; }); await pg.waitForTimeout(1200);
-  for (let i = 0; i < 12; i++) { await pg.mouse.click(300 + (i % 5) * 60, 300 + (i % 3) * 120); await pg.mouse.click(900 + (i % 5) * 50, 300 + (i % 3) * 120); await pg.waitForTimeout(70); }
+  /* נוגעים בביצים האמיתיות (מיקום מהמשחק) — לא בנקודות אקראיות שאולי ריקות */
+  for (let i = 0; i < 12; i++) { const pts = await pg.evaluate(() => { const D = FarmDuo.state(), W = innerWidth, H = innerHeight, half = W / 2; return D.g.eggs().map((L, p) => L.map(e => [p * half + e.x * half, e.y * H])).flat(); }); for (const q of pts.slice(0, 2)) await pg.mouse.click(q[0], q[1]); await pg.waitForTimeout(150); }
   const ds = await pg.evaluate(() => FarmDuo.state().score); if (ds[0] + ds[1] > 0) ok('חווה לשניים: ביצים נאספו ' + ds); else fail('חווה לשניים: אין ניקוד');
   await pg.evaluate(() => FarmDuo.finish()); await pg.waitForTimeout(300);
   if (await pg.evaluate(() => document.getElementById('duoEnd').style.display === 'grid')) ok('חווה לשניים: סיום'); else fail('חווה לשניים: אין מסך סיום');

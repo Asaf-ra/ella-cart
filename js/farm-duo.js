@@ -131,6 +131,7 @@
   function mkEggs() {
     var eggs = [[], []], spawn = [0, 0], chick = [0, 0];
     return {
+      eggs: function () { return eggs; },   /* לבדיקות: מיקומי הביצים (יחסיים לחצי המסך) */
       update: function (dt) {
         for (var p = 0; p < 2; p++) {
           spawn[p] -= dt;
