@@ -54,6 +54,9 @@ function ok(msg) { console.log('  ✅ ' + msg); }
   await drive(32);
   st = await pg.evaluate(() => { const g = CarsGame.state(); return { gates: g.gates, learned: Object.keys(g.learned).length, run: g.run }; });
   if (st.gates >= 1 && st.learned >= 1) ok('מכוניות: שערים ' + st.gates + ', מילים ' + st.learned); else fail('מכוניות: אין שערים/מילים ' + JSON.stringify(st));
+  // שלב 20 — ריאליזם (RealFX + דף חד) ומשחקיות: עקיפה צמודה ורצף 5 עקיפות
+  st = await pg.evaluate(() => { const g = CarsGame.state(), s0 = g.stars; g.passed = 0; g.lastNear = -99; for (let i = 0; i < 5; i++) CarsGame.passCar(true); return { rf: !!window.RealFX, sharp: document.body.hasAttribute('data-sharp'), near: g.near || 0, passed: g.passed, gain: g.stars - s0 }; });
+  if (st.rf && st.sharp && st.near >= 1 && st.passed === 5 && st.gain >= 3) ok('מכוניות: ריאליזם פעיל + עקיפה צמודה ורצף (+' + st.gain + '⭐)'); else fail('מכוניות: ריאליזם/עקיפות ' + JSON.stringify(st));
   await pg.evaluate(() => CarsGame.finish()); await pg.waitForTimeout(600);
   if (await pg.evaluate(() => document.getElementById('endScreen').classList.contains('show'))) ok('מכוניות: מסך סיום'); else fail('מכוניות: אין מסך סיום');
   // מכוניות — שני שחקנים
@@ -75,6 +78,8 @@ function ok(msg) { console.log('  ✅ ' + msg); }
   // רכיבה — לוח חיצים
   await pg.goto(base + 'ride.html'); await pg.waitForTimeout(500); await clearModals(); await pg.click('#padBtn2'); await clearModals(); await pg.click('#goBtn'); await pg.waitForTimeout(700);
   if (await pg.evaluate(() => document.getElementById('pad').classList.contains('show'))) ok('רכיבה: לוח חיצים'); else fail('רכיבה: לוח חיצים לא מוצג');
+  st = await pg.evaluate(() => { const g = RideGame.state(), s0 = g.stars; g.jz = 300; RideGame.cleared('x'); const hi = g.stars - s0; g.jz = 120; RideGame.cleared('x'); const lo = g.stars - s0 - hi; g.jz = 0; return { hi, lo, perfect: g.perfect }; });
+  if (st.hi === 2 && st.lo === 1 && st.perfect === 1) ok('רכיבה: קפיצה מושלמת = 2⭐, רגילה = 1⭐'); else fail('רכיבה: קפיצה מושלמת ' + JSON.stringify(st));
   // חווה — מדריך וחידון
   await pg.goto(base + 'farm.html'); await pg.waitForTimeout(900); await pg.evaluate(() => FarmGame.zoom('dog')); await pg.waitForTimeout(700);
   await pg.click('#zonePanel [data-act="learn"]'); await pg.waitForTimeout(300);

@@ -32,7 +32,8 @@
   function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
   function label(c, txt, x, y, size, col) { c.font = '900 ' + size + 'px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineWidth = Math.max(4, size * .18); c.strokeStyle = INK; c.strokeText(txt, x, y); c.fillStyle = col || '#fff'; c.fillText(txt, x, y); }
   var EMO = {};
-  function emo(e) { if (EMO[e]) return EMO[e]; var c = document.createElement('canvas'); c.width = c.height = 160; var x = c.getContext('2d'); x.font = '128px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, 80, 90); return (EMO[e] = c); }
+  /* emo — שלב 20: אימוג'י 256px חד מ-shared/real-fx.js (היה 160px) */
+  function emo(e) { return EMO[e] || (EMO[e] = RealFX.sprite(e, 256)); }
   // horseImg(p) — רסטר של הסוס: שחקן 1 = הסוס מהארון; שחקן 2 = סוס לבן עם רעמה בלונדינית ואוכף אחר
   var HIMG = [null, null];
   function horseImg(p) {
@@ -44,7 +45,7 @@
 
   /* ---------- פרק 2 — שכבה ---------- */
   var cv, ctx, W = 0, H = 0, DPR = 1, D = null, last = 0, raf = 0, PT = {};
-  function resize() { if (!cv) return; DPR = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
+  function resize() { if (!cv) return; DPR = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px'; RealFX.smooth(ctx); }
   if (window.addEventListener) window.addEventListener('resize', resize);   /* ב-node (gen_voice) אין DOM */
   function laneOf(y) { return y < H / 2 ? 1 : 0; }   // למעלה = שחקן 2
   function open() {
@@ -90,10 +91,13 @@
     for (var p = 1; p >= 0; p--) {
       var top = p ? 0 : H / 2, P = D.P[p], cam = Math.max(0, Math.min(LEN - W * .6, P.x - W * .3));
       c.save(); c.beginPath(); c.rect(0, top, W, H / 2); c.clip(); c.translate(0, top);
-      var g = c.createLinearGradient(0, 0, 0, H / 2); g.addColorStop(0, p ? '#ffd1e8' : '#bfe8ff'); g.addColorStop(1, '#ffffff'); c.fillStyle = g; c.fillRect(0, 0, W, H / 2);
-      /* גבעות בפרלקסה */
-      c.fillStyle = p ? '#d8b4e8' : '#a8dcae'; c.beginPath(); c.moveTo(0, H / 2); for (var x = 0; x <= W; x += 20) c.lineTo(x, H * .30 - Math.abs(Math.sin((x + cam * .3) / 160)) * H * .08); c.lineTo(W, H / 2); c.fill();
-      c.fillStyle = '#8ee07a'; c.fillRect(0, H * .34, W, H / 2);
+      /* שלב 20 — ריאליזם: שמיים עם אובך, שמש זוהרת, עננים נפחיים, רכסים בפרספקטיבה אווירית, דשא מוצלל */
+      var RF = RealFX, x; RF.sky(c, W, H / 2, H * .34, p ? '#c98bd8' : '#5fb8e8', p ? '#ffd1e8' : '#bfe8ff', '#fff6ea');
+      RF.sun(c, W * .82, H * .08, H * .035, { col: p ? '#ffc8a0' : '#fff1b0' });
+      RF.cloudLayer(c, W, H / 2, performance.now() / 1000, cam * .1, { n: 4, y0: .12, y1: .4, a: .9, tint: p ? 'dusk' : 'day' });
+      RF.ridge(c, W, H / 2 + 20, H * .31, H * .1, cam * .2, { top: p ? '#e6cdf0' : '#cfe8d8', bottom: p ? '#c9a3dc' : '#9fd0b0', seed: 2 + p, haze: '#fff6ea' });
+      RF.ridge(c, W, H / 2 + 20, H * .34, H * .045, cam * .45, { top: '#7fd07a', bottom: '#4fa85a', seed: 5 + p, rough: .6 });
+      var gg = c.createLinearGradient(0, H * .34, 0, H / 2); gg.addColorStop(0, '#7fd66b'); gg.addColorStop(1, '#4fb04f'); c.fillStyle = gg; c.fillRect(0, H * .34, W, H / 2);
       /* מסלול */
       c.fillStyle = '#e8c9a0'; c.fillRect(0, H * .40, W, H * .08); c.fillStyle = '#fff'; for (x = -((cam * 1) % 80); x < W; x += 80) c.fillRect(x, H * .435, 40, 6);
       /* גדרות וקו סיום */
@@ -101,7 +105,7 @@
       var fin = LEN - cam; if (fin < W + 60) { for (var k = 0; k < 10; k++) { c.fillStyle = k % 2 ? '#fff' : INK; c.fillRect(fin, H * .20 + k * H * .028, 14, H * .028); } c.drawImage(emo('🏁'), fin - 10, H * .16, 50, 50); }
       /* הסוס */
       var im = horseImg(p), hx = P.x - cam, hy = H * .43 - P.jz, bob = P.jz > 0 ? 0 : Math.sin(P.gait) * 4, sz = Math.min(W, H) * .22;
-      c.fillStyle = 'rgba(16,30,54,.25)'; c.beginPath(); c.ellipse(hx, H * .44, sz * .5, 10, 0, 0, 7); c.fill();
+      RF.contact(c, hx, H * .44, sz * (P.jz > 0 ? .7 : 1), P.jz > 0 ? .2 : .4);   /* צל מגע — מתכווץ בקפיצה */
       if (im.complete && im.naturalWidth) { c.save(); c.translate(hx, hy + bob); if (P.stumble > 0) c.rotate(.25); c.drawImage(im, -sz * .55, -sz * .85, sz * 1.1, sz * .88); c.restore(); }
       if (P.stumble > 0) c.drawImage(emo('💫'), hx - 20, hy - sz * .95, 40, 40);
       /* HUD של המסלול */

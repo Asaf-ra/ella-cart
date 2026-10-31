@@ -54,10 +54,11 @@
   /* ================= פרק 2 — עולם ומצלמה ================= */
   var VW = 4400, VH = 800, GROUND = 600;
   var cv = $('farmCv'), ctx = cv.getContext('2d'), W = 0, H = 0, DPR = 1;
+  var RF = window.RealFX;                                  // shared/real-fx.js — כלי הריאליזם (שלב 20)
   var cam = { cx: 3450, cy: VH / 2, z: 1, tcx: 3450, tcy: VH / 2, tz: 1, vx: 0 };
   var DPR_CAP = 2;                                         // שומר הביצועים (shared/perf-guard.js) מוריד ל-1 באייפד ישן
   window.addEventListener('perf:low', function () { DPR_CAP = 1; resize(); });
-  function resize() { DPR = Math.min(window.devicePixelRatio || 1, DPR_CAP); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
+  function resize() { DPR = Math.min(window.devicePixelRatio || 1, DPR_CAP); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; RF.smooth(ctx); }
   window.addEventListener('resize', resize);
   function scale() { return H / VH * cam.z; }
   function viewW() { return W / scale(); }
@@ -91,7 +92,8 @@
   var HIMG = null, HKEY = '';
   function horseImg() { if (!window.Horse) return null; var k = JSON.stringify([Horse.state.coat, Horse.state.mane, Horse.state.saddle, Horse.state.acc, Horse.state.braids, Horse.state.mud]); if (k !== HKEY) { HKEY = k; HIMG = new Image(); HIMG.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Horse.svg({}).replace('<svg ', '<svg width="500" height="400" ')); } return HIMG; }
   var EMO = {};
-  function emo(e) { if (EMO[e]) return EMO[e]; var c = document.createElement('canvas'); c.width = c.height = 160; var x = c.getContext('2d'); x.font = '128px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, 80, 90); return (EMO[e] = c); }
+  /* emo — שלב 20: אימוג'י 256px מ-RealFX (היה 160px) — חיות ופריטים חדים גם בזום קרוב */
+  function emo(e) { return EMO[e] || (EMO[e] = RF.sprite(e, 256)); }
   function drawEmo(c, e, x, y, sz, a) { if (a != null) c.globalAlpha = a; c.drawImage(emo(e), x - sz / 2, y - sz / 2, sz, sz); c.globalAlpha = 1; }
 
   /* ================= פרק 5 — נוף ================= */
@@ -109,7 +111,7 @@
     if (dark > .2) { c.fillStyle = '#fff'; for (var i = 0; i < 90; i++) { var x = (i * 137.5) % W, y = (i * 71.3) % (H * .5), tw = .5 + .5 * Math.sin(T * 2 + i); c.globalAlpha = dark * 1.5 * tw; c.fillRect(x, y, 2.2, 2.2); } c.globalAlpha = 1; }
     /* שמש / ירח בקשת לפי השעה */
     var dayT = (h - 6) / 14, ang = Math.PI * (1 - dayT), R = Math.min(W, H) * .07;
-    if (dayT > -0.05 && dayT < 1.05) { var sx = W / 2 + Math.cos(ang) * W * .42, sy = H * .62 - Math.sin(ang) * H * .5; var gg = c.createRadialGradient(sx, sy, R * .3, sx, sy, R * 3); gg.addColorStop(0, 'rgba(255,240,160,.9)'); gg.addColorStop(1, 'rgba(255,240,160,0)'); c.fillStyle = gg; c.fillRect(sx - R * 3, sy - R * 3, R * 6, R * 6); sunRays(c, sx, sy, Math.max(W, H) * .55); circle(c, sx, sy, R, '#ffe066', 0); c.lineWidth = 5; c.strokeStyle = 'rgba(27,16,54,.55)'; c.stroke(); }
+    if (dayT > -0.05 && dayT < 1.05) { var sx = W / 2 + Math.cos(ang) * W * .42, sy = H * .62 - Math.sin(ang) * H * .5; var gg = c.createRadialGradient(sx, sy, R * .3, sx, sy, R * 3); gg.addColorStop(0, 'rgba(255,240,160,.9)'); gg.addColorStop(1, 'rgba(255,240,160,0)'); c.fillStyle = gg; c.fillRect(sx - R * 3, sy - R * 3, R * 6, R * 6); sunRays(c, sx, sy, Math.max(W, H) * .55); RF.sun(c, sx, sy, R * .8, { col: h > 17 ? '#ffb070' : '#fff1b0' }); }   /* שלב 20: שמש זוהרת במקום עיגול עם קו */
     else { var nt = ((h + 24 - 20) % 24) / 10, a2 = Math.PI * (1 - nt), mx = W / 2 + Math.cos(a2) * W * .4, my = H * .6 - Math.sin(a2) * H * .45; circle(c, mx, my, R * .8, '#fff6c8', 0); circle(c, mx + R * .35, my - R * .2, R * .7, sk[0], 0); }
     if (rainbow()) { c.save(); c.globalAlpha = .45; ['#ff3b3b', '#ff8a3c', '#ffd93c', '#2fb85a', '#3d7bff', '#9b5cff'].forEach(function (col, i) { c.strokeStyle = col; c.lineWidth = H * .018; c.beginPath(); c.arc(W * .6 - cam.cx * s * .05, H * .78, H * (.52 - i * .018), Math.PI, 0); c.stroke(); }); c.restore(); }
   }
@@ -118,20 +120,19 @@
     var ox = cam.cx * s * f, yB = H / 2 + (baseY - cam.cy) * s;
     var top = [];
     for (var x = 0; x <= W + 20; x += 16) { var wx = (x + ox) / (s * 1); top.push([x, yB - (Math.sin(wx / 230 + seed) * .6 + Math.sin(wx / 97 + seed * 2) * .4 + 1) * amp * s]); }
-    c.fillStyle = col; c.beginPath(); c.moveTo(0, H); top.forEach(function (p) { c.lineTo(p[0], p[1]); }); c.lineTo(W, H); c.closePath(); c.fill();
+    var hg = c.createLinearGradient(0, yB - amp * s * 2, 0, yB + 40 * s); hg.addColorStop(0, RF.shade(col, .14)); hg.addColorStop(1, RF.shade(col, -.16));   /* שלב 20: אור מלמעלה */
+    c.fillStyle = hg; c.beginPath(); c.moveTo(0, H); top.forEach(function (p) { c.lineTo(p[0], p[1]); }); c.lineTo(W, H); c.closePath(); c.fill();
     /* קומיקס: קו דיו על קו הרכס (הרסטר מצויר ב-CSS מעל הקנבס — זול יותר) */
-    c.beginPath(); top.forEach(function (p, i) { if (i) c.lineTo(p[0], p[1]); else c.moveTo(p[0], p[1]); }); c.lineWidth = Math.max(2.5, 4 * s); c.strokeStyle = night ? 'rgba(10,10,40,.8)' : 'rgba(27,16,54,.7)'; c.lineJoin = 'round'; c.stroke();
-    if (trees) { for (var i = -2; i < 30; i++) { var wx2 = Math.floor(ox / (s * 190)) * 190 + i * 190 + (seed * 50 % 90), tx = wx2 * s - ox, ty = yB - (Math.sin(wx2 / 230 + seed) * .6 + Math.sin(wx2 / 97 + seed * 2) * .4 + 1) * amp * s; if (tx < -60 || tx > W + 60) continue; c.fillStyle = INK; c.fillRect(tx - 3 * s, ty - 6 * s, 6 * s, 10 * s); c.fillStyle = trees; c.beginPath(); c.ellipse(tx, ty - 26 * s, 22 * s, 30 * s, 0, 0, 7); c.fill(); c.lineWidth = Math.max(2, 3 * s); c.strokeStyle = 'rgba(27,16,54,.6)'; c.stroke(); } }
+    c.beginPath(); top.forEach(function (p, i) { if (i) c.lineTo(p[0], p[1]); else c.moveTo(p[0], p[1]); }); c.lineWidth = Math.max(1.5, 2.5 * s); c.strokeStyle = night ? 'rgba(10,10,40,.5)' : 'rgba(255,255,255,.35)'; c.lineJoin = 'round'; c.stroke();   /* קו אור על הרכס */
+    if (trees) { for (var i = -2; i < 30; i++) { var wx2 = Math.floor(ox / (s * 190)) * 190 + i * 190 + (seed * 50 % 90), tx = wx2 * s - ox, ty = yB - (Math.sin(wx2 / 230 + seed) * .6 + Math.sin(wx2 / 97 + seed * 2) * .4 + 1) * amp * s; if (tx < -60 || tx > W + 60) continue; c.fillStyle = INK; c.fillRect(tx - 3 * s, ty - 6 * s, 6 * s, 10 * s); var tg = c.createRadialGradient(tx - 8 * s, ty - 38 * s, 2 * s, tx, ty - 26 * s, 32 * s); tg.addColorStop(0, RF.shade(trees, .25)); tg.addColorStop(.6, trees); tg.addColorStop(1, RF.shade(trees, -.3)); c.fillStyle = tg; c.beginPath(); c.ellipse(tx, ty - 26 * s, 22 * s, 30 * s, 0, 0, 7); c.fill(); c.lineWidth = Math.max(1, 1.5 * s); c.strokeStyle = 'rgba(27,16,54,.3)'; c.stroke(); } }   /* שלב 20: צמרת מוארת משמאל-למעלה */
   }
+  /* clouds — שלב 20: עננים נפחיים מ-RealFX (מוארים מלמעלה, מוצללים מלמטה); אפורים בגשם, ורדרדים בשקיעה, שקופים בלילה */
   function clouds(c, s) {
-    var n = WEATHER === 'cloud' || raining() ? 9 : 5, col = raining() ? '#9aa6bd' : '#ffffff';
+    var n = WEATHER === 'cloud' || raining() ? 9 : 5, h = hourNow(), tint = raining() ? 'storm' : (h > 17.5 && h < 20.5) ? 'dusk' : 'day';
     for (var i = 0; i < n; i++) {
       var wx = ((i * 677 + T * (8 + i % 3 * 4)) % (VW + 800)) - 400, x = (wx - cam.cx * .25) * s + W / 2, y = H * (.1 + (i % 4) * .07), k = s * (0.8 + (i % 3) * .3);
       if (x < -300 || x > W + 300) continue;
-      var B = [[0, 0, 42], [40, -16, 50], [86, 0, 40], [44, 10, 46]];
-      /* ענן קומיקס: קו דיו עבה מסביב לאיחוד העיגולים, ואז מילוי וצל רסטר */
-      c.fillStyle = '#3a2d5c'; c.beginPath(); B.forEach(function (b) { c.moveTo(x + b[0] * k + b[2] * k + 4.5, y + b[1] * k); c.arc(x + b[0] * k, y + b[1] * k, b[2] * k + 4.5, 0, 7); }); c.fill();
-      c.fillStyle = col; c.beginPath(); B.forEach(function (b) { c.moveTo(x + b[0] * k + b[2] * k, y + b[1] * k); c.arc(x + b[0] * k, y + b[1] * k, b[2] * k, 0, 7); }); c.fill();
+      RF.cloud(c, x + 45 * k, y, 260 * k, night ? .35 : .95, i, tint);
     }
   }
   /* מבנים (בקואורדינטות עולם) */
@@ -250,6 +251,7 @@
     var im = art(a.t, opts(a)); if (!im.complete || !im.naturalWidth) return;
     var moving = a.st === 'walk' || a.st === 'run' || a.st === 'go', bob = moving && !a.swim ? Math.abs(Math.sin(T * (a.st === 'walk' ? 9 : 16))) * 7 : a.swim ? Math.sin(T * 2 + a.x) * 3 : 0;
     var sq = a.jz > 0 ? 1.06 : a.st === 'sit' ? .86 : 1 + Math.sin(T * 3 + a.x) * .012, sz = a.size;
+    if (!a.swim) RF.contact(c, a.x, a.y - 2, sz * (a.jz > 0 ? .5 : .78), a.jz > 0 ? .16 : .32);   /* צל מגע (שלב 20) — קטן ושקוף יותר כשהחיה באוויר */
     c.save(); c.translate(a.x, a.y - a.jz - bob);
     if (a.roll > 0) c.rotate((1 - a.roll) * Math.PI * 2 * (a.flip ? -1 : 1));
     c.scale(a.flip ? -1 : 1, 1); c.scale(1 / Math.sqrt(sq), sq);
@@ -726,6 +728,7 @@
     if (dark > 0) { c.fillStyle = 'rgba(15,20,70,' + dark * .75 + ')'; c.fillRect(0, 0, W, H); }
     if (raining()) { c.strokeStyle = 'rgba(200,225,255,.55)'; c.lineWidth = 2; c.beginPath(); rain.forEach(function (r) { c.moveTo(r.x, r.y); c.lineTo(r.x - 6, r.y + 18); }); c.stroke(); }
     grassFront(c, H / VH);
+    RF.grade(c, W, H, { night: dark > .5, warm: .4 });   /* דירוג צבע קולנועי (שלב 20) */
     comicScreen(c);
   }
   /* כניסה: ברכה לפי השעה, "התגעגענו!", הכלבלב רץ לקבל */

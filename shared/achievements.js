@@ -51,6 +51,8 @@
     ['combo', '💥', 'אצבעות ברק', 'קומבו של 10 לחיצות מהירות', function (c) { return (c['tap:combo10'] || 0) >= 1; }, 'fun'],
     ['zap', '⚡', 'מזמין ברקים', 'לחיצה ארוכה עד שיורד ברק', function (c) { return (c['tap:zap'] || 0) >= 1; }, 'fun'],
     ['explorer', '🗺️', 'מטייל בכל העולם', 'מבקרים בחווה, ברכיבה, במרוץ, בטיסה ובעגלה', function (c) { return ['farm', 'ride', 'cars', 'flight', 'cart'].every(function (p) { return c['visit:' + p]; }); }, 'fun'],
+    ['streak', '💨', 'מלך העקיפות', '10 עקיפות ברצף בלי התנגשות', function (c) { return (c['cars:streak10'] || 0) >= 1; }, 'cars'],
+    ['ridejump', '🎯', 'קפיצה מושלמת', '5 קפיצות מושלמות על גדרות במרוץ אחד', function (c) { return (c['ride:perfect5'] || 0) >= 1; }, 'ride'],
     ['twop', '👥', 'חברים על הכביש', 'מרוץ של שני שחקנים במסך מפוצל', function (c) { return (c['cars:2p'] || 0) >= 1; }, 'cars'],
     ['design', '🎨', 'מעצב מכוניות', 'פותחים את עיצוב המכונית במוסך', function (c) { return (c['cars:design'] || 0) >= 1; }, 'cars'],
     ['farmduo', '👥', 'חוואים לשניים', 'משחק אחד של "חווה לשניים"', function (c) { return (c['farm:duo'] || 0) >= 1; }, 'farm'],

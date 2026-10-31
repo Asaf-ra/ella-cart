@@ -125,6 +125,9 @@
       radial-gradient(rgba(255,255,255,.2) 1.4px, transparent 1.9px) 0 0 / 12px 12px;
     -webkit-mask: linear-gradient(180deg, #000 0, rgba(0,0,0,.55) 60%, rgba(0,0,0,.9) 100%); mask: linear-gradient(180deg, #000 0, rgba(0,0,0,.55) 60%, rgba(0,0,0,.9) 100%); }
   #comicFx::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%; background: radial-gradient(rgba(27,16,54,.16) 1.4px, transparent 1.9px) 0 0 / 11px 11px; }
+  /* שלב 20 (ריאליזם): בדף "חד" (shared/real-fx.js) — רק ויניטה, בלי רסטר נקודות שמטשטש את הציור */
+  body[data-sharp] #comicFx { background: radial-gradient(ellipse at 50% 55%, rgba(20,8,50,0) 60%, rgba(20,8,50,.2) 100%); -webkit-mask: none; mask: none; }
+  body[data-sharp] #comicFx::after { display: none; }
   /* --- פרק ח — למידה (שלב 16): מדריך הטיפול וחידון החווה --- */
   .zb.learn { background-image: var(--dotsW), linear-gradient(180deg, #ffe7a0, #ffb13b); }
   .ghint { font: 800 15px/1.3 var(--h-font); color: var(--h-text-soft); margin: 4px 0 10px; }
@@ -215,7 +218,7 @@
   <script src="shared/share.js"></script>
   <script src="js/horse.js"></script>
   <script src="shared/learn-fx.js"></script>
-  <script src="shared/tap-fx.js"></script><script src="shared/perf-guard.js"></script>
+  <script src="shared/tap-fx.js"></script><script src="shared/perf-guard.js"></script><script src="shared/real-fx.js"></script>
   <script src="js/farm-data.js"></script>
   <script src="js/farm-learn.js"></script>
   <script src="js/farm.js"></script>

@@ -27,6 +27,10 @@ body:not([data-skin="off"])::before {
     radial-gradient(rgba(16, 30, 54, .07) 1.6px, transparent 2.1px) 4px 4px / 18px 18px;                            /* רסטר גס */
   mix-blend-mode: normal;
 }
+/* data-sharp (שלב 20): במשחקי קנבס (shared/real-fx.js) — בלי רסטר נקודות מעל התמונה, רק ויניטה קלה. חדות מלאה */
+body[data-sharp]:not([data-skin="off"])::before { background:
+    radial-gradient(ellipse at 50% 48%, rgba(8, 10, 28, 0) 58%, rgba(8, 10, 28, .3) 100%),                          /* ויניטה קולנועית */
+    linear-gradient(180deg, rgba(255, 214, 150, .07) 0, rgba(255, 214, 150, 0) 45%); }                               /* אור חם מלמעלה */
 /* ms-flare: פס אור אלכסוני שחולף על המסך פעם ב-11 שניות — "הברקת עדשה" קולנועית. transform בלבד = GPU */
 body:not([data-skin="off"])::after {
   content: ""; position: fixed; top: -20%; bottom: -20%; left: -40%; width: 26%; z-index: 1; pointer-events: none;

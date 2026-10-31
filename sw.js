@@ -2,7 +2,7 @@
    פרק 1 — רשימת קבצים לשמירה מראש (דפים, קוד, גופנים, ציורים)
    פרק 2 — הקלטות הקול באנגלית: הרשימה נקראת מ-js/voice-en.js (אותו מניפסט שהאפליקציה משתמשת בו)
    פרק 3 — התקנה / ניקוי מטמונים ישנים / הגשה מהמטמון (cache-first) */
-const CACHE = 'ella-cart-v64';   /* v62: הישגים, שני שחקנים, עיצוב מכונית, שומר ביצועים */   /* v61: 162 הקלטות קול חדשות (מכוניות, מדריכי החווה, ספירה) */
+const CACHE = 'ella-cart-v65';   /* v65: שלב 26 — ריאליזם: shared/real-fx.js, ספרייטים 256px, חדות DPR 2 */   /* v62: הישגים, שני שחקנים, עיצוב מכונית, שומר ביצועים */   /* v61: 162 הקלטות קול חדשות (מכוניות, מדריכי החווה, ספירה) */
 const ART = [
   'ella','cust_girl','cust_boy','cust_bunny','cust_bear','cust_cat','cust_panda',
   'cust_dog','cust_fox','cust_frog','cust_penguin','cust_pig','cust_mouse',
@@ -72,6 +72,7 @@ const ASSETS = [
   './shared/learn-fx.js',
   './shared/achievements.js',
   './shared/perf-guard.js',
+  './shared/real-fx.js',
   './js/ride.js',
   './js/ride-data.js',
   './js/horse.js',
