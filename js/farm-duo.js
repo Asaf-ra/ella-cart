@@ -36,14 +36,15 @@
   function track(ev) { try { if (window.Progress) Progress.track(ev); } catch (e) {} }
   function rnd(a, b) { return a + Math.random() * (b - a); }
   var EMO = {};
-  function emo(e) { if (EMO[e]) return EMO[e]; var c = document.createElement('canvas'); c.width = c.height = 160; var x = c.getContext('2d'); x.font = '128px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, 80, 90); return (EMO[e] = c); }
+  /* emo — שלב 20: אימוג'י 256px חד מ-shared/real-fx.js (היה 160px) */
+  function emo(e) { return EMO[e] || (EMO[e] = RealFX.sprite(e, 256)); }
   function drawEmo(c, e, x, y, sz, a) { if (a != null) c.globalAlpha = a; c.drawImage(emo(e), x - sz / 2, y - sz / 2, sz, sz); c.globalAlpha = 1; }
   function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
   function label(c, txt, x, y, size, col) { c.font = '900 ' + size + 'px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineWidth = Math.max(4, size * .18); c.strokeStyle = INK; c.strokeText(txt, x, y); c.fillStyle = col || '#fff'; c.fillText(txt, x, y); }
 
   /* ---------- פרק 2 — שכבה ---------- */
   var cv, ctx, W = 0, H = 0, DPR = 1, half = 0, game = null, D = null, last = 0, raf = 0;
-  function resize() { if (!cv) return; DPR = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; half = W / 2; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px'; }
+  function resize() { if (!cv) return; DPR = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; half = W / 2; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px'; RealFX.smooth(ctx); }
   window.addEventListener('resize', resize);
   // side(x) — איזה שחקן נגע: 0 = שמאל, 1 = ימין
   function side(x) { return x < half ? 0 : 1; }
@@ -82,6 +83,7 @@
     for (var p = 0; p < 2; p++) {
       c.save(); c.beginPath(); c.rect(p * half, 0, half, H); c.clip(); c.translate(p * half, 0);
       D.g.draw(c, p, half, H);
+      RealFX.grade(c, half, H, { warm: .4 });   /* שלב 20: ויניטה ואור חם לכל חצי מסך */
       /* לוח ניקוד של החצי */
       var txt = PNAME[p] + '  ' + game.ico + ' ' + D.score[p]; c.font = '900 ' + Math.round(Math.min(half, H) * .055) + 'px ' + FONT; var w = c.measureText(txt).width + 40, y = Math.max(50, H * .07);
       c.fillStyle = INK; rr(c, half / 2 - w / 2 + 5, y - 24 + 6, w, 46, 12); c.fill(); c.fillStyle = PCOL[p]; rr(c, half / 2 - w / 2, y - 24, w, 46, 12); c.fill(); c.lineWidth = 4; c.strokeStyle = INK; c.stroke();
@@ -129,6 +131,7 @@
   function mkEggs() {
     var eggs = [[], []], spawn = [0, 0], chick = [0, 0];
     return {
+      eggs: function () { return eggs; },   /* לבדיקות: מיקומי הביצים (יחסיים לחצי המסך) */
       update: function (dt) {
         for (var p = 0; p < 2; p++) {
           spawn[p] -= dt;

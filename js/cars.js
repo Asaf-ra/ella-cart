@@ -13,6 +13,8 @@
    פרק 7  — קול: מנוע (WebAudio לפי מהירות), חריקה, צפצוף, טורבו; קול מוקלט באנגלית (Voice)
    פרק 8  — לולאת משחק: מהירות, דלק, טורבו, התנגשויות (בלי פסילה — רק האטה ו-"SCREECH!"), ניקוד
    פרק 9  — ציור: שמיים (יום/לילה), בניינים וגבעות, כביש עם פסי נתיב, ספרייטים, המכונית מאחור (6 דגמים), פיצוצי SFX
+             שלב 20 (ריאליזם): shared/real-fx.js — שמש עם הילה, עננים נפחיים, רכסים באובך, צללי מגע, אבני שפה אדומות-לבנות,
+             פסי שחיקת צמיגים, צבע מתכתי למכונית, אלומות פנסים בלילה, דירוג צבע קולנועי; ספרייטים 256px; DPR עד 2
    פרק 10 — HUD ומסכים: מד מהירות עם מחוג, דלק, פתיחה (מכונית/מסלול/שליטה + קנייה במטבעות), השהיה, תוצאות ומדליה
    פרק 11 — API לבדיקות: window.CarsGame
    תלויות: js/cars-data.js, js/audio.js (Voice, Sound), shared/kids-ui.js, learn-fx, tap-fx, wallet, hero-rewards, progress, share
@@ -53,12 +55,13 @@
 
   /* ================= פרק 2 — קנבס ומנוע ================= */
   var cv = $('carsCv'), ctx = cv.getContext('2d'), W = 0, H = 0, DPR = 1;
+  var RF = window.RealFX;                                  // shared/real-fx.js — כלי הריאליזם (פרק 9)
   var SEG = 200, RUMBLE = 3, ROAD_W = 2200, CAM_H = 1100, FOV = 100, DEPTH = 1 / Math.tan(FOV / 2 * Math.PI / 180), DRAW = 160;
   var PZ = CAM_H * DEPTH;                                  // המרחק של המכונית מהמצלמה
   var LANES = [-0.62, 0, 0.62];
-  var DPR_CAP = 1.5;                                       // שומר הביצועים (shared/perf-guard.js) מוריד ל-1 באייפד ישן
+  var DPR_CAP = 2;                                         // שלב 20: חדות מלאה ברטינה; שומר הביצועים (shared/perf-guard.js) מוריד ל-1 באייפד ישן
   window.addEventListener('perf:low', function () { DPR_CAP = 1; resize(); });
-  function resize() { DPR = Math.min(window.devicePixelRatio || 1, DPR_CAP); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+  function resize() { DPR = Math.min(window.devicePixelRatio || 1, DPR_CAP); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); RF.smooth(ctx); }
   window.addEventListener('resize', resize);
   var segs = [], LEN = 0;
   function project(p, cx, cy, cz) { var x = -cx, y = p.y - cy, z = p.z - cz; if (z < 1) z = 1; p.s = DEPTH / z; p.X = W / 2 + p.s * x * W / 2; p.Y = H / 2 - p.s * y * H / 2; p.Wd = p.s * ROAD_W * W / 2; }
@@ -111,7 +114,8 @@
 
   /* ================= פרק 4 — ספרייטים ================= */
   var SPR = {};
-  function spr(e) { if (SPR[e]) return SPR[e]; var c = document.createElement('canvas'); c.width = c.height = 128; var x = c.getContext('2d'); x.font = '104px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, 64, 72); return (SPR[e] = c); }
+  /* spr — שלב 20: ספרייט 256px מ-RealFX (היה 128px) = עצמים גדולים נשארים חדים ברטינה */
+  function spr(e) { return SPR[e] || (SPR[e] = RF.sprite(e, 256)); }
   var SIGN_IMG = {};
   function signImg(k) { if (SIGN_IMG[k]) return SIGN_IMG[k]; var im = new Image(), svg = SIGN_SVG[k]; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('<svg ', '<svg width="200" height="200" ')); SIGN_IMG[k] = im; return im; }
   /* ציורי התמרורים לצד הדרך (אותם ציורים כמו ב-learn-fx, בלי טקסט ארוך) */
@@ -353,11 +357,18 @@
       if (e.k === 'signpass') { e.done = 1; signPass(e.sign); return; }
       if (e.k === 'countcone') { e.done = 1; G.counting++; try { LF().count(G.counting, { what: G.counting === 1 ? 'cone' : 'cones' }); } catch (x) {} return; }
       if (e.k === 'item') { if (lane !== e.lane - 1) return; e.done = 1; collect(e.e); return; }
-      if (e.k === 'car') { e.done = 1; if (lane === e.lane - 1 && G.boost <= 0) bump('car'); else overtake(e.v); return; }
+      if (e.k === 'car') { e.done = 1; if (lane === e.lane - 1 && G.boost <= 0) bump('car'); else { overtake(e.v); passCar(Math.abs(lane - (e.lane - 1)) === 1); } return; }
       /* מכשולים בנתיב */
       if (lane === e.lane - 1) { e.done = 1; if (G.boost > 0 && e.k === 'cone') { G.fx.push({ x: W / 2, y: H * .8, vx: (Math.random() - .5) * 600, vy: -700, e: '🔶', life: .9 }); return; } bump(e.k); }
       else if (e.k === 'cone') { e.done = 1; G.clean++; if (G.clean % 3 === 0) { G.stars += 1; pop('🔶 עקיפה נקייה ×3! +1⭐', '#fff'); snd('ding'); } }
     });
+  }
+  /* passCar — שלב 20 (משחקיות): עקיפה מהנתיב הצמוד = "כמעט!" (+1⭐ ו-⚡ טורבו), וכל 5 עקיפות ברצף בלי התנגשות = +2⭐.
+     close = האם עברנו בנתיב שליד המכונית (ולא שני נתיבים ממנה) */
+  function passCar(close) {
+    G.passed = (G.passed || 0) + 1;
+    if (close && G.time - (G.lastNear || -9) > 2.5) { G.lastNear = G.time; G.near = (G.near || 0) + 1; G.stars += 1; G.boostE = Math.min(100, G.boostE + 15); burst('NEAR MISS!', W / 2 + (Math.random() - .5) * W * .2, H * .4); pop('💨 עקיפה צמודה! +1⭐ +⚡', '#7ef0ff'); snd('sparkle'); }
+    if (G.passed % 5 === 0) { G.stars += 2; burst('STREAK x' + G.passed + '!', W / 2, H * .34); pop('🏁 ' + G.passed + ' עקיפות ברצף! +2⭐', '#ffe14a'); snd('ding'); try { if (window.Achievements && G.passed >= 10) Achievements.hit('cars:streak10'); } catch (x) {} }
   }
   function collect(e) {
     if (e === '⭐') { G.stars++; snd('sparkle'); } else if (e === '🪙') { G.coins++; snd('ding'); } else if (e === '⛽') { refuel(); }
@@ -365,7 +376,7 @@
   }
   var OOPS = { cone: ['SCREECH!', 'אופס! קונוס — עוקפים לנתיב אחר'], oil: ['WHOA!', 'שמן! המכונית מחליקה… מחזיקים את ההגה'], car: ['BEEP!', 'ביפ ביפ! מכונית לפנינו — עוקפים בנתיב פנוי'], puddle: ['SPLASH!', 'שלולית! בכביש רטוב נוסעים לאט'] };
   function bump(k) {
-    G.hits++; G.shake = .4; G.combo = 0; var o = OOPS[k] || ['OOPS!', 'אופס!'];
+    G.hits++; G.shake = .4; G.combo = 0; G.passed = 0; var o = OOPS[k] || ['OOPS!', 'אופס!'];
     if (k === 'oil') { G.spin = 1; G.slow = .8; skid(); } else if (k === 'car') { G.slow = .9; horn(); } else if (k === 'puddle') { G.slow = .4; snd('bubble'); for (var i = 0; i < 14; i++) G.fx.push({ x: W / 2, y: H * .8, vx: (Math.random() - .5) * 500, vy: -400 - Math.random() * 400, e: '💧', life: .9 }); } else { G.slow = .7; skid(); }
     burst(o[0], W / 2 + (Math.random() - .5) * 120, H * .45); pop(o[1], '#ffc27a');
     if (G.hits <= 2 || k === 'oil') say(o[1]);
@@ -392,13 +403,18 @@
     var tr = T, c = ctx;
     c.save();
     if (G.shake > 0) c.translate((Math.random() - .5) * 14, (Math.random() - .5) * 10);
-    /* שמיים */
-    var g = c.createLinearGradient(0, 0, 0, H * .62); g.addColorStop(0, tr.sky[0]); g.addColorStop(.6, tr.sky[1]); g.addColorStop(1, tr.sky[2]); c.fillStyle = g; c.fillRect(-W, -H, W * 3, H * 3);
-    if (tr.night) { c.fillStyle = '#fff'; for (var i = 0; i < 70; i++) { var sx = (i * 137.5 - G.sky * 300) % (W + 40), sy = (i * 71.3) % (H * .45); c.globalAlpha = .4 + .6 * Math.abs(Math.sin(G.time * 2 + i)); c.fillRect(sx < 0 ? sx + W + 40 : sx, sy, 2.2, 2.2); } c.globalAlpha = 1; c.fillStyle = '#fff6c8'; c.beginPath(); c.arc(W * .75 - G.sky * 300 % W, H * .16, Math.min(W, H) * .05, 0, 7); c.fill(); }
-    else { c.fillStyle = tr.id === 'desert' ? '#fff3a0' : tr.snow ? '#ffffff' : '#fff3a0'; c.beginPath(); c.arc(W * .78 - G.sky * 400 % W, H * .18, Math.min(W, H) * .06, 0, 7); c.fill(); }
-    /* רקע: בניינים בעיר / גבעות בשטח — שתי שכבות פרלקסה */
-    if (tr.id === 'city' || tr.night) { skyline(c, H * .56, tr.night ? '#1a1a3a' : '#8a93b8', .6, G.sky * 300, tr.night); skyline(c, H * .58, tr.night ? '#2a2a4e' : '#6b7496', 1, G.sky * 600, tr.night); }
-    else { hills(c, H * .5, H * .1, tr.side[1], .6, G.sky * 300); hills(c, H * .55, H * .07, tr.side[0], 1, G.sky * 600); }
+    /* שמיים (שלב 20): גרדיאנט + אובך אופק, שמש עם הילה והשתקפויות עדשה / ירח עם מכתשים, עננים נפחיים */
+    var HY = H * .58; RF.sky(c, W, H, HY, tr.sky[0], tr.sky[1], tr.sky[2], tr.night);
+    if (tr.night) { c.fillStyle = '#fff'; for (var i = 0; i < 70; i++) { var sx = (i * 137.5 - G.sky * 300) % (W + 40), sy = (i * 71.3) % (H * .45); c.globalAlpha = .4 + .6 * Math.abs(Math.sin(G.time * 2 + i)); c.fillRect(sx < 0 ? sx + W + 40 : sx, sy, 2.2, 2.2); } c.globalAlpha = 1; RF.sun(c, W * .75 - G.sky * 300 % W, H * .16, Math.min(W, H) * .045, { moon: true }); }
+    else { RF.sun(c, W * .78 - G.sky * 400 % W, H * .18, Math.min(W, H) * .045, { col: tr.id === 'desert' ? '#ffd98a' : '#fff1b0', W: W, H: H }); RF.cloudLayer(c, W, H, G.time, G.sky * 300, { n: tr.id === 'desert' ? 3 : 5, y0: .07, y1: .3, a: tr.id === 'desert' ? .7 : .92 }); }
+    /* רקע: בניינים בעיר / רכסים בשטח — שכבות פרלקסה עם פרספקטיבה אווירית (רחוק = בהיר וכחלחל) */
+    if (tr.id === 'city' || tr.night) { skyline(c, H * .56, tr.night ? '#1a1a3a' : '#9aa3c4', .6, G.sky * 300, tr.night); skyline(c, H * .58, tr.night ? '#2a2a4e' : '#6b7496', 1, G.sky * 600, tr.night); }
+    else {
+      var far = RF.mix(tr.sky[1], tr.side[1], .35), mid = RF.mix(tr.side[1], '#2f5a3a', tr.snow || tr.id === 'desert' ? .1 : .35);
+      RF.ridge(c, W, H, H * .53, H * .2, G.sky * 300, { top: RF.mix(far, '#ffffff', .25), bottom: far, seed: 2, snow: tr.snow || tr.id === 'highway', haze: tr.sky[2] });
+      RF.ridge(c, W, H, H * .56, H * .09, G.sky * 600, { top: RF.shade(mid, .12), bottom: RF.shade(mid, -.12), seed: 5, rough: .6, haze: tr.sky[2] });
+      if (!tr.snow && tr.id !== 'desert') RF.treeLine(c, W, H * .565, H * .03, G.sky * 800, RF.shade(tr.side[1], -.45));
+    }
     /* הדרך: הטלה מקרוב לרחוק, ציור מרחוק לקרוב */
     var base = Math.floor(G.pos / SEG), pct = (G.pos % SEG) / SEG, bs = segs[base % segs.length];
     var py = bs.p1.y + (bs.p2.y - bs.p1.y) * pct, camY = CAM_H + py;
@@ -408,8 +424,10 @@
     for (var j = list.length - 1; j >= 0; j--) {
       s = list[j]; var p1 = s.p1, p2 = s.p2;
       c.fillStyle = s.dark ? tr.side[1] : tr.side[0]; c.fillRect(-W, p2.Y, W * 3, p1.Y - p2.Y + 1);
-      quad(c, p1.X, p1.Y, p1.Wd * 1.1, p2.X, p2.Y, p2.Wd * 1.1, s.dark ? tr.edge : '#101e36');                       /* אבני שפה */
+      quad(c, p1.X, p1.Y, p1.Wd * 1.1, p2.X, p2.Y, p2.Wd * 1.1, s.dark ? (tr.id === 'desert' ? tr.edge : '#d8232f') : '#f2f2f2');   /* אבני שפה אדומות-לבנות (שלב 20) */
       quad(c, p1.X, p1.Y, p1.Wd, p2.X, p2.Y, p2.Wd, s.dark ? tr.road[0] : tr.road[1]);
+      if (j < DRAW * .7) { var tw1 = p1.Wd * .045, tw2 = p2.Wd * .045; LANES.forEach(function (L) { [-.15, .15].forEach(function (o) { quad(c, p1.X + p1.Wd * (L + o), p1.Y, tw1, p2.X + p2.Wd * (L + o), p2.Y, tw2, 'rgba(10,10,20,.09)'); }); }); }   /* פסי שחיקת צמיגים */
+      [-.96, .96].forEach(function (L) { quad(c, p1.X + p1.Wd * L, p1.Y, p1.Wd * .012, p2.X + p2.Wd * L, p2.Y, p2.Wd * .012, tr.night ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.85)'); });   /* קו שוליים רציף */
       if (s.dark) { var lw1 = p1.Wd / 80, lw2 = p2.Wd / 80; [-.33, .33].forEach(function (L) { quad(c, p1.X + p1.Wd * L, p1.Y, lw1, p2.X + p2.Wd * L, p2.Y, lw2, 'rgba(255,255,255,.8)'); }); }   /* פסי נתיב דקים בגבולות הנתיבים (±0.33) */   /* פסי נתיב מקווקווים */
       var fogA = Math.min(.85, j / DRAW * 1.1); if (fogA > .05) { c.globalAlpha = fogA; c.fillStyle = fog; c.fillRect(-W, p2.Y, W * 3, p1.Y - p2.Y + 1); c.globalAlpha = 1; }
       drawSeg(c, s, fogA);
@@ -424,34 +442,52 @@
     drawCar(c, 0, 0, sc, styled(CAR), lean, G.wheelRot, input.brake, G.boost > 0, tr.night, G.time); c.restore();
     c.restore();
     if (G.flash > 0) { c.fillStyle = 'rgba(200,240,255,' + G.flash + ')'; c.fillRect(0, 0, W, H); }
-    if (tr.night) { c.fillStyle = 'rgba(10,8,40,.22)'; c.fillRect(0, 0, W, H); var hl = c.createRadialGradient(W / 2, H * .62, 20, W / 2, H * .62, W * .45); hl.addColorStop(0, 'rgba(255,250,200,.28)'); hl.addColorStop(1, 'rgba(255,250,200,0)'); c.fillStyle = hl; c.fillRect(0, 0, W, H); }   /* פנסים */
+    if (tr.night) { c.fillStyle = 'rgba(10,8,40,.22)'; c.fillRect(0, 0, W, H); headBeams(c); }   /* פנסים */
+    RF.grade(c, W, H, { night: tr.night, warm: tr.id === 'desert' ? 1 : .5 });   /* דירוג צבע קולנועי (שלב 20) */
     drawBursts(c);
     G.pops.forEach(function (p, i) { var a = 1 - Math.max(0, p.t - 1) / .4, y = H * .3 - p.t * 60 - i * 6; c.globalAlpha = Math.max(0, a); c.font = '900 ' + Math.round(Math.min(W, H) * .045) + 'px ' + FONT; c.textAlign = 'center'; c.lineWidth = 7; c.strokeStyle = INK; c.strokeText(p.txt, W / 2, y); c.fillStyle = p.col; c.fillText(p.txt, W / 2, y); }); c.globalAlpha = 1;
+  }
+  /* headBeams — שתי אלומות פנסים מהמכונית אל האופק (מצב לילה), באור מתווסף */
+  function headBeams(c) {
+    c.save(); c.globalCompositeOperation = 'lighter'; var bx = W / 2 + G.x * W * .02, by = H * .82;
+    [-1, 1].forEach(function (sd) { var g = c.createLinearGradient(0, by, 0, H * .52); g.addColorStop(0, 'rgba(255,246,200,.30)'); g.addColorStop(1, 'rgba(255,246,200,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(bx + sd * W * .07, by); c.lineTo(bx + sd * W * .02 - W * .16, H * .52); c.lineTo(bx + sd * W * .02 + W * .16, H * .52); c.closePath(); c.fill(); });
+    c.restore(); RF.glow(c, W / 2, H * .6, W * .28, '#fff6c8', .18);
   }
   function quad(c, x1, y1, w1, x2, y2, w2, col) { c.fillStyle = col; c.beginPath(); c.moveTo(x1 - w1, y1); c.lineTo(x2 - w2, y2); c.lineTo(x2 + w2, y2); c.lineTo(x1 + w1, y1); c.closePath(); c.fill(); }
   function hills(c, y, h, col, f, off) { c.fillStyle = col; c.beginPath(); c.moveTo(-W, H); for (var x = -W; x <= W * 2; x += 20) c.lineTo(x, y - Math.abs(Math.sin((x + off) / (180 * f))) * h - Math.sin((x + off) / (70 * f)) * h * .2); c.lineTo(W * 2, H); c.closePath(); c.fill(); }
   /* skyline — קו רקיע של עיר: בניינים בגבהים קבועים (זרע לפי x) עם חלונות דולקים בלילה */
   function skyline(c, yB, col, f, off, nightOn) {
-    c.fillStyle = col; var bw = 70;
-    for (var x = -bw; x <= W + bw; x += bw) { var wx = Math.floor((x + off * f) / bw), hgt = 40 + ((wx * 7919) % 97) + ((wx * 31) % 3) * 30; var bx = x - ((off * f) % bw); c.fillRect(bx, yB - hgt, bw - 6, hgt + 40);
-      if (nightOn) { c.fillStyle = '#ffe08a'; for (var wy = yB - hgt + 10; wy < yB - 10; wy += 16) for (var wxx = bx + 8; wxx < bx + bw - 14; wxx += 14) if (((wx * 13 + wy + wxx) | 0) % 3) c.fillRect(wxx, wy, 6, 8); c.fillStyle = col; } }
+    /* שלב 20: כל בניין עם גרדיאנט (אור מלמעלה), רשת חלונות זכוכית שמשקפת שמיים ביום ודולקת בלילה, מעקה גג ואנטנה */
+    var bw = 70, far = f < 1;
+    for (var x = -bw; x <= W + bw; x += bw) {
+      var wx = Math.floor((x + off * f) / bw), hgt = 40 + ((wx * 7919) % 97) + ((wx * 31) % 3) * 30, bx = x - ((off * f) % bw), w = bw - 6 - (wx % 2) * 8;
+      var g = c.createLinearGradient(0, yB - hgt, 0, yB); g.addColorStop(0, RF.shade(col, nightOn ? .08 : .22)); g.addColorStop(1, RF.shade(col, -.18)); c.fillStyle = g; c.fillRect(bx, yB - hgt, w, hgt + 40);
+      c.fillStyle = nightOn ? 'rgba(0,0,0,.25)' : 'rgba(10,14,40,.18)'; c.fillRect(bx + w * .72, yB - hgt, w * .28, hgt + 40);   /* צד מוצל */
+      c.fillStyle = RF.shade(col, -.3); c.fillRect(bx - 2, yB - hgt - 4, w + 4, 5);                                              /* מעקה גג */
+      if ((wx & 3) === 1) { c.fillRect(bx + w * .5, yB - hgt - 22, 2, 18); if (nightOn && Math.floor(G.time * 2 + wx) % 2) RF.glow(c, bx + w * .5 + 1, yB - hgt - 22, 10, '#ff3b3b', .9); }   /* אנטנה עם נורה */
+      for (var wy = yB - hgt + 10; wy < yB - 10; wy += 16) for (var wxx = bx + 7; wxx < bx + w - 10; wxx += 13) {
+        if (nightOn) { if (((wx * 13 + wy + wxx) | 0) % 3) { c.fillStyle = ((wx + wy) | 0) % 5 ? '#ffe08a' : '#bfe6ff'; c.fillRect(wxx, wy, 6, 8); } }
+        else { c.fillStyle = (wy - (yB - hgt)) / hgt < .5 ? 'rgba(220,240,255,.42)' : 'rgba(150,190,230,.3)'; c.fillRect(wxx, wy, 7, 9); }
+      }
+    }
+    if (far || !nightOn) { var hz = c.createLinearGradient(0, yB - 140, 0, yB + 10); hz.addColorStop(0, nightOn ? 'rgba(40,30,90,0)' : 'rgba(255,250,235,0)'); hz.addColorStop(1, nightOn ? 'rgba(40,30,90,.45)' : 'rgba(255,250,235,.45)'); c.fillStyle = hz; c.fillRect(0, yB - 140, W, 150); }   /* אובך עירוני */
   }
   /* drawSeg — ספרייטים של מקטע: נוף, תמרורים, פריטים, מכשולים, פסי טורבו, רמזור, שערים */
   function drawSeg(c, s, fogA) {
     var p = s.p1, scale = p.s * W / 2;
-    s.side.forEach(function (o) { var sz = o.sz * scale, x = p.X + p.Wd * o.off; if (sz < 3) return; if (o.sign) { var im = signImg(o.sign); if (im.complete && im.naturalWidth) c.drawImage(im, x - sz * .3, p.Y - sz, sz * .6, sz); } else c.drawImage(spr(o.e), x - sz / 2, p.Y - sz * .92, sz, sz); });
+    s.side.forEach(function (o) { var sz = o.sz * scale, x = p.X + p.Wd * o.off; if (sz < 3) return; if (o.sign) { var im = signImg(o.sign); if (im.complete && im.naturalWidth) c.drawImage(im, x - sz * .3, p.Y - sz, sz * .6, sz); } else { if (fogA < .7) RF.contact(c, x, p.Y, sz * .8, .3 * (1 - fogA)); c.drawImage(spr(o.e), x - sz / 2, p.Y - sz * .92, sz, sz); } });
     s.ents.forEach(function (e) {
       if (e.done && e.k !== 'gate' && e.k !== 'boost' && e.k !== 'light') return;
       var roadL = p.X - p.Wd, roadR = p.X + p.Wd, lx = e.lane >= 0 ? p.X + p.Wd * LANES[e.lane] : p.X;
-      if (e.k === 'item') { var sz = 330 * scale; c.drawImage(spr(e.e), lx - sz / 2, p.Y - sz * 1.2, sz, sz); return; }
-      if (e.k === 'cone' || e.k === 'countcone') { var ch = 300 * scale; c.fillStyle = '#ff7a1c'; c.strokeStyle = INK; c.lineWidth = Math.max(1, 12 * scale); c.beginPath(); c.moveTo(lx - ch * .42, p.Y); c.lineTo(lx - ch * .12, p.Y - ch); c.lineTo(lx + ch * .12, p.Y - ch); c.lineTo(lx + ch * .42, p.Y); c.closePath(); c.fill(); c.stroke(); c.fillStyle = '#fff'; c.fillRect(lx - ch * .28, p.Y - ch * .55, ch * .56, ch * .14); c.fillStyle = INK; c.fillRect(lx - ch * .5, p.Y - ch * .06, ch, ch * .08); return; }
+      if (e.k === 'item') { var sz = 330 * scale; RF.contact(c, lx, p.Y, sz * .6, .22); c.drawImage(spr(e.e), lx - sz / 2, p.Y - sz * 1.2, sz, sz); return; }
+      if (e.k === 'cone' || e.k === 'countcone') { var ch = 300 * scale; RF.contact(c, lx, p.Y, ch * 1.1, .35); c.fillStyle = '#ff7a1c'; c.strokeStyle = INK; c.lineWidth = Math.max(1, 12 * scale); c.beginPath(); c.moveTo(lx - ch * .42, p.Y); c.lineTo(lx - ch * .12, p.Y - ch); c.lineTo(lx + ch * .12, p.Y - ch); c.lineTo(lx + ch * .42, p.Y); c.closePath(); c.fill(); c.stroke(); c.fillStyle = '#fff'; c.fillRect(lx - ch * .28, p.Y - ch * .55, ch * .56, ch * .14); c.fillStyle = INK; c.fillRect(lx - ch * .5, p.Y - ch * .06, ch, ch * .08); return; }
       if (e.k === 'oil') { c.fillStyle = '#1b1b2e'; c.beginPath(); c.ellipse(lx, p.Y - 8 * scale, p.Wd * .3, Math.max(3, 90 * scale), 0, 0, 7); c.fill(); c.fillStyle = 'rgba(120,140,255,.4)'; c.beginPath(); c.ellipse(lx - p.Wd * .08, p.Y - 14 * scale, p.Wd * .12, Math.max(2, 30 * scale), 0, 0, 7); c.fill(); return; }
       if (e.k === 'puddle') { c.fillStyle = '#5fb8ff'; c.strokeStyle = '#fff'; c.lineWidth = Math.max(1, 3 * scale * 4); c.beginPath(); c.ellipse(lx, p.Y - 8 * scale, p.Wd * .3, Math.max(3, 70 * scale), 0, 0, 7); c.fill(); c.stroke(); return; }
-      if (e.k === 'car') { var vs = 560 * scale; c.drawImage(spr(e.v[1]), lx - vs / 2, p.Y - vs * .95, vs, vs); return; }
+      if (e.k === 'car') { var vs = 560 * scale; RF.contact(c, lx, p.Y - vs * .02, vs * .95, .5); c.drawImage(spr(e.v[1]), lx - vs / 2, p.Y - vs * .95, vs, vs); return; }
       if (e.k === 'boost') { var gr = c.createLinearGradient(roadL, 0, roadR, 0); gr.addColorStop(0, '#29e0ff'); gr.addColorStop(.5, '#7ef0ff'); gr.addColorStop(1, '#29e0ff'); c.fillStyle = gr; c.globalAlpha = e.done ? .3 : .85; c.fillRect(roadL, p.Y - 60 * scale, roadR - roadL, Math.max(3, 70 * scale)); c.globalAlpha = 1; c.fillStyle = '#fff'; for (var k = 0; k < 3; k++) { var ax = roadL + (roadR - roadL) * (k + .5) / 3, ah = 60 * scale; c.beginPath(); c.moveTo(ax - ah * .5, p.Y - ah * .2); c.lineTo(ax, p.Y - ah); c.lineTo(ax + ah * .5, p.Y - ah * .2); c.closePath(); c.fill(); } return; }
       if (e.k === 'light') { var ph = 1300 * scale, pw = Math.max(2, 50 * scale); c.fillStyle = '#5a5a6e'; c.fillRect(roadR + pw, p.Y - ph, pw, ph); c.fillRect(roadL - pw * 2, p.Y - ph, pw, ph); c.fillRect(roadL - pw * 2, p.Y - ph, roadR - roadL + pw * 4, pw * .8);
         var bh = 420 * scale, bw2 = 160 * scale, bx = p.X - bw2 / 2, by = p.Y - ph + pw; c.fillStyle = '#1a1a2e'; c.strokeStyle = INK; c.lineWidth = Math.max(1, 10 * scale); rr(c, bx, by, bw2, bh, bw2 * .2); c.fill(); c.stroke();
-        var phase = G.light ? G.light.phase : (e.done ? 'green' : 'red'); [['red', '#ff2e3b'], ['yellow', '#ffd93c'], ['green', '#2fe06a']].forEach(function (L, i) { c.fillStyle = phase === L[0] ? L[1] : '#2a2a3a'; c.beginPath(); c.arc(p.X, by + bh * (.2 + i * .3), bw2 * .3, 0, 7); c.fill(); if (phase === L[0]) { c.globalAlpha = .35; c.beginPath(); c.arc(p.X, by + bh * (.2 + i * .3), bw2 * .5, 0, 7); c.fill(); c.globalAlpha = 1; } }); return; }
+        var phase = G.light ? G.light.phase : (e.done ? 'green' : 'red'); [['red', '#ff2e3b'], ['yellow', '#ffd93c'], ['green', '#2fe06a']].forEach(function (L, i) { c.fillStyle = phase === L[0] ? L[1] : '#2a2a3a'; c.beginPath(); c.arc(p.X, by + bh * (.2 + i * .3), bw2 * .3, 0, 7); c.fill(); if (phase === L[0]) RF.glow(c, p.X, by + bh * (.2 + i * .3), bw2 * 1.2, L[1], .7); }); return; }
       if (e.k === 'gate') { e.opts.forEach(function (o, i) { var gx = p.X + p.Wd * LANES[i], gw = p.Wd * .27, gh = 700 * scale; c.lineWidth = Math.max(2, 40 * scale); c.strokeStyle = INK; c.fillStyle = o.col; rr(c, gx - gw, p.Y - gh, gw * 2, gh * .42, gw * .3); c.fill(); c.stroke(); c.fillRect(gx - gw, p.Y - gh * .6, gw * .18, gh * .6); c.fillRect(gx + gw * .82, p.Y - gh * .6, gw * .18, gh * .6);
           if (o.label) { var fs = gh * .26; if (/\d/.test(o.label)) { c.font = '900 ' + Math.round(fs) + 'px sans-serif'; c.textAlign = 'center'; c.fillStyle = INK; c.fillText(o.label, gx, p.Y - gh * .69); } else c.drawImage(spr(o.label), gx - fs * .6, p.Y - gh * .98, fs * 1.2, fs * 1.2); } }); return; }
     });
@@ -460,29 +496,39 @@
   /* drawCar — המכונית מאחור: גלגלים, גוף טרפזי, גג, חלון אחורי, פנסים אחוריים (זוהרים בברקס), פליטה, ותוספות לפי הדגם.
      c = קנבס, (x,y) = מרכז תחתית, k = קנה מידה (1 = 560px מסך), lean = נטייה (-1..1), rot = סיבוב גלגלים, brake, boost, night, t = זמן */
   function drawCar(c, x, y, k, car, lean, rot, brake, boost, night, t) {
-    c.save(); c.translate(x, y); c.scale(k, k); c.lineJoin = 'round'; c.lineCap = 'round'; c.strokeStyle = INK; c.lineWidth = 6;
+    /* שלב 20: קו מתאר דק וחצי-שקוף (פחות "מצויר", יותר "אמיתי"), צבע מתכתי, זכוכית עם השתקפות שמיים, צמיגי גומי וחישוקי כרום */
+    var OL = 'rgba(16,30,54,.85)', LW = 3.5;
+    c.save(); c.translate(x, y); c.scale(k, k); c.lineJoin = 'round'; c.lineCap = 'round'; c.strokeStyle = OL; c.lineWidth = LW;
     var big = car.kind === 'monster', tall = car.kind === 'fire' || car.kind === 'icecream' || big, bw = 230, bh = tall ? 150 : 110, wr = big ? 54 : 34, wy = big ? -70 : -34;
     /* צל */
-    c.fillStyle = 'rgba(16,30,54,.35)'; c.beginPath(); c.ellipse(0, 6, bw * .62, 16, 0, 0, 7); c.fill();
+    RF.contact(c, 0, 4, bw * 1.5, .6);
     /* פליטה: עשן (או אש בטורבו) */
     for (var i = 0; i < 4; i++) { var pf = ((t * 3 + i * .25) % 1); c.globalAlpha = (1 - pf) * .5; c.fillStyle = boost ? ['#7ef0ff', '#29e0ff', '#fff'][i % 3] : '#c9c9d9'; c.beginPath(); c.arc(-bw * .32 - pf * 60 * (boost ? 1.6 : 1), -16 + Math.sin(pf * 6) * 6, 8 + pf * (boost ? 14 : 10), 0, 7); c.fill(); } c.globalAlpha = 1;
     /* גלגלים אחוריים */
-    [-1, 1].forEach(function (sd) { var wxp = sd * (bw * .44); c.fillStyle = '#1b1b2e'; c.beginPath(); c.arc(wxp, wy, wr, 0, 7); c.fill(); c.stroke(); c.fillStyle = '#c9c9d9'; c.beginPath(); c.arc(wxp, wy, wr * .5, 0, 7); c.fill(); c.strokeStyle = '#8a8a9a'; c.lineWidth = 4; for (var sp = 0; sp < 4; sp++) { var a = rot + sp * Math.PI / 2; c.beginPath(); c.moveTo(wxp, wy); c.lineTo(wxp + Math.cos(a) * wr * .45, wy + Math.sin(a) * wr * .45); c.stroke(); } c.strokeStyle = INK; c.lineWidth = 6; });
+    [-1, 1].forEach(function (sd) { var wxp = sd * (bw * .44);
+      var tg = c.createRadialGradient(wxp - wr * .3, wy - wr * .3, wr * .2, wxp, wy, wr); tg.addColorStop(0, '#3c3c4a'); tg.addColorStop(1, '#0c0c14'); c.fillStyle = tg; c.beginPath(); c.arc(wxp, wy, wr, 0, 7); c.fill(); c.stroke();
+      c.strokeStyle = 'rgba(255,255,255,.08)'; c.lineWidth = 3; for (var tr2 = 0; tr2 < 10; tr2++) { var ta = rot * .5 + tr2 * Math.PI / 5; c.beginPath(); c.arc(wxp, wy, wr * .85, ta, ta + .18); c.stroke(); }   /* חריצי צמיג */
+      var rg = c.createLinearGradient(wxp - wr * .5, wy - wr * .5, wxp + wr * .5, wy + wr * .5); rg.addColorStop(0, '#f4f6fb'); rg.addColorStop(.5, '#9aa1b2'); rg.addColorStop(1, '#5c6274'); c.fillStyle = rg; c.beginPath(); c.arc(wxp, wy, wr * .52, 0, 7); c.fill();
+      c.strokeStyle = '#4a4f60'; c.lineWidth = 3; for (var sp = 0; sp < 5; sp++) { var a = rot + sp * Math.PI * 2 / 5; c.beginPath(); c.moveTo(wxp, wy); c.lineTo(wxp + Math.cos(a) * wr * .48, wy + Math.sin(a) * wr * .48); c.stroke(); }
+      c.strokeStyle = OL; c.lineWidth = LW; });
     /* גוף (טרפז רחב למטה) */
     c.save(); c.translate(0, wy - wr * .3); c.rotate(-lean * .08);
-    c.fillStyle = car.body; c.beginPath(); c.moveTo(-bw / 2, 0); c.lineTo(-bw / 2 + 10, -bh); c.lineTo(bw / 2 - 10, -bh); c.lineTo(bw / 2, 0); c.closePath(); c.fill(); c.stroke();
-    /* הברקה כרום */
-    var gl = c.createLinearGradient(0, -bh, 0, 0); gl.addColorStop(0, 'rgba(255,255,255,.45)'); gl.addColorStop(.4, 'rgba(255,255,255,.05)'); gl.addColorStop(1, 'rgba(0,0,0,.18)'); c.fillStyle = gl; c.beginPath(); c.moveTo(-bw / 2, 0); c.lineTo(-bw / 2 + 10, -bh); c.lineTo(bw / 2 - 10, -bh); c.lineTo(bw / 2, 0); c.closePath(); c.fill();
+    var pg = c.createLinearGradient(0, -bh, 0, 0); pg.addColorStop(0, RF.shade(car.body, .3)); pg.addColorStop(.35, car.body); pg.addColorStop(1, RF.shade(car.body, -.35));   /* צבע מתכתי: בהיר למעלה, כהה למטה */
+    c.fillStyle = pg; c.beginPath(); c.moveTo(-bw / 2, 0); c.lineTo(-bw / 2 + 10, -bh); c.lineTo(bw / 2 - 10, -bh); c.lineTo(bw / 2, 0); c.closePath(); c.fill(); c.stroke();
+    /* הצללת צדדים (הגוף מעוגל) + פס ברק מראה (specular) */
+    var sg = c.createLinearGradient(-bw / 2, 0, bw / 2, 0); sg.addColorStop(0, 'rgba(6,10,30,.38)'); sg.addColorStop(.18, 'rgba(6,10,30,0)'); sg.addColorStop(.55, 'rgba(255,255,255,.10)'); sg.addColorStop(.82, 'rgba(6,10,30,0)'); sg.addColorStop(1, 'rgba(6,10,30,.38)'); c.fillStyle = sg; c.beginPath(); c.moveTo(-bw / 2, 0); c.lineTo(-bw / 2 + 10, -bh); c.lineTo(bw / 2 - 10, -bh); c.lineTo(bw / 2, 0); c.closePath(); c.fill();
+    var gl = c.createLinearGradient(0, -bh, 0, -bh * .55); gl.addColorStop(0, 'rgba(255,255,255,0)'); gl.addColorStop(.5, 'rgba(255,255,255,.55)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gl; c.fillRect(-bw / 2 + 12, -bh * .96, bw - 24, bh * .4);
     /* פס משני + פגוש */
     c.fillStyle = car.acc; c.fillRect(-bw / 2 + 6, -bh * .42, bw - 12, 14); c.strokeRect(-bw / 2 + 6, -bh * .42, bw - 12, 14);
-    c.fillStyle = '#2a2a3a'; rr(c, -bw / 2 + 4, -22, bw - 8, 22, 8); c.fill(); c.stroke();
+    var bg2 = c.createLinearGradient(0, -22, 0, 0); bg2.addColorStop(0, '#5a5e70'); bg2.addColorStop(.25, '#2a2a3a'); bg2.addColorStop(1, '#14141f'); c.fillStyle = bg2; rr(c, -bw / 2 + 4, -22, bw - 8, 22, 8); c.fill(); c.stroke();   /* פגוש עם ברק עליון */
     /* לוחית רישוי */
     c.fillStyle = '#ffd93c'; rr(c, -34, -20, 68, 18, 4); c.fill(); c.stroke(); c.fillStyle = INK; c.font = '900 12px ' + FONT; c.textAlign = 'center'; c.direction = 'ltr'; c.fillText((car.plate || kidName()).slice(0, 7).toUpperCase(), 0, -6);
     /* פנסים אחוריים — זוהרים בברקס */
-    [-1, 1].forEach(function (sd) { var lx = sd * (bw / 2 - 30); if (brake) { c.save(); c.globalAlpha = .45; c.fillStyle = '#ff2e3b'; c.beginPath(); c.arc(lx, -bh * .22, 34, 0, 7); c.fill(); c.restore(); } c.fillStyle = brake ? '#ff5c5c' : '#c40f26'; rr(c, lx - 20, -bh * .3, 40, 18, 6); c.fill(); c.stroke(); });
+    [-1, 1].forEach(function (sd) { var lx = sd * (bw / 2 - 30); var lg = c.createLinearGradient(0, -bh * .3, 0, -bh * .3 + 18); lg.addColorStop(0, brake ? '#ffd0d0' : '#ff5a6a'); lg.addColorStop(.5, brake ? '#ff3b3b' : '#c40f26'); lg.addColorStop(1, brake ? '#c40f26' : '#6a0612'); c.fillStyle = lg; rr(c, lx - 20, -bh * .3, 40, 18, 6); c.fill(); c.stroke(); if (brake || night) RF.glow(c, lx, -bh * .3 + 9, brake ? 70 : 34, '#ff2e3b', brake ? .75 : .4); });   /* פנסים אחוריים עם זוהר אמיתי */
     /* גג וחלון אחורי */
-    var rw = bw * .68, rh = bh * .62; c.fillStyle = car.body; c.beginPath(); c.moveTo(-rw / 2, -bh); c.lineTo(-rw / 2 + 16, -bh - rh); c.lineTo(rw / 2 - 16, -bh - rh); c.lineTo(rw / 2, -bh); c.closePath(); c.fill(); c.stroke();
-    c.fillStyle = night ? '#1a2a5a' : '#9fe0ff'; c.beginPath(); c.moveTo(-rw / 2 + 12, -bh - 6); c.lineTo(-rw / 2 + 24, -bh - rh + 10); c.lineTo(rw / 2 - 24, -bh - rh + 10); c.lineTo(rw / 2 - 12, -bh - 6); c.closePath(); c.fill(); c.stroke();
+    var rw = bw * .68, rh = bh * .62; c.fillStyle = pg; c.beginPath(); c.moveTo(-rw / 2, -bh); c.lineTo(-rw / 2 + 16, -bh - rh); c.lineTo(rw / 2 - 16, -bh - rh); c.lineTo(rw / 2, -bh); c.closePath(); c.fill(); c.stroke();
+    var wg = c.createLinearGradient(0, -bh - rh, 0, -bh); wg.addColorStop(0, night ? '#2a3a7a' : '#e8f8ff'); wg.addColorStop(.45, night ? '#141e48' : '#7cc4ef'); wg.addColorStop(1, night ? '#0a1030' : '#2f5f8f');   /* זכוכית: משקפת שמיים למעלה, כהה למטה */
+    c.fillStyle = wg; c.beginPath(); c.moveTo(-rw / 2 + 12, -bh - 6); c.lineTo(-rw / 2 + 24, -bh - rh + 10); c.lineTo(rw / 2 - 24, -bh - rh + 10); c.lineTo(rw / 2 - 12, -bh - 6); c.closePath(); c.fill(); c.stroke();
     c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.moveTo(-rw / 2 + 20, -bh - 10); c.lineTo(-rw / 2 + 30, -bh - rh + 16); c.lineTo(-rw / 2 + 50, -bh - rh + 16); c.lineTo(-rw / 2 + 36, -bh - 10); c.closePath(); c.fill();
     /* ראש של הנהג/ת בחלון */
     c.fillStyle = '#f2c9a0'; c.beginPath(); c.arc(0, -bh - rh * .45, rh * .22, 0, 7); c.fill(); c.stroke(); c.fillStyle = BOY ? '#3d7bff' : '#ff5ca8'; c.beginPath(); c.arc(0, -bh - rh * .5, rh * .24, Math.PI, 0); c.fill(); c.stroke();
@@ -490,9 +536,9 @@
     if (car.sticker) c.drawImage(spr(car.sticker), -rw * .2, -bh - rh * .95, rw * .4, rw * .4);
     /* תוספות לפי דגם */
     var top = -bh - rh;
-    if (car.kind === 'police') { var on = Math.floor(t * 6) % 2; c.fillStyle = '#2a2a3a'; rr(c, -60, top - 18, 120, 18, 6); c.fill(); c.stroke(); c.fillStyle = on ? '#ff2e3b' : '#7a1a1a'; rr(c, -56, top - 16, 52, 14, 4); c.fill(); c.fillStyle = on ? '#1a3aff' : '#1a1a7a'; rr(c, 4, top - 16, 52, 14, 4); c.fill(); c.save(); c.globalAlpha = .35; c.fillStyle = on ? '#ff2e3b' : '#1a3aff'; c.beginPath(); c.arc(on ? -30 : 30, top - 10, 50, 0, 7); c.fill(); c.restore(); }
+    if (car.kind === 'police') { var on = Math.floor(t * 6) % 2; c.fillStyle = '#2a2a3a'; rr(c, -60, top - 18, 120, 18, 6); c.fill(); c.stroke(); c.fillStyle = on ? '#ff2e3b' : '#7a1a1a'; rr(c, -56, top - 16, 52, 14, 4); c.fill(); c.fillStyle = on ? '#1a3aff' : '#1a1a7a'; rr(c, 4, top - 16, 52, 14, 4); c.fill(); RF.glow(c, on ? -30 : 30, top - 10, 110, on ? '#ff2e3b' : '#3a5aff', .8); }
     if (car.kind === 'taxi') { c.fillStyle = '#ffd93c'; rr(c, -44, top - 26, 88, 26, 6); c.fill(); c.stroke(); c.fillStyle = INK; c.font = '900 16px ' + FONT; c.fillText('TAXI', 0, top - 7); }
-    if (car.kind === 'fire') { c.fillStyle = '#c9c9d9'; rr(c, -rw / 2, top - 14, rw, 14, 4); c.fill(); c.stroke(); c.strokeStyle = '#8a8a9a'; c.lineWidth = 4; for (i = -rw / 2 + 14; i < rw / 2; i += 22) { c.beginPath(); c.moveTo(i, top - 14); c.lineTo(i, top); c.stroke(); } c.strokeStyle = INK; c.lineWidth = 6; c.fillStyle = Math.floor(t * 5) % 2 ? '#ff2e3b' : '#7a1a1a'; c.beginPath(); c.arc(0, top - 26, 12, 0, 7); c.fill(); c.stroke(); }
+    if (car.kind === 'fire') { c.fillStyle = '#c9c9d9'; rr(c, -rw / 2, top - 14, rw, 14, 4); c.fill(); c.stroke(); c.strokeStyle = '#8a8a9a'; c.lineWidth = 4; for (i = -rw / 2 + 14; i < rw / 2; i += 22) { c.beginPath(); c.moveTo(i, top - 14); c.lineTo(i, top); c.stroke(); } c.strokeStyle = OL; c.lineWidth = LW; c.fillStyle = Math.floor(t * 5) % 2 ? '#ff2e3b' : '#7a1a1a'; c.beginPath(); c.arc(0, top - 26, 12, 0, 7); c.fill(); c.stroke(); }
     if (car.kind === 'race') { c.fillStyle = car.acc; rr(c, -bw / 2 - 10, -bh - 30, bw + 20, 16, 6); c.fill(); c.stroke(); c.fillRect(-bw / 2 + 20, -bh - 14, 12, 14); c.fillRect(bw / 2 - 32, -bh - 14, 12, 14); c.fillStyle = '#fff'; c.font = '900 34px ' + FONT; c.fillText('1', 0, -bh * .55); c.strokeText('1', 0, -bh * .55); }
     if (car.kind === 'sport') { c.fillStyle = INK; rr(c, -bw / 2 + 10, -bh - 20, bw - 20, 12, 5); c.fill(); c.fillRect(-bw / 2 + 30, -bh - 8, 10, 8); c.fillRect(bw / 2 - 40, -bh - 8, 10, 8); }
     if (car.kind === 'monster') { c.fillStyle = '#ffd93c'; for (i = 0; i < 4; i++) { c.beginPath(); c.arc(-45 + i * 30, top - 10, 9, 0, 7); c.fill(); c.stroke(); } c.fillStyle = '#fff'; c.font = '900 26px ' + FONT; c.fillText('ROAR', 0, -bh * .6); c.strokeText('ROAR', 0, -bh * .6); }
@@ -616,5 +662,5 @@
   window.addEventListener('DOMContentLoaded', function () { startScreen(); requestAnimationFrame(function (t) { last = t; loop(t); }); (function pv(t) { drawPreview(t || 0); requestAnimationFrame(pv); })(0); });
 
   /* ================= פרק 11 — API לבדיקות ================= */
-  window.CarsGame = { state: function () { return G; }, p2: function () { return G2; }, twoP: function () { return twoP; }, save: function () { return S; }, start: newRound, boost: useBoost, brake: function (on) { input.brake = !!on; }, steer: function (x) { if (G) G.tx = x; }, ctl: setCtl, finish: function () { if (G) G.time = ROUND; }, segs: function () { return segs; }, drawCar: drawCar };
+  window.CarsGame = { state: function () { return G; }, p2: function () { return G2; }, twoP: function () { return twoP; }, save: function () { return S; }, start: newRound, boost: useBoost, brake: function (on) { input.brake = !!on; }, steer: function (x) { if (G) G.tx = x; }, ctl: setCtl, finish: function () { if (G) G.time = ROUND; }, segs: function () { return segs; }, drawCar: drawCar, passCar: passCar };
 })();

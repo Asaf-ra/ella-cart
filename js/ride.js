@@ -36,12 +36,13 @@
 
   /* ================= פרק 2 — קנבס ומנוע ================= */
   var cv = $('rideCv'), ctx = cv.getContext('2d'), W = 0, H = 0, DPR = 1;
+  var RF = window.RealFX;                                  // shared/real-fx.js — כלי הריאליזם (שלב 20)
   var SEG = 200, RUMBLE = 3, ROAD_W = 2000, CAM_H = 1000, FOV = 100, DEPTH = 1 / Math.tan(FOV / 2 * Math.PI / 180), DRAW = 150;
   var PZ = CAM_H * DEPTH;                                  // המרחק של "הרוכבת" מהמצלמה
   var LANES = [-0.62, 0, 0.62];
-  var DPR_CAP = 1.5;                                       // שומר הביצועים (shared/perf-guard.js) מוריד ל-1 באייפד ישן
+  var DPR_CAP = 2;                                         // שלב 20: חדות מלאה ברטינה; שומר הביצועים (shared/perf-guard.js) מוריד ל-1 באייפד ישן
   window.addEventListener('perf:low', function () { DPR_CAP = 1; resize(); });
-  function resize() { DPR = Math.min(window.devicePixelRatio || 1, DPR_CAP); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+  function resize() { DPR = Math.min(window.devicePixelRatio || 1, DPR_CAP); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); cv.style.width = W + 'px'; cv.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); RF.smooth(ctx); }
   window.addEventListener('resize', resize);
   var segs = [], LEN = 0;
   function project(p, cx, cy, cz) {
@@ -93,12 +94,8 @@
 
   /* ================= פרק 4 — ספרייטים ================= */
   var SPR = {};
-  function spr(e) {
-    if (SPR[e]) return SPR[e];
-    var c = document.createElement('canvas'); c.width = c.height = 128; var x = c.getContext('2d');
-    x.font = '104px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, 64, 72);
-    return (SPR[e] = c);
-  }
+  /* spr — שלב 20: ספרייט 256px מ-RealFX (היה 128px) — חד גם כשהעצם קרוב וגדול */
+  function spr(e) { return SPR[e] || (SPR[e] = RF.sprite(e, 256)); }
 
   /* ================= פרק 5 — שליטה ================= */
   var input = { dragX: null, startX: 0, startY: 0, t0: 0, baseX: 0, keys: {}, tilt: null };
@@ -282,9 +279,9 @@
       if (e.k === 'arch') { e.done = 1; G.archT = .9; pop('✨ קשת טריקים! עכשיו טריק!', '#ffd93c'); snd('bubble'); return; }
       if (e.k === 'item') { if (lane !== e.lane - 1) return; e.done = 1; collect(e.e); return; }
       /* מכשולים ברוחב הדרך: צריך להיות באוויר */
-      if (e.lane < 0) { e.done = 1; if (G.jz > 90) { G.clean++; G.stars += 1; pop('⬆️ קפיצה נקייה! +1⭐', '#ffffff'); snd('ding'); } else stumble(e.k); return; }
+      if (e.lane < 0) { e.done = 1; if (G.jz > 90) cleared('⬆️ קפיצה נקייה! +1⭐'); else stumble(e.k); return; }
       /* מכשולים בנתיב: עוקפים (או קופצים מעליהם) */
-      if (lane === e.lane - 1) { e.done = 1; if (G.jz > 90) { G.clean++; G.stars += 1; pop('⬆️ מעל המכשול! +1⭐', '#ffffff'); snd('ding'); } else stumble(e.k); }
+      if (lane === e.lane - 1) { e.done = 1; if (G.jz > 90) cleared('⬆️ מעל המכשול! +1⭐'); else stumble(e.k); }
     });
   }
   function collect(e) {
@@ -293,6 +290,13 @@
     else if (e === '🍎' || e === '🥕') { G.food++; snd('pop'); }
     else { G.stars++; snd('bubble'); }
     G.fx.push({ x: W / 2 + (G.x * W * .18), y: H * .5, vx: (Math.random() - .5) * 200, vy: -500, e: e, life: .8 });
+  }
+  /* cleared — שלב 20 (משחקיות): מעבר מכשול בקפיצה. בשיא הקפיצה (גובה > 250 מתוך ~340) = "קפיצה מושלמת" +2⭐;
+     5 מושלמות במרוץ אחד = תג "קפיצה מושלמת" באלבום ההישגים */
+  function cleared(txt) {
+    G.clean++;
+    if (G.jz > 250) { G.perfect = (G.perfect || 0) + 1; G.stars += 2; pop('🎯 קפיצה מושלמת! +2⭐', '#ffe14a'); snd('sparkle'); try { G.fx.push({ x: W / 2, y: H * .45, vx: 0, vy: -260, e: '🎯', life: .9 }); } catch (x) {} if (G.perfect === 5) { try { Achievements.hit('ride:perfect5'); } catch (x) {} } }
+    else { G.stars += 1; pop(txt, '#ffffff'); snd('ding'); }
   }
   var OOPS = { fence: 'אופס! גדר — מחליקים למעלה כדי לקפוץ', log: 'אופס! בול עץ — קופצים מעליו', puddle: 'שפלאש! שלולית', hay: 'אופס! חבילת חציר — עוקפים הצידה', rock: 'אופס! סלע — עוקפים', bush: 'שיח! עוקפים הצידה', cactus: 'אאוץ׳! קקטוס — עוקפים' };
   function stumble(k) {
@@ -310,11 +314,15 @@
     /* סיבוב באוויר: כל העולם מסתובב סביב מרכז המסך */
     if (G.trick && G.trick.id === 'spin') { var k = G.trick.t / G.trick.dur; c.translate(W / 2, H / 2); c.rotate(k * Math.PI * 2); c.translate(-W / 2, -H / 2); }
     /* שמיים */
-    var g = c.createLinearGradient(0, 0, 0, H * .62); g.addColorStop(0, tr.sky[0]); g.addColorStop(.6, tr.sky[1]); g.addColorStop(1, tr.sky[2]);
-    c.fillStyle = g; c.fillRect(-W, -H, W * 3, H * 3);
-    c.fillStyle = tr.id === 'sunset' ? '#ffd9a0' : tr.id === 'snow' ? '#ffffff' : '#fff3a0'; c.beginPath(); c.arc(W * .78 - G.sky * 400 % W, H * .18, Math.min(W, H) * .06, 0, 7); c.fill();
-    /* גבעות רחוקות בשתי שכבות (פרלקסה לפי העיקולים) */
-    hills(c, H * .5, H * .1, tr.grass[1], .6, G.sky * 300); hills(c, H * .55, H * .07, tr.grass[0], 1, G.sky * 600);
+    /* שלב 20 — ריאליזם: שמיים עם אובך אופק, שמש עם הילה ועדשה, עננים נפחיים, רכסים בפרספקטיבה אווירית, קו יער */
+    c.fillStyle = tr.sky[0]; c.fillRect(-W, -H, W * 3, H);
+    RF.sky(c, W, H, H * .58, tr.sky[0], tr.sky[1], tr.sky[2]);
+    var sunset = tr.id === 'sunset'; RF.sun(c, W * .78 - G.sky * 400 % W, sunset ? H * .42 : H * .18, Math.min(W, H) * (sunset ? .07 : .045), { col: sunset ? '#ffb070' : '#fff1b0', W: W, H: H, noFlare: G.trick && G.trick.id === 'spin' });
+    RF.cloudLayer(c, W, H, G.time, G.sky * 300, { n: tr.id === 'desert' || tr.id === 'beach' ? 3 : 5, y0: .07, y1: .3, tint: sunset ? 'dusk' : 'day', a: .92 });
+    var far = RF.mix(tr.sky[1], tr.grass[1], .3), mid = RF.mix(tr.grass[1], '#1f4a2a', tr.snow || tr.id === 'desert' || tr.id === 'beach' ? .1 : .3);
+    RF.ridge(c, W, H, H * .53, H * .2, G.sky * 300, { top: RF.mix(far, '#ffffff', .25), bottom: far, seed: 3, snow: tr.snow || tr.id === 'forest', haze: tr.sky[2] });
+    RF.ridge(c, W, H, H * .56, H * .09, G.sky * 600, { top: RF.shade(mid, .12), bottom: RF.shade(mid, -.12), seed: 6, rough: .6, haze: tr.sky[2] });
+    if (tr.id !== 'desert' && tr.id !== 'beach' && !tr.snow) RF.treeLine(c, W, H * .565, H * .03, G.sky * 800, RF.shade(tr.grass[1], -.45));
     /* הדרך: מחשבים הטלה מקרוב לרחוק, מציירים מרחוק לקרוב */
     var base = Math.floor(G.pos / SEG), pct = (G.pos % SEG) / SEG, bs = segs[base % segs.length];
     var py = bs.p1.y + (bs.p2.y - bs.p1.y) * pct, camY = CAM_H + py + G.jz * .9 + (G.rear > 0 ? 180 * Math.sin(Math.min(1, (1.1 - G.rear) / .3) * Math.PI / 2) : 0);
@@ -333,6 +341,7 @@
       c.fillStyle = s.dark ? tr.grass[1] : tr.grass[0]; c.fillRect(-W, p2.Y, W * 3, p1.Y - p2.Y + 1);
       quad(c, p1.X, p1.Y, p1.Wd * 1.12, p2.X, p2.Y, p2.Wd * 1.12, s.dark ? tr.edge : shade(tr.edge));
       quad(c, p1.X, p1.Y, p1.Wd, p2.X, p2.Y, p2.Wd, s.dark ? tr.road[0] : tr.road[1]);
+      if (j < DRAW * .7) { LANES.forEach(function (L) { quad(c, p1.X + p1.Wd * L, p1.Y, p1.Wd * .09, p2.X + p2.Wd * L, p2.Y, p2.Wd * .09, 'rgba(90,60,30,.10)'); }); [-1.04, 1.04].forEach(function (L) { quad(c, p1.X + p1.Wd * L, p1.Y, p1.Wd * .05, p2.X + p2.Wd * L, p2.Y, p2.Wd * .05, 'rgba(20,40,10,.10)'); }); }   /* שביל דרוך בכל נתיב + צל עשב בשוליים */
       if (s.dark) { var lw1 = p1.Wd / 40, lw2 = p2.Wd / 40; [-1 / 3, 1 / 3].forEach(function (L) { quad(c, p1.X + p1.Wd * L * 2, p1.Y, lw1, p2.X + p2.Wd * L * 2, p2.Y, lw2, 'rgba(255,255,255,.35)'); }); }
       var fogA = Math.min(.85, j / DRAW * 1.1); if (fogA > .05) { c.globalAlpha = fogA; c.fillStyle = fog; c.fillRect(-W, p2.Y, W * 3, p1.Y - p2.Y + 1); c.globalAlpha = 1; }
       drawSeg(c, s, fogA);
@@ -343,6 +352,7 @@
     if (tr.snow) { c.fillStyle = 'rgba(255,255,255,.85)'; for (var sn = 0; sn < 60; sn++) { var sx = (sn * 97 + G.time * 40 * (1 + sn % 3)) % W, sy = (sn * 53 + G.time * 90 * (1 + sn % 2)) % H; c.beginPath(); c.arc(sx, sy, 2 + sn % 3, 0, 7); c.fill(); } }
     c.restore();
     pov(c);
+    RF.grade(c, W, H, { warm: tr.id === 'sunset' || tr.id === 'desert' ? 1 : .5 });   /* דירוג צבע קולנועי (שלב 20) */
     if (G.flash > 0) { c.fillStyle = 'rgba(255,255,220,' + G.flash + ')'; c.fillRect(0, 0, W, H); }
     G.pops.forEach(function (p, i) {
       var a = 1 - Math.max(0, p.t - 1) / .4, y = H * .3 - p.t * 60 - i * 6;
@@ -356,11 +366,11 @@
   /* drawSeg — ספרייטים של מקטע: נוף, פריטים, מכשולים, קשתות ושערים */
   function drawSeg(c, s, fogA) {
     var p = s.p1, scale = p.s * W / 2;
-    s.side.forEach(function (o) { var sz = o.sz * scale, x = p.X + p.Wd * o.off; if (sz < 3) return; c.drawImage(spr(o.e), x - sz / 2, p.Y - sz * .92, sz, sz); });
+    s.side.forEach(function (o) { var sz = o.sz * scale, x = p.X + p.Wd * o.off; if (sz < 3) return; if (fogA < .7) RF.contact(c, x, p.Y, sz * .8, .3 * (1 - fogA)); c.drawImage(spr(o.e), x - sz / 2, p.Y - sz * .92, sz, sz); });
     s.ents.forEach(function (e) {
       if (e.done && e.k !== 'gate' && e.k !== 'arch') return;
       var roadL = p.X - p.Wd, roadR = p.X + p.Wd;
-      if (e.k === 'item') { var sz = 330 * scale, x = p.X + p.Wd * LANES[e.lane]; c.drawImage(spr(e.e), x - sz / 2, p.Y - sz * 1.3, sz, sz); return; }
+      if (e.k === 'item') { var sz = 330 * scale, x = p.X + p.Wd * LANES[e.lane]; RF.contact(c, x, p.Y, sz * .55, .22); c.drawImage(spr(e.e), x - sz / 2, p.Y - sz * 1.3, sz, sz); return; }
       if (e.k === 'fence') { var h = 260 * scale; c.fillStyle = '#ffffff'; c.strokeStyle = HS.INK; c.lineWidth = Math.max(1, 5 * scale * 4);
         [.35, .75].forEach(function (f) { c.fillRect(roadL, p.Y - h * f, roadR - roadL, h * .14); c.strokeRect(roadL, p.Y - h * f, roadR - roadL, h * .14); });
         for (var k = 0; k <= 6; k++) { var fx = roadL + (roadR - roadL) * k / 6; c.fillStyle = '#ff5ca8'; c.fillRect(fx - h * .05, p.Y - h, h * .1, h); c.strokeRect(fx - h * .05, p.Y - h, h * .1, h); } return; }
@@ -372,7 +382,7 @@
       /* מכשולים בנתיב */
       var em = { hay: '🌾', rock: '🪨', bush: '🌳', cactus: '🌵' }[e.k] || '🪨', osz = (e.k === 'hay' ? 420 : 380) * scale, ox = p.X + p.Wd * LANES[e.lane];
       if (e.k === 'hay') { c.fillStyle = '#ffd97a'; c.strokeStyle = HS.INK; c.lineWidth = Math.max(1, 3 * scale * 4); rr(c, ox - osz * .6, p.Y - osz * .7, osz * 1.2, osz * .7, osz * .12); c.fill(); c.stroke(); c.beginPath(); c.moveTo(ox - osz * .6, p.Y - osz * .35); c.lineTo(ox + osz * .6, p.Y - osz * .35); c.stroke(); }
-      else c.drawImage(spr(em), ox - osz / 2, p.Y - osz * .95, osz, osz);
+      else { RF.contact(c, ox, p.Y, osz * .9, .4); c.drawImage(spr(em), ox - osz / 2, p.Y - osz * .95, osz, osz); }
     });
   }
   function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
@@ -384,9 +394,11 @@
     var tilt = (G.tx - G.x) * .12 + (G.jz > 0 ? -.05 : 0);
     var cx = W / 2, top = H * .74 - bob - rear * H * .22 - (G.jz > 0 ? H * .03 : 0), bw = W * .26, tw = W * .09;
     c.save(); c.translate(cx, H); c.rotate(tilt); c.translate(-cx, -H);
-    c.lineJoin = 'round'; c.lineCap = 'round'; c.strokeStyle = ink; c.lineWidth = 5;
-    /* צוואר */
-    c.fillStyle = col.coat; c.beginPath(); c.moveTo(cx - bw, H + 10); c.quadraticCurveTo(cx - tw * 1.3, top + H * .1, cx - tw, top); c.lineTo(cx + tw, top); c.quadraticCurveTo(cx + tw * 1.3, top + H * .1, cx + bw, H + 10); c.closePath(); c.fill(); c.stroke();
+    c.lineJoin = 'round'; c.lineCap = 'round'; c.strokeStyle = 'rgba(16,30,54,.8)'; c.lineWidth = 3.5;   /* שלב 20: קו דק יותר = מראה ריאליסטי */
+    /* צוואר — מילוי, ואז הצללה נפחית: צדדים כהים, פס אור במרכז, ברק פרווה מהשמש */
+    c.fillStyle = col.coat; c.beginPath(); c.moveTo(cx - bw, H + 10); c.quadraticCurveTo(cx - tw * 1.3, top + H * .1, cx - tw, top); c.lineTo(cx + tw, top); c.quadraticCurveTo(cx + tw * 1.3, top + H * .1, cx + bw, H + 10); c.closePath(); c.fill();
+    var ng = c.createLinearGradient(cx - bw, 0, cx + bw, 0); ng.addColorStop(0, 'rgba(8,10,28,.45)'); ng.addColorStop(.3, 'rgba(8,10,28,.08)'); ng.addColorStop(.62, 'rgba(255,255,255,.14)'); ng.addColorStop(.8, 'rgba(8,10,28,.1)'); ng.addColorStop(1, 'rgba(8,10,28,.45)'); c.fillStyle = ng; c.fill();
+    var vg = c.createLinearGradient(0, top, 0, H); vg.addColorStop(0, 'rgba(255,240,210,.18)'); vg.addColorStop(1, 'rgba(8,10,28,.25)'); c.fillStyle = vg; c.fill(); c.stroke();
     /* אוזניים */
     [-1, 1].forEach(function (sd) { var ex = cx + sd * tw * .75, ey = top + 6; c.fillStyle = col.coat; c.beginPath(); c.moveTo(ex - tw * .32, ey); c.quadraticCurveTo(ex + sd * tw * .1, ey - H * .12, ex + sd * tw * .12, ey - H * .13); c.quadraticCurveTo(ex + tw * .32, ey - H * .05, ex + tw * .3, ey); c.closePath(); c.fill(); c.stroke();
       c.fillStyle = '#ff8fc4'; c.beginPath(); c.moveTo(ex - tw * .14, ey - 4); c.quadraticCurveTo(ex + sd * tw * .08, ey - H * .09, ex + sd * tw * .1, ey - H * .1); c.quadraticCurveTo(ex + tw * .16, ey - H * .04, ex + tw * .14, ey - 4); c.closePath(); c.fill(); });
@@ -398,6 +410,8 @@
     for (var i = 0; i <= 6; i++) { var yy = top + (H - top) * i / 6, wv = Math.sin(i * 1.7 + G.gait * 2) * tw * .12; c.lineTo(cx - tw * (.32 + i * .06) + wv, yy); }
     for (i = 6; i >= 0; i--) { yy = top + (H - top) * i / 6; wv = Math.sin(i * 1.7 + G.gait * 2) * tw * .12; c.lineTo(cx + tw * (.32 + i * .06) + wv, yy); }
     c.closePath(); c.fill(); c.stroke();
+    /* שערות ברעמה: קווים בהירים וכהים שזזים עם הדהירה */
+    c.save(); c.lineWidth = 1.6; for (i = 0; i < 14; i++) { var hx = cx + (i / 13 - .5) * tw * .9; c.strokeStyle = i % 2 ? 'rgba(255,255,255,.16)' : 'rgba(8,10,28,.18)'; c.beginPath(); c.moveTo(hx, top); for (var q = 1; q <= 6; q++) { var qy = top + (H - top) * q / 6; c.lineTo(hx + (hx - cx) * q * .03 + Math.sin(q * 1.7 + G.gait * 2) * tw * .12, qy); } c.stroke(); } c.restore();
     c.beginPath(); c.moveTo(cx - tw * .45, top); c.quadraticCurveTo(cx, top - H * .06, cx + tw * .45, top); c.quadraticCurveTo(cx, top + H * .02, cx - tw * .45, top); c.fill(); c.stroke();
     if (HS.state.braids > 0) for (i = 1; i <= HS.state.braids; i++) { c.fillStyle = '#ff5ca8'; c.beginPath(); c.arc(cx, top + (H - top) * i / 5, 7, 0, 7); c.fill(); c.stroke(); }
     if (col.acc.indexOf('flowers') >= 0) ['#ff5ca8', '#ffd93c', '#9b5cff'].forEach(function (f, i) { c.fillStyle = f; c.beginPath(); c.arc(cx + (i - 1) * tw * .45, top - H * .035, tw * .16, 0, 7); c.fill(); c.stroke(); });
@@ -589,5 +603,5 @@
   resize(); bind();
   window.addEventListener('DOMContentLoaded', function () { if (location.hash === '#farm') openFarm(); else startScreen(); requestAnimationFrame(function (t) { last = t; loop(t); }); });
   /* לבדיקות אוטומטיות */
-  window.RideGame = { state: function () { return G; }, start: newRound, trick: doTrick, farm: openFarm, tool: useTool, finish: function () { if (G) G.time = ROUND; }, segs: function () { return segs; } };
+  window.RideGame = { state: function () { return G; }, start: newRound, trick: doTrick, farm: openFarm, tool: useTool, finish: function () { if (G) G.time = ROUND; }, segs: function () { return segs; }, cleared: cleared };
 })();
