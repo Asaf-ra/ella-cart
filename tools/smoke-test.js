@@ -133,7 +133,12 @@ function ok(msg) { console.log('  ✅ ' + msg); }
   const bp = await pg.evaluate(() => { const d = BalloonsDuo.state(); let n = 0; [0, 1].forEach(p => { const b = d.bal[p][0]; if (b) { BalloonsDuo.pop(p, b); n++; } }); return { n: n, sleeping: !window.gameInstance.loop.running }; });
   if (bp.n === 2 && bp.sleeping) ok('בלונים לשניים: פיצוץ בשני הצדדים, Phaser ישן'); else fail('בלונים לשניים: ' + JSON.stringify(bp));
   await pg.click('#bduoX').catch(() => {}); await pg.evaluate(() => BalloonsDuo.close()); if (await pg.evaluate(() => window.gameInstance.loop.running)) ok('בלונים לשניים: Phaser התעורר'); else fail('בלונים לשניים: Phaser לא התעורר');
-  // שלב 27 — 🧪 בר המילקשייק (ניסיון): לקוח שלם — כדורים, חלב עד הקו, טחינה, מזיגה, קצפת, תוספות, הגשה (ShakeLab.tick — בלי תלות בקצב הפריימים)
+  // הישגים (אחרי המשחקים)
+  const ach = await pg.evaluate(() => ({ n: Achievements.count(), total: Achievements.total, guide: Achievements.state().c['ride:duo'] }));
+  if (ach.guide >= 1 && ach.total >= 24) ok('הישגים: מונים עובדים (' + ach.n + '/' + ach.total + ')'); else fail('הישגים ' + JSON.stringify(ach));
+  await pg.evaluate(() => Achievements.open()); await pg.waitForTimeout(300);
+  if (await pg.evaluate(() => document.querySelectorAll('.ach-b').length >= 24)) ok('הישגים: אלבום'); else fail('הישגים: אלבום לא נפתח');
+  // שלב 27 — 🧪 בר המילקשייק (ניסיון, אחרי ההישגים — הדף לא טוען את Achievements): לקוח שלם — כדורים, חלב עד הקו, טחינה, מזיגה, קצפת, תוספות, הגשה (ShakeLab.tick — בלי תלות בקצב הפריימים)
   await pg.goto(base + 'shake-lab.html'); await pg.waitForTimeout(600); await clearModals();
   const sl = await pg.evaluate(() => {
     const T = ShakeLab.targets(), until = (fn) => { for (let i = 0; i < 400; i++) { const a = ShakeLab.tick(.05); if (fn(a)) return a; } throw new Error('תקוע: ' + JSON.stringify(ShakeLab.state())); };
@@ -150,11 +155,6 @@ function ok(msg) { console.log('  ✅ ' + msg); }
     } catch (e) { return { err: e.message }; }
   });
   if (sl.stars === 3 && sl.coins > 0) ok('בר המילקשייק: לקוח שלם, ' + sl.stars + ' כוכבים, ' + sl.coins + ' מטבעות, הלקוח הבא נכנס'); else fail('בר המילקשייק: ' + JSON.stringify(sl));
-  // הישגים (אחרי המשחקים)
-  const ach = await pg.evaluate(() => ({ n: Achievements.count(), total: Achievements.total, guide: Achievements.state().c['ride:duo'] }));
-  if (ach.guide >= 1 && ach.total >= 24) ok('הישגים: מונים עובדים (' + ach.n + '/' + ach.total + ')'); else fail('הישגים ' + JSON.stringify(ach));
-  await pg.evaluate(() => Achievements.open()); await pg.waitForTimeout(300);
-  if (await pg.evaluate(() => document.querySelectorAll('.ach-b').length >= 24)) ok('הישגים: אלבום'); else fail('הישגים: אלבום לא נפתח');
   if (errs.length) fail('שגיאות קונסול בתרחישים: ' + errs.slice(0, 3).join(' | ')); else ok('תרחישים: 0 שגיאות קונסול');
   await br.close(); srv.close();
   /* ---------- פרק 4 — סיכום ---------- */
